@@ -1,11 +1,5 @@
 /* =========================================================
    NINTH INNING COMBINE
-   COMPLETE STYLESHEET
-========================================================= */
-
-
-/* =========================================================
-   RESET / VARIABLES
 ========================================================= */
 
 * {
@@ -14,56 +8,34 @@
   padding: 0;
 }
 
-
 :root {
-
   --bg: #0b0d10;
-
   --panel: #13171c;
-
   --panel-light: #1a2027;
-
   --panel-lighter: #202730;
-
   --border: #2a313a;
-
   --border-light: #36404b;
 
-
   --text: #f4f7fa;
-
   --muted: #8f9aa7;
 
-
   --blue: #2f80ed;
-
   --blue-hover: #4a90f3;
-
   --green: #29c46d;
-
   --red: #ef4444;
 
-  --yellow: #f4c430;
-
-
   --radius: 14px;
-
 }
-
 
 html {
   background: var(--bg);
 }
 
-
 body {
-
   min-height: 100vh;
 
   background: var(--bg);
-
   color: var(--text);
-
 
   font-family:
     Inter,
@@ -72,2991 +44,1383 @@ body {
     BlinkMacSystemFont,
     "Segoe UI",
     sans-serif;
-
 }
 
 
-/* =========================================================
-   BASIC FORM / BUTTON RESET
-========================================================= */
+/* GENERAL */
 
 button,
 input,
 select,
 textarea {
-
   font: inherit;
-
 }
-
 
 button {
-
   cursor: pointer;
-
 }
 
 
-button:disabled {
-
-  cursor: not-allowed;
-
-  opacity: 0.55;
-
-}
-
-
-/* =========================================================
-   TOP HEADER
-========================================================= */
+/* TOP BAR */
 
 .topbar {
-
   position: sticky;
-
   top: 0;
-
   z-index: 100;
-
 
   min-height: 76px;
 
-
   display: grid;
-
-  grid-template-columns:
-    1fr
-    auto
-    1fr;
-
-
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-
 
   padding: 12px 24px;
 
+  background: rgba(11, 13, 16, 0.96);
 
-  background:
-    rgba(11, 13, 16, 0.96);
+  border-bottom: 1px solid var(--border);
 
-
-  border-bottom:
-    1px solid var(--border);
-
-
-  backdrop-filter:
-    blur(12px);
-
+  backdrop-filter: blur(12px);
 }
-
 
 .brand {
-
   text-align: center;
-
   line-height: 1;
-
 }
-
 
 .brand h1 {
-
   font-size: 22px;
-
   font-weight: 900;
-
   letter-spacing: 1px;
-
 }
 
-
 .brand span {
-
   display: block;
-
 
   margin-top: 5px;
 
-
   color: var(--blue);
 
-
   font-size: 12px;
-
   font-weight: 800;
-
   letter-spacing: 5px;
-
 }
-
 
 .index-button {
-
   justify-self: start;
 
-
-  border:
-    1px solid var(--border);
-
-
+  border: 1px solid var(--border);
   border-radius: 10px;
 
+  padding: 11px 15px;
 
-  padding:
-    11px 15px;
-
-
-  background:
-    var(--panel);
-
-
-  color:
-    var(--text);
-
+  background: var(--panel);
+  color: var(--text);
 
   font-size: 12px;
-
   font-weight: 800;
-
   letter-spacing: 1px;
-
 }
-
 
 .index-button:hover {
-
-  background:
-    var(--panel-light);
-
+  background: var(--panel-light);
 }
-
 
 .top-nav {
-
   justify-self: end;
 
-
   display: flex;
-
   align-items: center;
-
   gap: 8px;
-
 }
-
 
 .nav-button {
-
   border: none;
-
   border-radius: 9px;
 
+  padding: 11px 14px;
 
-  padding:
-    11px 14px;
-
-
-  background:
-    transparent;
-
-
-  color:
-    var(--muted);
-
+  background: transparent;
+  color: var(--muted);
 
   font-size: 12px;
-
   font-weight: 800;
-
   letter-spacing: 0.6px;
-
 }
-
 
 .nav-button:hover {
-
-  color:
-    var(--text);
-
-
-  background:
-    var(--panel-light);
-
+  color: var(--text);
+  background: var(--panel-light);
 }
-
 
 .nav-button.active {
-
-  color:
-    var(--text);
-
+  color: var(--text);
 }
-
 
 .add-player-button {
-
-  background:
-    var(--blue);
-
-
-  color:
-    white;
-
+  background: var(--blue);
+  color: white;
 }
-
 
 .add-player-button:hover {
-
-  background:
-    var(--blue-hover);
-
-
-  color:
-    white;
-
+  background: var(--blue-hover);
 }
 
 
-
-/* =========================================================
-   MAIN CONTAINER
-========================================================= */
+/* MAIN */
 
 .app-container {
+  width: min(1500px, 100%);
 
-  width:
-    min(1500px, 100%);
+  margin: 0 auto;
 
-
-  margin:
-    0 auto;
-
-
-  padding:
-    34px 24px 80px;
-
+  padding: 34px 24px 80px;
 }
-
 
 .view {
-
-  display:
-    none;
-
+  display: none;
 }
-
 
 .active-view {
-
-  display:
-    block;
-
+  display: block;
 }
 
 
-
-/* =========================================================
-   PAGE HEADINGS
-========================================================= */
+/* HEADINGS */
 
 .page-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 
-  display:
-    flex;
+  gap: 20px;
 
-
-  align-items:
-    center;
-
-
-  justify-content:
-    space-between;
-
-
-  gap:
-    20px;
-
-
-  margin-bottom:
-    24px;
-
+  margin-bottom: 24px;
 }
-
 
 .page-heading h2,
 .test-player-heading h2 {
+  font-size: clamp(30px, 5vw, 46px);
+  line-height: 1;
 
-  font-size:
-    clamp(30px, 5vw, 46px);
-
-
-  line-height:
-    1;
-
-
-  font-weight:
-    900;
-
-
-  letter-spacing:
-    -1.5px;
-
+  font-weight: 900;
+  letter-spacing: -1.5px;
 }
-
 
 .eyebrow {
+  margin-bottom: 8px;
 
-  margin-bottom:
-    8px;
+  color: var(--blue);
 
-
-  color:
-    var(--blue);
-
-
-  font-size:
-    11px;
-
-
-  font-weight:
-    900;
-
-
-  letter-spacing:
-    2px;
-
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 2px;
 }
-
 
 .page-subtext {
+  margin-top: 9px;
 
-  margin-top:
-    9px;
+  color: var(--muted);
 
-
-  color:
-    var(--muted);
-
-
-  font-size:
-    13px;
-
-
-  font-weight:
-    600;
-
+  font-size: 13px;
+  font-weight: 600;
 }
 
 
-
-/* =========================================================
-   STANDARD BUTTONS
-========================================================= */
+/* BUTTONS */
 
 .primary-button,
 .secondary-button {
+  border-radius: 10px;
 
-  border-radius:
-    10px;
+  padding: 13px 17px;
 
+  font-weight: 900;
+  font-size: 12px;
 
-  padding:
-    13px 17px;
-
-
-  font-weight:
-    900;
-
-
-  font-size:
-    12px;
-
-
-  letter-spacing:
-    0.7px;
-
+  letter-spacing: 0.7px;
 }
-
 
 .primary-button {
+  border: none;
 
-  border:
-    none;
-
-
-  background:
-    var(--blue);
-
-
-  color:
-    white;
-
+  background: var(--blue);
+  color: white;
 }
-
 
 .primary-button:hover {
-
-  background:
-    var(--blue-hover);
-
+  background: var(--blue-hover);
 }
-
 
 .secondary-button {
+  border: 1px solid var(--border);
 
-  border:
-    1px solid var(--border);
-
-
-  background:
-    var(--panel);
-
-
-  color:
-    var(--text);
-
+  background: var(--panel);
+  color: var(--text);
 }
-
 
 .secondary-button:hover {
-
-  background:
-    var(--panel-light);
-
+  background: var(--panel-light);
 }
-
 
 .full-width {
-
-  width:
-    100%;
-
+  width: 100%;
 }
 
 
-
-/* =========================================================
-   FILTER / SEARCH
-========================================================= */
+/* FILTERS */
 
 .filter-bar {
+  display: flex;
+  align-items: center;
 
-  display:
-    flex;
+  gap: 12px;
 
-
-  align-items:
-    center;
-
-
-  gap:
-    12px;
-
-
-  margin-bottom:
-    20px;
-
+  margin-bottom: 20px;
 }
-
 
 .search-wrapper {
-
-  flex:
-    1;
-
+  flex: 1;
 }
-
 
 .filter-bar input,
 .filter-bar select {
+  min-height: 48px;
 
-  min-height:
-    48px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
 
+  background: var(--panel);
+  color: var(--text);
 
-  border:
-    1px solid var(--border);
-
-
-  border-radius:
-    10px;
-
-
-  background:
-    var(--panel);
-
-
-  color:
-    var(--text);
-
-
-  outline:
-    none;
-
+  outline: none;
 }
-
 
 .filter-bar input {
+  width: 100%;
 
-  width:
-    100%;
-
-
-  padding:
-    0 16px;
-
+  padding: 0 16px;
 }
-
 
 .filter-bar > input {
-
-  flex:
-    1;
-
+  flex: 1;
 }
-
 
 .filter-bar select {
+  min-width: 190px;
 
-  min-width:
-    190px;
-
-
-  padding:
-    0 14px;
-
+  padding: 0 14px;
 }
-
 
 .filter-bar input:focus,
 .filter-bar select:focus {
-
-  border-color:
-    var(--blue);
-
+  border-color: var(--blue);
 }
 
 
-
-/* =========================================================
-   TABLE CONTAINERS
-========================================================= */
+/* TABLES */
 
 .table-wrapper,
 .results-table-wrapper {
+  overflow-x: auto;
 
-  overflow-x:
-    auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
 
+  background: var(--panel);
 
-  border:
-    1px solid var(--border);
-
-
-  border-radius:
-    var(--radius);
-
-
-  background:
-    var(--panel);
-
-
-  -webkit-overflow-scrolling:
-    touch;
-
+  -webkit-overflow-scrolling: touch;
 }
-
 
 .data-table {
+  width: 100%;
 
-  width:
-    100%;
+  border-collapse: collapse;
 
-
-  border-collapse:
-    collapse;
-
-
-  min-width:
-    800px;
-
+  min-width: 800px;
 }
-
 
 .results-table {
-
-  min-width:
-    1750px;
-
+  min-width: 1800px;
 }
-
-
-
-/* =========================================================
-   TABLE HEADERS / CELLS
-========================================================= */
 
 .data-table th {
+  padding: 15px 17px;
 
-  padding:
-    0;
+  border-bottom: 1px solid var(--border);
 
+  color: var(--muted);
 
-  border-bottom:
-    1px solid var(--border);
+  background: var(--panel);
 
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 1px;
 
-  color:
-    var(--muted);
-
-
-  font-size:
-    10px;
-
-
-  font-weight:
-    900;
-
-
-  letter-spacing:
-    1px;
-
-
-  text-align:
-    left;
-
-
-  white-space:
-    nowrap;
-
-
-  background:
-    var(--panel);
-
+  text-align: left;
+  white-space: nowrap;
 }
 
-
-.data-table th:not(:has(.sort-header)) {
-
-  padding:
-    15px 17px;
-
+.results-table th {
+  padding: 0;
 }
-
 
 .data-table td {
+  padding: 16px 17px;
 
-  padding:
-    16px 17px;
+  border-bottom: 1px solid var(--border);
 
+  font-size: 14px;
+  font-weight: 600;
 
-  border-bottom:
-    1px solid var(--border);
-
-
-  font-size:
-    14px;
-
-
-  font-weight:
-    600;
-
-
-  white-space:
-    nowrap;
-
+  white-space: nowrap;
 }
-
 
 .data-table tbody tr:last-child td {
-
-  border-bottom:
-    none;
-
+  border-bottom: none;
 }
-
 
 .data-table tbody tr:hover {
-
-  background:
-    var(--panel-light);
-
+  background: var(--panel-light);
 }
 
 
-
-/* =========================================================
-   SORTABLE RESULT HEADERS
-========================================================= */
+/* SORT HEADERS */
 
 .sort-header {
+  width: 100%;
+  min-height: 48px;
 
-  width:
-    100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
 
+  gap: 6px;
 
-  min-height:
-    48px;
+  border: none;
 
+  padding: 0 15px;
 
-  display:
-    flex;
+  background: transparent;
+  color: var(--muted);
 
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 1px;
 
-  align-items:
-    center;
-
-
-  justify-content:
-    flex-start;
-
-
-  gap:
-    6px;
-
-
-  border:
-    none;
-
-
-  padding:
-    0 15px;
-
-
-  background:
-    transparent;
-
-
-  color:
-    var(--muted);
-
-
-  font-size:
-    10px;
-
-
-  font-weight:
-    900;
-
-
-  letter-spacing:
-    1px;
-
-
-  white-space:
-    nowrap;
-
+  white-space: nowrap;
 }
-
 
 .sort-header:hover {
-
-  background:
-    var(--panel-light);
-
-
-  color:
-    white;
-
+  background: var(--panel-light);
+  color: white;
 }
-
 
 .sort-header.active-sort {
+  color: var(--blue);
 
-  color:
-    var(--blue);
-
-
-  background:
-    rgba(47, 128, 237, 0.08);
-
+  background: rgba(47, 128, 237, 0.08);
 }
-
 
 .sort-indicator {
+  color: #5d6875;
 
-  color:
-    #5d6875;
-
-
-  font-size:
-    12px;
-
+  font-size: 12px;
 }
-
 
 .sort-header.active-sort .sort-indicator {
-
-  color:
-    var(--blue);
-
+  color: var(--blue);
 }
 
 
-
-/* =========================================================
-   TABLE SPECIAL CELLS
-========================================================= */
+/* TABLE VALUES */
 
 .rank-cell {
-
-  font-size:
-    18px;
-
-
-  font-weight:
-    900;
-
+  font-size: 18px;
+  font-weight: 900;
 }
-
 
 .score-cell {
-
-  color:
-    var(--blue);
-
-
-  font-weight:
-    900;
-
+  color: var(--blue);
+  font-weight: 900;
 }
-
 
 .test-button {
+  border: 1px solid var(--blue);
+  border-radius: 8px;
 
-  border:
-    1px solid var(--blue);
+  padding: 9px 15px;
 
+  background: transparent;
+  color: var(--blue);
 
-  border-radius:
-    8px;
-
-
-  padding:
-    9px 15px;
-
-
-  background:
-    transparent;
-
-
-  color:
-    var(--blue);
-
-
-  font-size:
-    11px;
-
-
-  font-weight:
-    900;
-
-
-  letter-spacing:
-    0.8px;
-
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.8px;
 }
-
 
 .test-button:hover {
-
-  background:
-    var(--blue);
-
-
-  color:
-    white;
-
+  background: var(--blue);
+  color: white;
 }
 
 
-
-/* =========================================================
-   TEST HEADER
-========================================================= */
+/* TEST HEADER */
 
 .test-header {
+  display: flex;
+  align-items: center;
 
-  display:
-    flex;
+  gap: 22px;
 
-
-  align-items:
-    center;
-
-
-  gap:
-    22px;
-
-
-  margin-bottom:
-    28px;
-
+  margin-bottom: 28px;
 }
-
 
 .test-player-heading {
-
-  flex:
-    1;
-
+  flex: 1;
 }
-
 
 #testPlayerAge {
+  display: inline-block;
 
-  display:
-    inline-block;
+  margin-top: 8px;
 
+  color: var(--muted);
 
-  margin-top:
-    8px;
-
-
-  color:
-    var(--muted);
-
-
-  font-size:
-    14px;
-
-
-  font-weight:
-    700;
-
+  font-size: 14px;
+  font-weight: 700;
 }
 
 
-
-/* =========================================================
-   TEST GRID
-========================================================= */
+/* TEST GRID */
 
 .test-grid {
+  display: grid;
 
-  display:
-    grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 
-
-  grid-template-columns:
-    repeat(
-      2,
-      minmax(0, 1fr)
-    );
-
-
-  gap:
-    14px;
-
+  gap: 14px;
 }
 
-
 .test-card {
+  min-height: 170px;
 
-  min-height:
-    170px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
 
+  background: var(--panel);
+  color: var(--text);
 
-  border:
-    1px solid var(--border);
-
-
-  border-radius:
-    var(--radius);
-
-
-  background:
-    var(--panel);
-
-
-  color:
-    var(--text);
-
-
-  padding:
-    20px;
-
+  padding: 20px;
 
   transition:
     transform 0.15s ease,
     border-color 0.15s ease,
     background 0.15s ease;
-
 }
-
 
 .test-label {
+  color: var(--muted);
 
-  color:
-    var(--muted);
-
-
-  font-size:
-    11px;
-
-
-  font-weight:
-    900;
-
-
-  letter-spacing:
-    1px;
-
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 1px;
 }
 
 
-
-/* =========================================================
-   SINGLE VALUE TEST CARDS
-========================================================= */
+/* STANDARD NUMBER TEST */
 
 .number-test {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 
-  display:
-    flex;
-
-
-  flex-direction:
-    column;
-
-
-  justify-content:
-    space-between;
-
-
-  text-align:
-    left;
-
+  text-align: left;
 }
-
 
 .number-test:hover {
+  transform: translateY(-2px);
 
-  transform:
-    translateY(-2px);
+  border-color: var(--blue);
 
-
-  border-color:
-    var(--blue);
-
-
-  background:
-    var(--panel-light);
-
+  background: var(--panel-light);
 }
-
 
 .number-test strong {
+  margin-top: 25px;
 
-  margin-top:
-    25px;
+  font-size: 42px;
+  line-height: 1;
 
-
-  font-size:
-    42px;
-
-
-  line-height:
-    1;
-
-
-  font-weight:
-    900;
-
-
-  letter-spacing:
-    -1px;
-
+  font-weight: 900;
+  letter-spacing: -1px;
 }
-
 
 .test-unit {
+  margin-top: 8px;
 
-  margin-top:
-    8px;
+  color: var(--blue);
 
-
-  color:
-    var(--blue);
-
-
-  font-size:
-    11px;
-
-
-  font-weight:
-    900;
-
-
-  letter-spacing:
-    1px;
-
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 1px;
 }
 
 
-
-/* =========================================================
-   PULLDOWN / EXIT VELO MULTI ATTEMPTS
-========================================================= */
+/* PULLDOWN / EXIT VELO */
 
 .attempt-test-card {
+  display: flex;
+  flex-direction: column;
 
-  display:
-    flex;
-
-
-  flex-direction:
-    column;
-
-
-  min-height:
-    325px;
-
+  min-height: 325px;
 }
-
 
 .attempt-stat-row {
+  display: grid;
 
-  display:
-    grid;
+  grid-template-columns: 1fr 1fr;
 
+  gap: 10px;
 
-  grid-template-columns:
-    1fr 1fr;
-
-
-  gap:
-    10px;
-
-
-  margin:
-    20px 0;
-
+  margin: 20px 0;
 }
-
 
 .attempt-stat {
+  padding: 15px;
 
-  padding:
-    15px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
 
-
-  border:
-    1px solid var(--border);
-
-
-  border-radius:
-    10px;
-
-
-  background:
-    var(--bg);
-
+  background: var(--bg);
 }
-
 
 .attempt-stat small {
+  display: block;
 
-  display:
-    block;
+  margin-bottom: 8px;
 
+  color: var(--muted);
 
-  margin-bottom:
-    8px;
-
-
-  color:
-    var(--muted);
-
-
-  font-size:
-    9px;
-
-
-  font-weight:
-    900;
-
-
-  letter-spacing:
-    1px;
-
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 1px;
 }
-
 
 .attempt-stat strong {
+  display: block;
 
-  display:
-    block;
+  font-size: 32px;
+  line-height: 1;
 
+  font-weight: 900;
 
-  font-size:
-    32px;
-
-
-  line-height:
-    1;
-
-
-  font-weight:
-    900;
-
-
-  font-variant-numeric:
-    tabular-nums;
-
+  font-variant-numeric: tabular-nums;
 }
-
 
 .attempt-stat span {
+  display: block;
 
-  display:
-    block;
+  margin-top: 7px;
 
+  color: var(--blue);
 
-  margin-top:
-    7px;
-
-
-  color:
-    var(--blue);
-
-
-  font-size:
-    9px;
-
-
-  font-weight:
-    900;
-
-
-  letter-spacing:
-    1px;
-
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 1px;
 }
-
 
 .add-attempt-button {
+  width: 100%;
 
-  width:
-    100%;
-
-
-  margin-bottom:
-    5px;
-
+  margin-bottom: 5px;
 }
 
 
-
-/* =========================================================
-   SQUAT
-========================================================= */
-
-.assessment-card {
-
-  display:
-    flex;
-
-
-  flex-direction:
-    column;
-
-
-  min-height:
-    325px;
-
-}
-
-
-.pass-fail-buttons {
-
-  display:
-    grid;
-
-
-  grid-template-columns:
-    1fr 1fr;
-
-
-  gap:
-    10px;
-
-
-  margin:
-    20px 0 12px;
-
-}
-
-
-.assessment-button {
-
-  min-height:
-    56px;
-
-
-  border:
-    1px solid var(--border);
-
-
-  border-radius:
-    10px;
-
-
-  background:
-    var(--panel-light);
-
-
-  color:
-    var(--text);
-
-
-  font-size:
-    13px;
-
-
-  font-weight:
-    900;
-
-}
-
-
-.assessment-button.pass-selected {
-
-  border-color:
-    var(--green);
-
-
-  background:
-    rgba(41, 196, 109, 0.13);
-
-
-  color:
-    var(--green);
-
-}
-
-
-.assessment-button.fail-selected {
-
-  border-color:
-    var(--red);
-
-
-  background:
-    rgba(239, 68, 68, 0.13);
-
-
-  color:
-    var(--red);
-
-}
-
-
-.assessment-card textarea {
-
-  flex:
-    1;
-
-
-  min-height:
-    100px;
-
-
-  resize:
-    vertical;
-
-
-  border:
-    1px solid var(--border);
-
-
-  border-radius:
-    10px;
-
-
-  padding:
-    12px;
-
-
-  background:
-    var(--bg);
-
-
-  color:
-    var(--text);
-
-
-  outline:
-    none;
-
-}
-
-
-.assessment-card textarea:focus {
-
-  border-color:
-    var(--blue);
-
-}
-
-
-.save-small-button {
-
-  margin-top:
-    12px;
-
-
-  min-height:
-    44px;
-
-
-  border:
-    none;
-
-
-  border-radius:
-    9px;
-
-
-  background:
-    var(--blue);
-
-
-  color:
-    white;
-
-
-  font-size:
-    11px;
-
-
-  font-weight:
-    900;
-
-
-  letter-spacing:
-    0.8px;
-
-}
-
-
-
-/* =========================================================
-   TIMERS
-========================================================= */
+/* TIMER CARDS */
 
 .timer-card {
+  display: flex;
+  flex-direction: column;
 
-  display:
-    flex;
-
-
-  flex-direction:
-    column;
-
-
-  min-height:
-    325px;
-
+  min-height: 335px;
 }
-
 
 .timer-display {
+  margin: 26px 0 20px;
 
-  margin:
-    26px 0 20px;
+  text-align: center;
 
+  font-variant-numeric: tabular-nums;
 
-  text-align:
-    center;
-
-
-  font-variant-numeric:
-    tabular-nums;
-
-
-  font-size:
-    48px;
-
-
-  font-weight:
-    900;
-
-
-  letter-spacing:
-    -1px;
-
+  font-size: 48px;
+  font-weight: 900;
+  letter-spacing: -1px;
 }
-
 
 .timer-button {
+  min-height: 56px;
 
-  min-height:
-    56px;
+  border: none;
+  border-radius: 10px;
 
+  background: var(--green);
+  color: #061009;
 
-  border:
-    none;
-
-
-  border-radius:
-    10px;
-
-
-  background:
-    var(--green);
-
-
-  color:
-    #061009;
-
-
-  font-size:
-    14px;
-
-
-  font-weight:
-    900;
-
-
-  letter-spacing:
-    1px;
-
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 1px;
 }
-
 
 .timer-button.running {
-
-  background:
-    var(--red);
-
-
-  color:
-    white;
-
+  background: var(--red);
+  color: white;
 }
-
 
 .timer-stat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 
-  display:
-    flex;
+  margin-top: 14px;
 
+  padding: 10px 12px;
 
-  align-items:
-    center;
+  border: 1px solid var(--border);
+  border-radius: 8px;
 
-
-  justify-content:
-    space-between;
-
-
-  margin-top:
-    14px;
-
-
-  padding:
-    10px 12px;
-
-
-  border:
-    1px solid var(--border);
-
-
-  border-radius:
-    8px;
-
-
-  background:
-    var(--bg);
-
+  background: var(--bg);
 }
-
 
 .timer-stat-row span {
+  color: var(--muted);
 
-  color:
-    var(--muted);
-
-
-  font-size:
-    9px;
-
-
-  font-weight:
-    900;
-
-
-  letter-spacing:
-    1px;
-
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 1px;
 }
-
 
 .timer-stat-row strong {
+  color: var(--green);
 
-  color:
-    var(--green);
-
-
-  font-size:
-    18px;
-
-
-  font-weight:
-    900;
-
+  font-size: 18px;
+  font-weight: 900;
 }
 
 
-
-/* =========================================================
-   ATTEMPT LISTS
-========================================================= */
+/* ATTEMPTS */
 
 .attempt-heading {
+  margin-top: 20px;
+  margin-bottom: 8px;
 
-  margin-top:
-    20px;
+  color: var(--muted);
 
-
-  margin-bottom:
-    8px;
-
-
-  color:
-    var(--muted);
-
-
-  font-size:
-    10px;
-
-
-  font-weight:
-    900;
-
-
-  letter-spacing:
-    1px;
-
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 1px;
 }
-
 
 .attempt-list {
+  display: flex;
+  flex-direction: column;
 
-  display:
-    flex;
-
-
-  flex-direction:
-    column;
-
-
-  gap:
-    6px;
-
+  gap: 6px;
 }
-
 
 .attempt-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 
-  display:
-    flex;
+  gap: 10px;
 
+  min-height: 40px;
 
-  align-items:
-    center;
+  padding: 9px 11px;
 
+  border-radius: 8px;
 
-  justify-content:
-    space-between;
+  background: var(--bg);
 
-
-  gap:
-    10px;
-
-
-  min-height:
-    40px;
-
-
-  padding:
-    9px 11px;
-
-
-  border-radius:
-    8px;
-
-
-  background:
-    var(--bg);
-
-
-  font-size:
-    13px;
-
-
-  font-weight:
-    800;
-
+  font-size: 13px;
+  font-weight: 800;
 }
-
 
 .attempt-row strong {
+  margin-left: auto;
 
-  margin-left:
-    auto;
-
-
-  font-variant-numeric:
-    tabular-nums;
-
+  font-variant-numeric: tabular-nums;
 }
-
 
 .delete-attempt,
 .delete-velocity-attempt {
+  border: none;
 
-  border:
-    none;
+  background: transparent;
+  color: var(--red);
 
-
-  background:
-    transparent;
-
-
-  color:
-    var(--red);
-
-
-  font-size:
-    10px;
-
-
-  font-weight:
-    900;
-
+  font-size: 10px;
+  font-weight: 900;
 }
 
 
+/* SQUAT */
 
-/* =========================================================
-   BROAD JUMP — LAST / FULL WIDTH
-========================================================= */
+.assessment-card {
+  display: flex;
+  flex-direction: column;
+
+  min-height: 230px;
+}
+
+.pass-fail-buttons {
+  display: grid;
+
+  grid-template-columns: 1fr 1fr;
+
+  gap: 10px;
+
+  margin: 20px 0 12px;
+}
+
+.assessment-button {
+  min-height: 56px;
+
+  border: 1px solid var(--border);
+  border-radius: 10px;
+
+  background: var(--panel-light);
+  color: var(--text);
+
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.assessment-button.pass-selected {
+  border-color: var(--green);
+
+  background: rgba(41, 196, 109, 0.13);
+  color: var(--green);
+}
+
+.assessment-button.fail-selected {
+  border-color: var(--red);
+
+  background: rgba(239, 68, 68, 0.13);
+  color: var(--red);
+}
+
+.assessment-card textarea {
+  flex: 1;
+
+  min-height: 90px;
+
+  resize: vertical;
+
+  border: 1px solid var(--border);
+  border-radius: 10px;
+
+  padding: 12px;
+
+  background: var(--bg);
+  color: var(--text);
+
+  outline: none;
+}
+
+.assessment-card textarea:focus {
+  border-color: var(--blue);
+}
+
+.autosave-text {
+  margin-top: 10px;
+
+  color: var(--muted);
+
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+
+/* BROAD JUMP */
 
 .broad-jump-card {
-
-  grid-column:
-    1 / -1;
-
-
-  min-height:
-    190px;
-
+  min-height: 230px;
 }
-
 
 .broad-jump-card strong {
-
-  font-size:
-    52px;
-
+  font-size: 52px;
 }
 
 
-
-/* =========================================================
-   MODAL BACKDROP
-========================================================= */
+/* MODALS */
 
 .modal {
+  position: fixed;
+  inset: 0;
 
-  position:
-    fixed;
+  z-index: 1000;
 
+  display: none;
+  align-items: center;
+  justify-content: center;
 
-  inset:
-    0;
+  padding: 20px;
 
+  background: rgba(0, 0, 0, 0.78);
 
-  z-index:
-    1000;
-
-
-  display:
-    none;
-
-
-  align-items:
-    center;
-
-
-  justify-content:
-    center;
-
-
-  padding:
-    20px;
-
-
-  background:
-    rgba(0, 0, 0, 0.78);
-
-
-  backdrop-filter:
-    blur(8px);
-
+  backdrop-filter: blur(8px);
 }
-
 
 .modal.show {
-
-  display:
-    flex;
-
+  display: flex;
 }
 
 
-
-/* =========================================================
-   CALCULATOR
-========================================================= */
+/* CALCULATOR */
 
 .calculator {
+  position: relative;
 
-  position:
-    relative;
+  width: min(390px, 100%);
 
+  padding: 26px;
 
-  width:
-    min(390px, 100%);
+  border: 1px solid var(--border);
+  border-radius: 20px;
 
+  background: var(--panel);
 
-  padding:
-    26px;
-
-
-  border:
-    1px solid var(--border);
-
-
-  border-radius:
-    20px;
-
-
-  background:
-    var(--panel);
-
-
-  box-shadow:
-    0 30px 80px
-    rgba(0, 0, 0, 0.55);
-
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
 }
-
 
 .calculator-close {
+  position: absolute;
 
-  position:
-    absolute;
+  top: 13px;
+  right: 15px;
 
+  width: 38px;
+  height: 38px;
 
-  top:
-    13px;
+  border: none;
+  border-radius: 50%;
 
+  background: var(--panel-light);
+  color: var(--muted);
 
-  right:
-    15px;
-
-
-  width:
-    38px;
-
-
-  height:
-    38px;
-
-
-  border:
-    none;
-
-
-  border-radius:
-    50%;
-
-
-  background:
-    var(--panel-light);
-
-
-  color:
-    var(--muted);
-
-
-  font-size:
-    24px;
-
-
-  line-height:
-    1;
-
+  font-size: 24px;
+  line-height: 1;
 }
-
 
 .calculator-close:hover {
-
-  color:
-    white;
-
+  color: white;
 }
-
 
 .calculator-label {
+  padding-right: 45px;
 
-  padding-right:
-    45px;
+  color: var(--muted);
 
-
-  color:
-    var(--muted);
-
-
-  font-size:
-    12px;
-
-
-  font-weight:
-    900;
-
-
-  letter-spacing:
-    1.2px;
-
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 1.2px;
 }
-
 
 .calculator-display {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
 
-  display:
-    flex;
+  gap: 8px;
 
+  min-height: 110px;
 
-  align-items:
-    baseline;
+  padding: 25px 5px 20px;
 
-
-  justify-content:
-    flex-end;
-
-
-  gap:
-    8px;
-
-
-  min-height:
-    110px;
-
-
-  padding:
-    25px 5px 20px;
-
-
-  overflow:
-    hidden;
-
+  overflow: hidden;
 }
-
 
 #calculatorValue {
+  font-size: 58px;
+  line-height: 1;
 
-  font-size:
-    58px;
+  font-weight: 900;
+  letter-spacing: -2px;
 
-
-  line-height:
-    1;
-
-
-  font-weight:
-    900;
-
-
-  letter-spacing:
-    -2px;
-
-
-  font-variant-numeric:
-    tabular-nums;
-
+  font-variant-numeric: tabular-nums;
 }
-
 
 #calculatorValue:empty::before {
+  content: "—";
 
-  content:
-    "—";
-
-
-  color:
-    #59626d;
-
+  color: #59626d;
 }
-
 
 #calculatorUnit {
+  color: var(--blue);
 
-  color:
-    var(--blue);
-
-
-  font-size:
-    13px;
-
-
-  font-weight:
-    900;
-
+  font-size: 13px;
+  font-weight: 900;
 }
 
 
-
-/* =========================================================
-   CALCULATOR NUMBER GRID
-
-   7 8 9
-   4 5 6
-   1 2 3
-   . 0 backspace
-========================================================= */
+/* CALCULATOR GRID */
 
 .calculator-grid {
+  display: grid;
 
-  display:
-    grid;
+  grid-template-columns: repeat(3, 1fr);
 
-
-  grid-template-columns:
-    repeat(3, 1fr);
-
-
-  gap:
-    10px;
-
+  gap: 10px;
 }
-
 
 .calculator-grid button {
+  aspect-ratio: 1.25;
 
-  aspect-ratio:
-    1.25;
+  border: 1px solid var(--border);
+  border-radius: 12px;
 
+  background: var(--panel-light);
+  color: var(--text);
 
-  border:
-    1px solid var(--border);
-
-
-  border-radius:
-    12px;
-
-
-  background:
-    var(--panel-light);
-
-
-  color:
-    var(--text);
-
-
-  font-size:
-    24px;
-
-
-  font-weight:
-    800;
-
+  font-size: 24px;
+  font-weight: 800;
 }
-
 
 .calculator-grid button:hover {
+  border-color: var(--blue);
 
-  border-color:
-    var(--blue);
-
-
-  background:
-    var(--panel-lighter);
-
+  background: var(--panel-lighter);
 }
-
 
 .calculator-grid button:active {
-
-  transform:
-    scale(0.97);
-
+  transform: scale(0.97);
 }
-
 
 .calculator-save {
+  width: 100%;
+  min-height: 56px;
 
-  width:
-    100%;
+  margin-top: 14px;
 
+  border: none;
+  border-radius: 12px;
 
-  min-height:
-    56px;
+  background: var(--blue);
+  color: white;
 
-
-  margin-top:
-    14px;
-
-
-  border:
-    none;
-
-
-  border-radius:
-    12px;
-
-
-  background:
-    var(--blue);
-
-
-  color:
-    white;
-
-
-  font-size:
-    13px;
-
-
-  font-weight:
-    900;
-
-
-  letter-spacing:
-    1px;
-
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 1px;
 }
-
 
 .calculator-save:hover {
-
-  background:
-    var(--blue-hover);
-
+  background: var(--blue-hover);
 }
 
 
-
-/* =========================================================
-   ADD PLAYER MODAL
-========================================================= */
+/* ADD PLAYER */
 
 .form-modal {
+  position: relative;
 
-  position:
-    relative;
+  width: min(460px, 100%);
 
+  padding: 28px;
 
-  width:
-    min(460px, 100%);
+  border: 1px solid var(--border);
+  border-radius: 20px;
 
+  background: var(--panel);
 
-  padding:
-    28px;
-
-
-  border:
-    1px solid var(--border);
-
-
-  border-radius:
-    20px;
-
-
-  background:
-    var(--panel);
-
-
-  box-shadow:
-    0 30px 80px
-    rgba(0, 0, 0, 0.55);
-
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
 }
-
 
 .form-modal h2 {
+  margin-bottom: 24px;
 
-  margin-bottom:
-    24px;
-
-
-  font-size:
-    32px;
-
-
-  font-weight:
-    900;
-
+  font-size: 32px;
+  font-weight: 900;
 }
-
 
 .form-modal label {
+  display: block;
 
-  display:
-    block;
+  margin-bottom: 18px;
 
+  color: var(--muted);
 
-  margin-bottom:
-    18px;
-
-
-  color:
-    var(--muted);
-
-
-  font-size:
-    11px;
-
-
-  font-weight:
-    900;
-
-
-  letter-spacing:
-    0.7px;
-
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.7px;
 }
-
 
 .form-modal input,
 .form-modal select {
+  width: 100%;
+  min-height: 50px;
 
-  width:
-    100%;
+  margin-top: 7px;
 
+  border: 1px solid var(--border);
+  border-radius: 10px;
 
-  min-height:
-    50px;
+  padding: 0 13px;
 
+  background: var(--bg);
+  color: var(--text);
 
-  margin-top:
-    7px;
-
-
-  border:
-    1px solid var(--border);
-
-
-  border-radius:
-    10px;
-
-
-  padding:
-    0 13px;
-
-
-  background:
-    var(--bg);
-
-
-  color:
-    var(--text);
-
-
-  outline:
-    none;
-
+  outline: none;
 }
-
 
 .form-modal input:focus,
 .form-modal select:focus {
-
-  border-color:
-    var(--blue);
-
+  border-color: var(--blue);
 }
 
 
-
-/* =========================================================
-   SIDE PLAYER DRAWER
-========================================================= */
+/* PLAYER DRAWER */
 
 .player-drawer {
+  position: fixed;
 
-  position:
-    fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
 
+  z-index: 1200;
 
-  top:
-    0;
+  width: min(380px, 88vw);
 
+  transform: translateX(-105%);
 
-  bottom:
-    0;
+  background: var(--panel);
 
+  border-right: 1px solid var(--border);
 
-  left:
-    0;
+  transition: transform 0.23s ease;
 
-
-  z-index:
-    1200;
-
-
-  width:
-    min(380px, 88vw);
-
-
-  transform:
-    translateX(-105%);
-
-
-  background:
-    var(--panel);
-
-
-  border-right:
-    1px solid var(--border);
-
-
-  transition:
-    transform 0.23s ease;
-
-
-  overflow-y:
-    auto;
-
+  overflow-y: auto;
 }
-
 
 .player-drawer.open {
-
-  transform:
-    translateX(0);
-
+  transform: translateX(0);
 }
-
 
 .drawer-backdrop {
+  position: fixed;
+  inset: 0;
 
-  position:
-    fixed;
+  z-index: 1100;
 
+  display: none;
 
-  inset:
-    0;
-
-
-  z-index:
-    1100;
-
-
-  display:
-    none;
-
-
-  background:
-    rgba(0, 0, 0, 0.6);
-
+  background: rgba(0, 0, 0, 0.6);
 }
-
 
 .drawer-backdrop.show {
-
-  display:
-    block;
-
+  display: block;
 }
-
 
 .drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 
-  display:
-    flex;
+  padding: 22px;
 
-
-  align-items:
-    center;
-
-
-  justify-content:
-    space-between;
-
-
-  padding:
-    22px;
-
-
-  border-bottom:
-    1px solid var(--border);
-
+  border-bottom: 1px solid var(--border);
 }
-
 
 .drawer-header h2 {
-
-  font-size:
-    16px;
-
-
-  font-weight:
-    900;
-
-
-  letter-spacing:
-    1px;
-
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: 1px;
 }
-
 
 .close-button {
+  border: none;
 
-  border:
-    none;
+  background: transparent;
+  color: var(--muted);
 
-
-  background:
-    transparent;
-
-
-  color:
-    var(--muted);
-
-
-  font-size:
-    30px;
-
+  font-size: 30px;
 }
-
 
 .drawer-search {
-
-  padding:
-    15px;
-
+  padding: 15px;
 }
-
 
 .drawer-search input {
+  width: 100%;
+  min-height: 46px;
 
-  width:
-    100%;
+  border: 1px solid var(--border);
+  border-radius: 10px;
 
+  padding: 0 13px;
 
-  min-height:
-    46px;
+  background: var(--bg);
+  color: var(--text);
 
-
-  border:
-    1px solid var(--border);
-
-
-  border-radius:
-    10px;
-
-
-  padding:
-    0 13px;
-
-
-  background:
-    var(--bg);
-
-
-  color:
-    var(--text);
-
-
-  outline:
-    none;
-
+  outline: none;
 }
-
 
 .drawer-search input:focus {
-
-  border-color:
-    var(--blue);
-
+  border-color: var(--blue);
 }
-
 
 .drawer-player-list {
-
-  padding:
-    5px 15px 30px;
-
+  padding: 5px 15px 30px;
 }
-
 
 .drawer-age-heading {
+  margin: 18px 5px 8px;
 
-  margin:
-    18px 5px 8px;
+  color: var(--blue);
 
-
-  color:
-    var(--blue);
-
-
-  font-size:
-    11px;
-
-
-  font-weight:
-    900;
-
-
-  letter-spacing:
-    1.5px;
-
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 1.5px;
 }
-
 
 .drawer-player-button {
+  width: 100%;
 
-  width:
-    100%;
+  border: none;
+  border-bottom: 1px solid var(--border);
 
+  padding: 13px 7px;
 
-  border:
-    none;
+  background: transparent;
+  color: var(--text);
 
+  text-align: left;
 
-  border-bottom:
-    1px solid var(--border);
-
-
-  padding:
-    13px 7px;
-
-
-  background:
-    transparent;
-
-
-  color:
-    var(--text);
-
-
-  text-align:
-    left;
-
-
-  font-size:
-    14px;
-
-
-  font-weight:
-    700;
-
+  font-size: 14px;
+  font-weight: 700;
 }
-
 
 .drawer-player-button:hover {
-
-  color:
-    var(--blue);
-
+  color: var(--blue);
 }
 
 
-
-/* =========================================================
-   EMPTY STATE
-========================================================= */
+/* EMPTY STATE */
 
 .empty-state {
+  padding: 50px 20px !important;
 
-  padding:
-    50px 20px !important;
+  color: var(--muted);
 
+  text-align: center !important;
 
-  color:
-    var(--muted);
-
-
-  text-align:
-    center !important;
-
-
-  font-weight:
-    700 !important;
-
+  font-weight: 700 !important;
 }
 
 
+/* TABLET */
 
-/* =========================================================
-   LARGE SCREENS
-========================================================= */
-
-@media
-  (min-width: 1200px) {
-
-  .test-grid {
-
-    grid-template-columns:
-      repeat(
-        2,
-        minmax(0, 1fr)
-      );
-
-  }
-
-}
-
-
-
-/* =========================================================
-   TABLET
-========================================================= */
-
-@media
-  (max-width: 900px) {
+@media (max-width: 900px) {
 
   .topbar {
+    grid-template-columns: auto 1fr auto;
 
-    grid-template-columns:
-      auto
-      1fr
-      auto;
-
-
-    padding:
-      10px 14px;
-
+    padding: 10px 14px;
   }
-
 
   .brand h1 {
-
-    font-size:
-      17px;
-
+    font-size: 17px;
   }
-
 
   .brand span {
-
-    font-size:
-      9px;
-
-
-    letter-spacing:
-      3px;
-
+    font-size: 9px;
+    letter-spacing: 3px;
   }
-
 
   .nav-button:not(.add-player-button) {
-
-    display:
-      none;
-
+    display: none;
   }
-
 
   .app-container {
-
-    padding:
-      26px 15px 70px;
-
-  }
-
-
-  .test-grid {
-
-    grid-template-columns:
-      repeat(
-        2,
-        minmax(0, 1fr)
-      );
-
+    padding: 26px 15px 70px;
   }
 
 }
 
 
+/* PHONE */
 
-/* =========================================================
-   PHONE
-========================================================= */
-
-@media
-  (max-width: 600px) {
-
+@media (max-width: 600px) {
 
   .topbar {
-
-    min-height:
-      66px;
-
+    min-height: 66px;
   }
-
-
-  .brand {
-
-    justify-self:
-      center;
-
-  }
-
 
   .brand h1 {
-
-    font-size:
-      14px;
-
+    font-size: 14px;
   }
-
 
   .brand span {
+    margin-top: 4px;
 
-    margin-top:
-      4px;
-
-
-    font-size:
-      8px;
-
-
-    letter-spacing:
-      2.5px;
-
+    font-size: 8px;
+    letter-spacing: 2.5px;
   }
 
-
-  .index-button {
-
-    padding:
-      10px;
-
-
-    font-size:
-      10px;
-
-  }
-
-
+  .index-button,
   .add-player-button {
+    padding: 10px;
 
-    padding:
-      10px;
-
-
-    font-size:
-      10px;
-
+    font-size: 10px;
   }
-
 
   .page-heading {
-
-    align-items:
-      flex-start;
-
-
-    flex-direction:
-      column;
-
+    align-items: flex-start;
+    flex-direction: column;
   }
-
 
   .page-heading .primary-button {
-
-    width:
-      100%;
-
+    width: 100%;
   }
-
 
   .filter-bar {
-
-    align-items:
-      stretch;
-
-
-    flex-direction:
-      column;
-
+    align-items: stretch;
+    flex-direction: column;
   }
-
 
   .filter-bar select {
-
-    width:
-      100%;
-
+    width: 100%;
   }
-
 
   .test-header {
-
-    align-items:
-      flex-start;
-
+    align-items: flex-start;
   }
-
 
   .test-header .secondary-button {
+    padding: 10px;
 
-    padding:
-      10px;
-
-
-    font-size:
-      10px;
-
+    font-size: 10px;
   }
-
 
   .test-grid {
+    grid-template-columns: 1fr 1fr;
 
-    grid-template-columns:
-      1fr 1fr;
-
-
-    gap:
-      9px;
-
+    gap: 9px;
   }
-
 
   .test-card {
-
-    min-height:
-      145px;
-
-
-    padding:
-      15px;
-
+    padding: 14px;
   }
-
 
   .number-test strong {
-
-    font-size:
-      34px;
-
+    font-size: 32px;
   }
 
+  /*
+     Pulldown and Exit Velo are larger,
+     so keep those full width on phones.
+  */
 
   .attempt-test-card {
-
-    grid-column:
-      1 / -1;
-
-
-    min-height:
-      300px;
-
+    grid-column: 1 / -1;
   }
 
+  /*
+     Timers intentionally remain side-by-side.
+     Squat and Broad intentionally remain side-by-side.
+  */
+
+  .timer-card {
+    min-height: 330px;
+  }
+
+  .timer-display {
+    margin: 22px 0 16px;
+
+    font-size: 36px;
+  }
+
+  .timer-button {
+    min-height: 50px;
+  }
 
   .assessment-card,
-  .timer-card {
-
-    grid-column:
-      1 / -1;
-
-  }
-
-
   .broad-jump-card {
-
-    grid-column:
-      1 / -1;
-
+    min-height: 230px;
   }
 
+  .pass-fail-buttons {
+    gap: 6px;
+
+    margin-top: 16px;
+  }
+
+  .assessment-button {
+    min-height: 48px;
+
+    font-size: 11px;
+  }
+
+  .assessment-card textarea {
+    min-height: 80px;
+  }
+
+  .broad-jump-card strong {
+    font-size: 40px;
+  }
 
   .calculator {
-
-    padding:
-      21px;
-
+    padding: 21px;
   }
-
 
   #calculatorValue {
-
-    font-size:
-      52px;
-
+    font-size: 52px;
   }
-
 
   .calculator-grid {
-
-    gap:
-      8px;
-
+    gap: 8px;
   }
 
-
   .calculator-grid button {
-
-    font-size:
-      22px;
-
+    font-size: 22px;
   }
 
 }
 
 
+/* VERY SMALL PHONES */
 
-/* =========================================================
-   VERY SMALL PHONES
-========================================================= */
-
-@media
-  (max-width: 390px) {
-
+@media (max-width: 390px) {
 
   .brand {
-
-    display:
-      none;
-
+    display: none;
   }
-
 
   .topbar {
-
-    grid-template-columns:
-      1fr 1fr;
-
+    grid-template-columns: 1fr 1fr;
   }
-
 
   .top-nav {
-
-    justify-self:
-      end;
-
+    justify-self: end;
   }
 
-
-  .attempt-stat-row {
-
-    grid-template-columns:
-      1fr 1fr;
-
+  .timer-display {
+    font-size: 31px;
   }
 
+  .attempt-row {
+    padding: 8px;
 
-  .attempt-stat strong {
+    font-size: 11px;
+  }
 
-    font-size:
-      27px;
-
+  .delete-attempt,
+  .delete-velocity-attempt {
+    font-size: 8px;
   }
 
 }
