@@ -16,17 +16,21 @@ import {
 import {
   getFirestore,
   collection,
+  collectionGroup,
   doc,
   getDoc,
   setDoc,
   updateDoc,
+  addDoc,
   onSnapshot,
-  serverTimestamp
+  serverTimestamp,
+  writeBatch
 } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
 
 
+
 /* =========================================================
-   FIREBASE CONFIG
+   FIREBASE
 ========================================================= */
 
 const firebaseConfig = {
@@ -72,77 +76,111 @@ setPersistence(
 
 
 /* =========================================================
-   RANKED EVENTS
+   EVENT CONFIGURATION
 ========================================================= */
 
-const RANKED_EVENTS = [
+const EVENT_CONFIG = {
 
-  {
-    key: "pulldown",
-    direction: "high"
+  pulldown: {
+    label: "Pulldown",
+    unit: "MPH",
+    direction: "high",
+    decimals: 1,
+    average: true
   },
 
-  {
-    key: "exitVelo",
-    direction: "high"
+  exitVelo: {
+    label: "Exit Velo",
+    unit: "MPH",
+    direction: "high",
+    decimals: 1,
+    average: true
   },
 
-  {
-    key: "internalRotation",
-    direction: "high"
+  internalRotation: {
+    label: "Internal Rotation",
+    unit: "°",
+    direction: "high",
+    decimals: 1
   },
 
-  {
-    key: "externalRotation",
-    direction: "high"
+  externalRotation: {
+    label: "External Rotation",
+    unit: "°",
+    direction: "high",
+    decimals: 1
   },
 
-  {
-    key: "dynoInternal",
-    direction: "high"
+  dynoInternal: {
+    label: "Dynamometer Internal",
+    unit: "LB",
+    direction: "high",
+    decimals: 1
   },
 
-  {
-    key: "dynoExternal",
-    direction: "high"
+  dynoExternal: {
+    label: "Dynamometer External",
+    unit: "LB",
+    direction: "high",
+    decimals: 1
   },
 
-  {
-    key: "gripLeft",
-    direction: "high"
+  gripLeft: {
+    label: "Grip Left",
+    unit: "LB",
+    direction: "high",
+    decimals: 1
   },
 
-  {
-    key: "gripRight",
-    direction: "high"
+  gripRight: {
+    label: "Grip Right",
+    unit: "LB",
+    direction: "high",
+    decimals: 1
   },
 
-  {
-    key: "medBallLeft",
-    direction: "high"
+  medBallLeft: {
+    label: "Med Ball Left",
+    unit: "IN",
+    direction: "high",
+    decimals: 1
   },
 
-  {
-    key: "medBallRight",
-    direction: "high"
+  medBallRight: {
+    label: "Med Ball Right",
+    unit: "IN",
+    direction: "high",
+    decimals: 1
   },
 
-  {
-    key: "fiveTenFive",
-    direction: "low"
+  fiveTenFive: {
+    label: "5 / 10 / 5",
+    unit: "s",
+    direction: "low",
+    decimals: 2,
+    timer: true
   },
 
-  {
-    key: "tenYard",
-    direction: "low"
+  tenYard: {
+    label: "10-Yard Shuttle",
+    unit: "s",
+    direction: "low",
+    decimals: 2,
+    timer: true
   },
 
-  {
-    key: "broadJump",
-    direction: "high"
+  broadJump: {
+    label: "Broad Jump",
+    unit: "IN",
+    direction: "high",
+    decimals: 1
   }
 
-];
+};
+
+
+const RANKED_EVENTS =
+  Object.keys(EVENT_CONFIG);
 
 
 const TOTAL_RANKED_EVENTS =
@@ -151,7 +189,7 @@ const TOTAL_RANKED_EVENTS =
 
 
 /* =========================================================
-   RESULTS SORTING
+   RESULT SORTING
 ========================================================= */
 
 const SORT_CONFIG = {
@@ -167,7 +205,7 @@ const SORT_CONFIG = {
   },
 
   ageGroup: {
-    type: "age",
+    type: "number",
     defaultDirection: "asc"
   },
 
@@ -176,77 +214,30 @@ const SORT_CONFIG = {
     defaultDirection: "asc"
   },
 
-  pulldown: {
-    type: "number",
-    defaultDirection: "desc"
-  },
-
-  exitVelo: {
-    type: "number",
-    defaultDirection: "desc"
-  },
-
-  internalRotation: {
-    type: "number",
-    defaultDirection: "desc"
-  },
-
-  externalRotation: {
-    type: "number",
-    defaultDirection: "desc"
-  },
-
-  dynoInternal: {
-    type: "number",
-    defaultDirection: "desc"
-  },
-
-  dynoExternal: {
-    type: "number",
-    defaultDirection: "desc"
-  },
-
-  gripLeft: {
-    type: "number",
-    defaultDirection: "desc"
-  },
-
-  gripRight: {
-    type: "number",
-    defaultDirection: "desc"
-  },
-
-  medBallLeft: {
-    type: "number",
-    defaultDirection: "desc"
-  },
-
-  medBallRight: {
-    type: "number",
-    defaultDirection: "desc"
-  },
-
-  fiveTenFive: {
-    type: "number",
-    defaultDirection: "asc"
-  },
-
-  tenYard: {
-    type: "number",
-    defaultDirection: "asc"
-  },
-
   squat: {
     type: "squat",
     defaultDirection: "asc"
-  },
-
-  broadJump: {
-    type: "number",
-    defaultDirection: "desc"
   }
 
 };
+
+
+RANKED_EVENTS.forEach(
+  key => {
+
+    SORT_CONFIG[key] = {
+
+      type: "number",
+
+      defaultDirection:
+        EVENT_CONFIG[key].direction === "low"
+          ? "asc"
+          : "desc"
+
+    };
+
+  }
+);
 
 
 
@@ -256,175 +247,27 @@ const SORT_CONFIG = {
 
 let players = [];
 
+let attempts = [];
+
 let currentPlayerId = null;
 
 let activeCalculatorTest = null;
 
 let calculatorInput = "";
 
-let selectedSquatStatus = null;
-
 let timerControllers = [];
 
 let unsubscribePlayers = null;
+
+let unsubscribeAttempts = null;
+
+let squatNotesSaveTimer = null;
+
 
 let resultsSort = {
   key: "combineScore",
   direction: "asc"
 };
-
-let squatNotesSaveTimer = null;
-
-
-
-/* =========================================================
-   DEFAULT RESULTS
-========================================================= */
-
-function defaultResults() {
-
-  return {
-
-    pulldown: [],
-
-    exitVelo: [],
-
-
-    internalRotation: null,
-
-    externalRotation: null,
-
-
-    dynoInternal: null,
-
-    dynoExternal: null,
-
-
-    gripLeft: null,
-
-    gripRight: null,
-
-
-    medBallLeft: null,
-
-    medBallRight: null,
-
-
-    fiveTenFive: [],
-
-    tenYard: [],
-
-
-    squat: {
-
-      status: null,
-
-      notes: ""
-
-    },
-
-
-    broadJump: null
-
-  };
-
-}
-
-
-
-/* =========================================================
-   NORMALIZE DATABASE DATA
-========================================================= */
-
-function normalizePlayer(player) {
-
-  const defaults =
-    defaultResults();
-
-
-  const old =
-    player.results || {};
-
-
-  const toArray =
-    value => {
-
-      if (
-        Array.isArray(value)
-      ) {
-
-        return value
-          .map(Number)
-          .filter(Number.isFinite);
-
-      }
-
-
-      if (
-        isNumber(value)
-      ) {
-
-        return [
-          Number(value)
-        ];
-
-      }
-
-
-      return [];
-
-    };
-
-
-  return {
-
-    ...player,
-
-
-    results: {
-
-      ...defaults,
-
-      ...old,
-
-
-      pulldown:
-        toArray(
-          old.pulldown
-        ),
-
-
-      exitVelo:
-        toArray(
-          old.exitVelo
-        ),
-
-
-      fiveTenFive:
-        toArray(
-          old.fiveTenFive
-        ),
-
-
-      tenYard:
-        toArray(
-          old.tenYard
-        ),
-
-
-      squat: {
-
-        ...defaults.squat,
-
-        ...(old.squat || {})
-
-      }
-
-    }
-
-  };
-
-}
 
 
 
@@ -433,57 +276,31 @@ function normalizePlayer(player) {
 ========================================================= */
 
 const loginView =
-  document.getElementById(
-    "loginView"
-  );
-
+  document.getElementById("loginView");
 
 const appShell =
-  document.getElementById(
-    "appShell"
-  );
-
+  document.getElementById("appShell");
 
 const loginForm =
-  document.getElementById(
-    "loginForm"
-  );
-
+  document.getElementById("loginForm");
 
 const loginEmail =
-  document.getElementById(
-    "loginEmail"
-  );
-
+  document.getElementById("loginEmail");
 
 const loginPassword =
-  document.getElementById(
-    "loginPassword"
-  );
-
+  document.getElementById("loginPassword");
 
 const loginButton =
-  document.getElementById(
-    "loginButton"
-  );
-
+  document.getElementById("loginButton");
 
 const loginError =
-  document.getElementById(
-    "loginError"
-  );
-
+  document.getElementById("loginError");
 
 const logoutButton =
-  document.getElementById(
-    "logoutButton"
-  );
-
+  document.getElementById("logoutButton");
 
 const signedInUser =
-  document.getElementById(
-    "signedInUser"
-  );
+  document.getElementById("signedInUser");
 
 
 
@@ -492,93 +309,53 @@ const signedInUser =
 ========================================================= */
 
 const playersView =
-  document.getElementById(
-    "playersView"
-  );
-
+  document.getElementById("playersView");
 
 const resultsView =
-  document.getElementById(
-    "resultsView"
-  );
-
+  document.getElementById("resultsView");
 
 const testView =
-  document.getElementById(
-    "testView"
-  );
+  document.getElementById("testView");
 
 
 const playersNavButton =
-  document.getElementById(
-    "playersNavButton"
-  );
-
+  document.getElementById("playersNavButton");
 
 const resultsNavButton =
-  document.getElementById(
-    "resultsNavButton"
-  );
-
+  document.getElementById("resultsNavButton");
 
 const mainResultsButton =
-  document.getElementById(
-    "mainResultsButton"
-  );
-
+  document.getElementById("mainResultsButton");
 
 const backToPlayersButton =
-  document.getElementById(
-    "backToPlayersButton"
-  );
+  document.getElementById("backToPlayersButton");
 
 
 const playersTableBody =
-  document.getElementById(
-    "playersTableBody"
-  );
-
+  document.getElementById("playersTableBody");
 
 const resultsTableBody =
-  document.getElementById(
-    "resultsTableBody"
-  );
+  document.getElementById("resultsTableBody");
 
 
 const playerSearch =
-  document.getElementById(
-    "playerSearch"
-  );
-
+  document.getElementById("playerSearch");
 
 const playerAgeFilter =
-  document.getElementById(
-    "playerAgeFilter"
-  );
-
+  document.getElementById("playerAgeFilter");
 
 const resultsSearch =
-  document.getElementById(
-    "resultsSearch"
-  );
-
+  document.getElementById("resultsSearch");
 
 const resultsAgeFilter =
-  document.getElementById(
-    "resultsAgeFilter"
-  );
+  document.getElementById("resultsAgeFilter");
 
 
 const testPlayerName =
-  document.getElementById(
-    "testPlayerName"
-  );
-
+  document.getElementById("testPlayerName");
 
 const testPlayerAge =
-  document.getElementById(
-    "testPlayerAge"
-  );
+  document.getElementById("testPlayerAge");
 
 
 
@@ -587,45 +364,25 @@ const testPlayerAge =
 ========================================================= */
 
 const addPlayerButton =
-  document.getElementById(
-    "addPlayerButton"
-  );
-
+  document.getElementById("addPlayerButton");
 
 const addPlayerModal =
-  document.getElementById(
-    "addPlayerModal"
-  );
-
+  document.getElementById("addPlayerModal");
 
 const closeAddPlayerButton =
-  document.getElementById(
-    "closeAddPlayerButton"
-  );
-
+  document.getElementById("closeAddPlayerButton");
 
 const savePlayerButton =
-  document.getElementById(
-    "savePlayerButton"
-  );
-
+  document.getElementById("savePlayerButton");
 
 const newPlayerFirstName =
-  document.getElementById(
-    "newPlayerFirstName"
-  );
-
+  document.getElementById("newPlayerFirstName");
 
 const newPlayerLastName =
-  document.getElementById(
-    "newPlayerLastName"
-  );
-
+  document.getElementById("newPlayerLastName");
 
 const newPlayerAgeGroup =
-  document.getElementById(
-    "newPlayerAgeGroup"
-  );
+  document.getElementById("newPlayerAgeGroup");
 
 
 
@@ -634,39 +391,22 @@ const newPlayerAgeGroup =
 ========================================================= */
 
 const indexButton =
-  document.getElementById(
-    "indexButton"
-  );
-
+  document.getElementById("indexButton");
 
 const playerDrawer =
-  document.getElementById(
-    "playerDrawer"
-  );
-
+  document.getElementById("playerDrawer");
 
 const drawerBackdrop =
-  document.getElementById(
-    "drawerBackdrop"
-  );
-
+  document.getElementById("drawerBackdrop");
 
 const closeDrawerButton =
-  document.getElementById(
-    "closeDrawerButton"
-  );
-
+  document.getElementById("closeDrawerButton");
 
 const drawerSearch =
-  document.getElementById(
-    "drawerSearch"
-  );
-
+  document.getElementById("drawerSearch");
 
 const drawerPlayerList =
-  document.getElementById(
-    "drawerPlayerList"
-  );
+  document.getElementById("drawerPlayerList");
 
 
 
@@ -675,40 +415,22 @@ const drawerPlayerList =
 ========================================================= */
 
 const numberModal =
-  document.getElementById(
-    "numberModal"
-  );
-
+  document.getElementById("numberModal");
 
 const calculatorLabel =
-  document.getElementById(
-    "calculatorLabel"
-  );
-
+  document.getElementById("calculatorLabel");
 
 const calculatorValue =
-  document.getElementById(
-    "calculatorValue"
-  );
-
+  document.getElementById("calculatorValue");
 
 const calculatorUnit =
-  document.getElementById(
-    "calculatorUnit"
-  );
-
+  document.getElementById("calculatorUnit");
 
 const calculatorSaveButton =
-  document.getElementById(
-    "calculatorSaveButton"
-  );
-
+  document.getElementById("calculatorSaveButton");
 
 const closeCalculatorButton =
-  document.getElementById(
-    "closeCalculatorButton"
-  );
-
+  document.getElementById("closeCalculatorButton");
 
 const calculatorButtons =
   document.querySelectorAll(
@@ -722,40 +444,60 @@ const calculatorButtons =
 ========================================================= */
 
 const squatPassButton =
-  document.getElementById(
-    "squatPassButton"
-  );
-
+  document.getElementById("squatPassButton");
 
 const squatFailButton =
-  document.getElementById(
-    "squatFailButton"
-  );
-
+  document.getElementById("squatFailButton");
 
 const squatNotes =
-  document.getElementById(
-    "squatNotes"
-  );
+  document.getElementById("squatNotes");
 
 
 
 /* =========================================================
-   AUTHENTICATION
+   PLAYER NORMALIZATION
 ========================================================= */
 
-function showLogin(
-  message = ""
-) {
+function normalizePlayer(raw) {
+
+  const oldSquat =
+    raw.squat ||
+    raw.results?.squat ||
+    {};
+
+
+  return {
+
+    ...raw,
+
+    squat: {
+
+      status:
+        oldSquat.status || null,
+
+      notes:
+        oldSquat.notes || ""
+
+    }
+
+  };
+
+}
+
+
+
+/* =========================================================
+   AUTH
+========================================================= */
+
+function showLogin(message = "") {
 
   loginError.textContent =
     message;
 
-
   loginView.classList.remove(
     "hidden"
   );
-
 
   appShell.classList.add(
     "hidden"
@@ -764,80 +506,60 @@ function showLogin(
 }
 
 
-
 function showApp(user) {
 
-  loginError.textContent =
-    "";
-
+  loginError.textContent = "";
 
   loginView.classList.add(
     "hidden"
   );
 
-
   appShell.classList.remove(
     "hidden"
   );
 
-
   signedInUser.textContent =
-    user.email ||
-    "SIGNED IN";
+    user.email || "SIGNED IN";
 
-
-  showView(
-    "players"
-  );
+  showView("players");
 
 }
-
 
 
 function authErrorMessage(error) {
 
   switch (error.code) {
 
-
     case "auth/invalid-credential":
-
     case "auth/wrong-password":
-
     case "auth/user-not-found":
 
       return "Incorrect email or password.";
-
 
     case "auth/user-disabled":
 
       return "This account has been disabled.";
 
-
     case "auth/too-many-requests":
 
-      return "Too many sign-in attempts. Try again later.";
-
+      return "Too many attempts. Try again later.";
 
     case "auth/network-request-failed":
 
-      return "Network error. Check your connection and try again.";
-
+      return "Network error. Check your connection.";
 
     default:
 
-      return "Sign-in failed. Check your information and try again.";
+      return "Sign-in failed.";
 
   }
 
 }
 
 
+async function isApprovedStaff(user) {
 
-async function isApprovedStaff(
-  user
-) {
-
-  const staffSnap =
+  const snap =
     await getDoc(
 
       doc(
@@ -848,26 +570,59 @@ async function isApprovedStaff(
 
     );
 
-
-  return staffSnap.exists();
+  return snap.exists();
 
 }
 
 
 
 /* =========================================================
-   REAL-TIME PLAYER DATABASE
+   FIRESTORE REALTIME LISTENERS
 ========================================================= */
 
-function startPlayersListener() {
+function stopDataListeners() {
 
-  if (
-    unsubscribePlayers
-  ) {
+  if (unsubscribePlayers) {
 
     unsubscribePlayers();
 
+    unsubscribePlayers = null;
+
   }
+
+
+  if (unsubscribeAttempts) {
+
+    unsubscribeAttempts();
+
+    unsubscribeAttempts = null;
+
+  }
+
+}
+
+
+function renderAfterDatabaseChange() {
+
+  renderEverything();
+
+
+  if (
+    currentPlayerId &&
+    getCurrentPlayer() &&
+    testView.classList.contains("active-view")
+  ) {
+
+    renderTestView();
+
+  }
+
+}
+
+
+function startDataListeners() {
+
+  stopDataListeners();
 
 
   unsubscribePlayers =
@@ -878,9 +633,7 @@ function startPlayersListener() {
         "players"
       ),
 
-
       snapshot => {
-
 
         players =
           snapshot.docs.map(
@@ -897,21 +650,9 @@ function startPlayersListener() {
 
           );
 
-
-        renderEverything();
-
-
-        if (
-          currentPlayerId &&
-          getCurrentPlayer()
-        ) {
-
-          renderTestView();
-
-        }
+        renderAfterDatabaseChange();
 
       },
-
 
       error => {
 
@@ -920,9 +661,65 @@ function startPlayersListener() {
           error
         );
 
+        alert(
+          "Could not load players."
+        );
+
+      }
+
+    );
+
+
+  unsubscribeAttempts =
+    onSnapshot(
+
+      collectionGroup(
+        db,
+        "attempts"
+      ),
+
+      snapshot => {
+
+        attempts =
+          snapshot.docs.map(
+            attemptDoc => {
+
+              const data =
+                attemptDoc.data();
+
+              const parentPlayer =
+                attemptDoc.ref.parent.parent;
+
+              return {
+
+                id:
+                  attemptDoc.id,
+
+                playerId:
+                  data.playerId ||
+                  parentPlayer?.id ||
+                  "",
+
+                ...data
+
+              };
+
+            }
+          );
+
+        renderAfterDatabaseChange();
+
+      },
+
+      error => {
+
+        console.error(
+          "Attempt listener failed:",
+          error
+        );
 
         alert(
-          "The player database could not be loaded. Check Firebase permissions and your connection."
+          "Could not load measurement attempts. Check your Firestore rules."
         );
 
       }
@@ -942,30 +739,16 @@ onAuthStateChanged(
 
   async user => {
 
-
     if (!user) {
 
-
-      if (
-        unsubscribePlayers
-      ) {
-
-        unsubscribePlayers();
-
-        unsubscribePlayers =
-          null;
-
-      }
-
+      stopDataListeners();
 
       players = [];
+      attempts = [];
 
-      currentPlayerId =
-        null;
-
+      currentPlayerId = null;
 
       showLogin();
-
 
       return;
 
@@ -974,69 +757,50 @@ onAuthStateChanged(
 
     try {
 
-
       const approved =
-        await isApprovedStaff(
-          user
-        );
+        await isApprovedStaff(user);
 
 
       if (!approved) {
 
-
-        await signOut(
-          auth
-        );
-
+        await signOut(auth);
 
         showLogin(
-          "This account is not approved for Combine access."
+          "This account is not approved."
         );
-
 
         return;
 
       }
 
 
-      showApp(
-        user
-      );
+      showApp(user);
 
-
-      startPlayersListener();
-
+      startDataListeners();
 
     } catch (error) {
-
 
       console.error(
         "Staff verification failed:",
         error
       );
 
-
-      await signOut(
-        auth
-      ).catch(
-        () => {}
-      );
-
+      await signOut(auth)
+        .catch(() => {});
 
       showLogin(
-        "Could not verify staff access. Check Firestore rules and try again."
+        "Could not verify staff access."
       );
 
     }
 
   }
-
 );
 
 
 
 /* =========================================================
-   LOGIN
+   LOGIN EVENTS
 ========================================================= */
 
 loginForm.addEventListener(
@@ -1044,24 +808,17 @@ loginForm.addEventListener(
 
   async event => {
 
-
     event.preventDefault();
 
+    loginError.textContent = "";
 
-    loginError.textContent =
-      "";
-
-
-    loginButton.disabled =
-      true;
-
+    loginButton.disabled = true;
 
     loginButton.textContent =
       "SIGNING IN...";
 
 
     try {
-
 
       await signInWithEmailAndPassword(
 
@@ -1073,26 +830,16 @@ loginForm.addEventListener(
 
       );
 
-
-      loginPassword.value =
-        "";
-
+      loginPassword.value = "";
 
     } catch (error) {
 
-
       loginError.textContent =
-        authErrorMessage(
-          error
-        );
-
+        authErrorMessage(error);
 
     } finally {
 
-
-      loginButton.disabled =
-        false;
-
+      loginButton.disabled = false;
 
       loginButton.textContent =
         "SIGN IN";
@@ -1100,16 +847,13 @@ loginForm.addEventListener(
     }
 
   }
-
 );
-
 
 
 logoutButton.addEventListener(
   "click",
 
   async () => {
-
 
     cancelAllTimers();
 
@@ -1119,74 +863,10 @@ logoutButton.addEventListener(
 
     closeAddPlayerModal();
 
-
-    await signOut(
-      auth
-    );
+    await signOut(auth);
 
   }
-
 );
-
-
-
-/* =========================================================
-   FIRESTORE HELPERS
-========================================================= */
-
-function playerRef(
-  playerId
-) {
-
-  return doc(
-    db,
-    "players",
-    playerId
-  );
-
-}
-
-
-
-async function updatePlayerFields(
-  playerId,
-  fields
-) {
-
-  if (
-    !auth.currentUser
-  ) {
-
-    throw new Error(
-      "Not signed in"
-    );
-
-  }
-
-
-  await updateDoc(
-
-    playerRef(
-      playerId
-    ),
-
-    {
-
-      ...fields,
-
-
-      updatedAt:
-        serverTimestamp(),
-
-
-      updatedBy:
-        auth.currentUser.uid
-
-    }
-
-  );
-
-}
 
 
 
@@ -1198,70 +878,40 @@ function getCurrentPlayer() {
 
   return players.find(
     player =>
-      player.id ===
-      currentPlayerId
+      player.id === currentPlayerId
   );
 
 }
 
 
-
-function ageNumber(
-  ageGroup
-) {
+function ageNumber(ageGroup) {
 
   return (
-    parseInt(
-      ageGroup,
-      10
-    ) ||
+    parseInt(ageGroup, 10) ||
     999
   );
 
 }
 
 
+function escapeHTML(value) {
 
-function escapeHTML(
-  value
-) {
+  return String(value ?? "")
 
-  return String(
-    value ?? ""
-  )
+    .replaceAll("&", "&amp;")
 
-    .replaceAll(
-      "&",
-      "&amp;"
-    )
+    .replaceAll("<", "&lt;")
 
-    .replaceAll(
-      "<",
-      "&lt;"
-    )
+    .replaceAll(">", "&gt;")
 
-    .replaceAll(
-      ">",
-      "&gt;"
-    )
+    .replaceAll('"', "&quot;")
 
-    .replaceAll(
-      '"',
-      "&quot;"
-    )
-
-    .replaceAll(
-      "'",
-      "&#039;"
-    );
+    .replaceAll("'", "&#039;");
 
 }
 
 
-
-function isNumber(
-  value
-) {
+function isNumber(value) {
 
   return (
 
@@ -1278,38 +928,80 @@ function isNumber(
 }
 
 
-
-function formatValue(
-  value,
-  decimals = 1
-) {
+function attemptTime(attempt) {
 
   if (
-    !isNumber(value)
+    attempt.createdAt &&
+    typeof attempt.createdAt.toMillis === "function"
   ) {
 
-    return "—";
+    return attempt.createdAt.toMillis();
+
+  }
+
+  return Number(
+    attempt.clientCreatedAt || 0
+  );
+
+}
+
+
+function formatAttemptTime(attempt) {
+
+  let date;
+
+
+  if (
+    attempt.createdAt &&
+    typeof attempt.createdAt.toDate === "function"
+  ) {
+
+    date =
+      attempt.createdAt.toDate();
+
+  } else {
+
+    date =
+      new Date(
+        attempt.clientCreatedAt ||
+        Date.now()
+      );
 
   }
 
 
-  const number =
-    Number(value);
+  return date.toLocaleString(
+    [],
+    {
+      month: "numeric",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit"
+    }
+  );
+
+}
 
 
-  if (
-    Number.isInteger(
-      number
-    )
-  ) {
+function coachName(attempt) {
 
-    return number.toString();
+  const email =
+    attempt.enteredByEmail ||
+    "staff";
 
-  }
+  return email.includes("@")
+    ? email.split("@")[0]
+    : email;
+
+}
 
 
-  return number.toFixed(
-    decimals
+function playerRef(playerId) {
+
+  return doc(
+    db,
+    "players",
+    playerId
   );
 
 }
@@ -1317,63 +1009,54 @@ function formatValue(
 
 
 /* =========================================================
-   ATTEMPT CALCULATIONS
+   ATTEMPT HELPERS
 ========================================================= */
 
-function maxAttempt(
-  attempts
+function getActiveAttempts(
+  playerId,
+  eventKey
 ) {
 
-  if (
+  return attempts
 
-    !Array.isArray(
-      attempts
-    ) ||
+    .filter(
+      attempt =>
 
-    attempts.length === 0
+        attempt.playerId ===
+          playerId &&
 
-  ) {
+        attempt.eventKey ===
+          eventKey &&
 
-    return null;
+        attempt.active !== false &&
 
-  }
+        isNumber(
+          attempt.value
+        )
+    )
 
-
-  const values =
-    attempts
-
-      .map(Number)
-
-      .filter(
-        Number.isFinite
-      );
-
-
-  return values.length
-
-    ? Math.max(
-        ...values
-      )
-
-    : null;
+    .sort(
+      (a, b) =>
+        attemptTime(b) -
+        attemptTime(a)
+    );
 
 }
 
 
-
-function averageAttempt(
-  attempts
+function getBestAttemptValue(
+  playerId,
+  eventKey
 ) {
 
-  if (
+  const entries =
+    getActiveAttempts(
+      playerId,
+      eventKey
+    );
 
-    !Array.isArray(
-      attempts
-    ) ||
 
-    attempts.length === 0
-
-  ) {
+  if (!entries.length) {
 
     return null;
 
@@ -1381,18 +1064,40 @@ function averageAttempt(
 
 
   const values =
-    attempts
-
-      .map(Number)
-
-      .filter(
-        Number.isFinite
-      );
+    entries.map(
+      attempt =>
+        Number(attempt.value)
+    );
 
 
   if (
-    !values.length
+    EVENT_CONFIG[eventKey]
+      .direction === "low"
   ) {
+
+    return Math.min(...values);
+
+  }
+
+
+  return Math.max(...values);
+
+}
+
+
+function getAverageAttemptValue(
+  playerId,
+  eventKey
+) {
+
+  const entries =
+    getActiveAttempts(
+      playerId,
+      eventKey
+    );
+
+
+  if (!entries.length) {
 
     return null;
 
@@ -1400,19 +1105,93 @@ function averageAttempt(
 
 
   return (
-
-    values.reduce(
-
-      (sum, value) =>
-        sum + value,
-
+    entries.reduce(
+      (sum, attempt) =>
+        sum +
+        Number(attempt.value),
       0
-
     )
-
     /
+    entries.length
+  );
 
-    values.length
+}
+
+
+function formatEventValue(
+  eventKey,
+  value
+) {
+
+  if (!isNumber(value)) {
+
+    return "—";
+
+  }
+
+
+  return Number(value).toFixed(
+    EVENT_CONFIG[eventKey]
+      .decimals
+  );
+
+}
+
+
+
+/* =========================================================
+   ADD INDIVIDUAL ATTEMPT
+========================================================= */
+
+async function addMeasurementAttempt(
+  playerId,
+  eventKey,
+  value
+) {
+
+  if (!auth.currentUser) {
+
+    throw new Error(
+      "Not signed in"
+    );
+
+  }
+
+
+  await addDoc(
+
+    collection(
+      db,
+      "players",
+      playerId,
+      "attempts"
+    ),
+
+    {
+
+      playerId,
+
+      eventKey,
+
+      value:
+        Number(value),
+
+      active:
+        true,
+
+      enteredByUid:
+        auth.currentUser.uid,
+
+      enteredByEmail:
+        auth.currentUser.email || "",
+
+      createdAt:
+        serverTimestamp(),
+
+      clientCreatedAt:
+        Date.now()
+
+    }
 
   );
 
@@ -1420,155 +1199,74 @@ function averageAttempt(
 
 
 
-function bestTime(
-  attempts
-) {
-
-  if (
-
-    !Array.isArray(
-      attempts
-    ) ||
-
-    attempts.length === 0
-
-  ) {
-
-    return null;
-
-  }
-
-
-  const values =
-    attempts
-
-      .map(Number)
-
-      .filter(
-        Number.isFinite
-      );
-
-
-  return values.length
-
-    ? Math.min(
-        ...values
-      )
-
-    : null;
-
-}
-
-
-
 /* =========================================================
-   EVENT VALUE FOR RANKING
+   VOID ATTEMPT
+
+   The document stays in Firestore.
 ========================================================= */
 
-function getEventValue(
-  player,
-  eventKey
-) {
+async function voidAttempt(attempt) {
 
-  if (!player) {
+  if (!auth.currentUser) {
 
-    return null;
+    return;
 
   }
 
 
-  if (
+  await updateDoc(
 
-    eventKey ===
-      "pulldown" ||
+    doc(
+      db,
+      "players",
+      attempt.playerId,
+      "attempts",
+      attempt.id
+    ),
 
-    eventKey ===
-      "exitVelo"
+    {
 
-  ) {
+      active:
+        false,
 
-    return maxAttempt(
+      deletedAt:
+        serverTimestamp(),
 
-      player.results[
-        eventKey
-      ]
+      deletedByUid:
+        auth.currentUser.uid,
 
-    );
+      deletedByEmail:
+        auth.currentUser.email || ""
 
-  }
+    }
 
-
-  if (
-    eventKey ===
-    "fiveTenFive"
-  ) {
-
-    return bestTime(
-      player.results.fiveTenFive
-    );
-
-  }
-
-
-  if (
-    eventKey ===
-    "tenYard"
-  ) {
-
-    return bestTime(
-      player.results.tenYard
-    );
-
-  }
-
-
-  const value =
-    player.results[
-      eventKey
-    ];
-
-
-  return isNumber(
-    value
-  )
-
-    ? Number(value)
-
-    : null;
+  );
 
 }
 
 
 
 /* =========================================================
-   RANKING ENGINE
+   RANKING
 ========================================================= */
 
 function calculateRankings() {
 
-  const rankingData =
-    {};
+  const rankingData = {};
 
 
   players.forEach(
     player => {
 
+      rankingData[player.id] = {
 
-      rankingData[
-        player.id
-      ] = {
+        eventRanks: {},
 
-        eventRanks:
-          {},
+        completedEvents: 0,
 
-        completedEvents:
-          0,
+        combineScore: null,
 
-        combineScore:
-          null,
-
-        overallRank:
-          null
+        overallRank: null
 
       };
 
@@ -1578,22 +1276,17 @@ function calculateRankings() {
 
   const ageGroups =
     [
-
       ...new Set(
-
         players.map(
           player =>
             player.ageGroup
         )
-
       )
-
     ];
 
 
   ageGroups.forEach(
     ageGroup => {
-
 
       const agePlayers =
         players.filter(
@@ -1604,7 +1297,11 @@ function calculateRankings() {
 
 
       RANKED_EVENTS.forEach(
-        event => {
+        eventKey => {
+
+          const direction =
+            EVENT_CONFIG[eventKey]
+              .direction;
 
 
           const competitors =
@@ -1616,9 +1313,9 @@ function calculateRankings() {
                   player,
 
                   value:
-                    getEventValue(
-                      player,
-                      event.key
+                    getBestAttemptValue(
+                      player.id,
+                      eventKey
                     )
 
                 })
@@ -1635,37 +1332,28 @@ function calculateRankings() {
           competitors.sort(
             (a, b) =>
 
-              event.direction ===
-              "low"
+              direction === "low"
 
                 ? a.value -
                   b.value
 
                 : b.value -
                   a.value
-
           );
 
 
-          let previousValue =
-            null;
+          let previousValue = null;
 
-
-          let previousRank =
-            null;
+          let previousRank = null;
 
 
           competitors.forEach(
             (item, index) => {
 
-
               const rank =
 
-                previousValue !==
-                  null &&
-
-                item.value ===
-                  previousValue
+                previousValue !== null &&
+                item.value === previousValue
 
                   ? previousRank
 
@@ -1675,13 +1363,12 @@ function calculateRankings() {
               rankingData[
                 item.player.id
               ].eventRanks[
-                event.key
+                eventKey
               ] = rank;
 
 
               previousValue =
                 item.value;
-
 
               previousRank =
                 rank;
@@ -1695,7 +1382,6 @@ function calculateRankings() {
 
       agePlayers.forEach(
         player => {
-
 
           const ranks =
             Object.values(
@@ -1714,28 +1400,20 @@ function calculateRankings() {
 
 
           if (
-
             ranks.length ===
             TOTAL_RANKED_EVENTS
-
           ) {
-
 
             rankingData[
               player.id
             ].combineScore =
 
               ranks.reduce(
-
                 (sum, rank) =>
                   sum + rank,
-
                 0
-
               )
-
               /
-
               ranks.length;
 
           }
@@ -1749,40 +1427,29 @@ function calculateRankings() {
 
           .filter(
             player =>
-
               rankingData[
                 player.id
-              ].combineScore !==
-              null
+              ].combineScore !== null
           )
 
           .sort(
             (a, b) =>
-
               rankingData[
                 a.id
-              ].combineScore
-
-              -
-
+              ].combineScore -
               rankingData[
                 b.id
               ].combineScore
-
           );
 
 
-      let previousScore =
-        null;
+      let previousScore = null;
 
-
-      let previousRank =
-        null;
+      let previousRank = null;
 
 
       eligible.forEach(
         (player, index) => {
-
 
           const score =
             rankingData[
@@ -1792,9 +1459,7 @@ function calculateRankings() {
 
           const rank =
 
-            previousScore !==
-              null &&
-
+            previousScore !== null &&
             Math.abs(
               score -
               previousScore
@@ -1814,7 +1479,6 @@ function calculateRankings() {
           previousScore =
             score;
 
-
           previousRank =
             rank;
 
@@ -1832,7 +1496,7 @@ function calculateRankings() {
 
 
 /* =========================================================
-   PLAYER TABLE
+   MAIN PLAYER SORT
 ========================================================= */
 
 function sortPlayersForMain(
@@ -1840,29 +1504,15 @@ function sortPlayersForMain(
   rankings
 ) {
 
-  return [
-    ...playerList
-  ].sort(
+  return [...playerList].sort(
     (a, b) => {
 
-
       const ageDifference =
-
-        ageNumber(
-          a.ageGroup
-        )
-
-        -
-
-        ageNumber(
-          b.ageGroup
-        );
+        ageNumber(a.ageGroup) -
+        ageNumber(b.ageGroup);
 
 
-      if (
-        ageDifference !==
-        0
-      ) {
+      if (ageDifference !== 0) {
 
         return ageDifference;
 
@@ -1870,41 +1520,26 @@ function sortPlayersForMain(
 
 
       const rankA =
-        rankings[
-          a.id
-        ].overallRank;
-
+        rankings[a.id].overallRank;
 
       const rankB =
-        rankings[
-          b.id
-        ].overallRank;
+        rankings[b.id].overallRank;
 
 
       if (
-
         rankA !== null &&
-
         rankB !== null &&
-
         rankA !== rankB
-
       ) {
 
-        return (
-          rankA -
-          rankB
-        );
+        return rankA - rankB;
 
       }
 
 
       if (
-
         rankA !== null &&
-
         rankB === null
-
       ) {
 
         return -1;
@@ -1913,11 +1548,8 @@ function sortPlayersForMain(
 
 
       if (
-
         rankA === null &&
-
         rankB !== null
-
       ) {
 
         return 1;
@@ -1931,20 +1563,15 @@ function sortPlayersForMain(
         );
 
 
-      if (
-        lastCompare !==
-        0
-      ) {
+      if (lastCompare !== 0) {
 
         return lastCompare;
 
       }
 
 
-      return (
-        a.firstName.localeCompare(
-          b.firstName
-        )
+      return a.firstName.localeCompare(
+        b.firstName
       );
 
     }
@@ -1953,6 +1580,10 @@ function sortPlayersForMain(
 }
 
 
+
+/* =========================================================
+   PLAYERS TABLE
+========================================================= */
 
 function renderPlayersTable() {
 
@@ -1974,11 +1605,9 @@ function renderPlayersTable() {
     players.filter(
       player => {
 
-
         const normal =
           `${player.firstName} ${player.lastName}`
             .toLowerCase();
-
 
         const reverse =
           `${player.lastName} ${player.firstName}`
@@ -1986,23 +1615,13 @@ function renderPlayersTable() {
 
 
         const matchesSearch =
-
           !search ||
-
-          normal.includes(
-            search
-          ) ||
-
-          reverse.includes(
-            search
-          );
+          normal.includes(search) ||
+          reverse.includes(search);
 
 
         const matchesAge =
-
-          ageFilter ===
-            "ALL" ||
-
+          ageFilter === "ALL" ||
           player.ageGroup ===
             ageFilter;
 
@@ -2023,9 +1642,7 @@ function renderPlayersTable() {
     );
 
 
-  if (
-    !filtered.length
-  ) {
+  if (!filtered.length) {
 
     playersTableBody.innerHTML = `
 
@@ -2039,9 +1656,7 @@ function renderPlayersTable() {
         </td>
 
       </tr>
-
     `;
-
 
     return;
 
@@ -2049,88 +1664,76 @@ function renderPlayersTable() {
 
 
   playersTableBody.innerHTML =
-    filtered
+    filtered.map(
+      player => {
 
-      .map(
-        player => {
-
-
-          const ranking =
-            rankings[
-              player.id
-            ];
+        const ranking =
+          rankings[player.id];
 
 
-          const rankDisplay =
+        const rankDisplay =
+          ranking.overallRank !== null
 
-            ranking.overallRank !==
-            null
+            ? `#${ranking.overallRank}`
 
-              ? `#${ranking.overallRank}`
-
-              : "—";
+            : "—";
 
 
-          const scoreDisplay =
+        const scoreDisplay =
+          ranking.combineScore !== null
 
-            ranking.combineScore !==
-            null
+            ? ranking.combineScore
+                .toFixed(2)
 
-              ? ranking.combineScore
-                  .toFixed(2)
-
-              : `INCOMPLETE (${ranking.completedEvents}/${TOTAL_RANKED_EVENTS})`;
+            : `INCOMPLETE (${ranking.completedEvents}/${TOTAL_RANKED_EVENTS})`;
 
 
-          return `
+        return `
 
-            <tr>
+          <tr>
 
-              <td class="rank-cell">
-                ${rankDisplay}
-              </td>
+            <td class="rank-cell">
+              ${rankDisplay}
+            </td>
 
-              <td>
-                ${escapeHTML(
-                  player.firstName
-                )}
-              </td>
+            <td>
+              ${escapeHTML(
+                player.firstName
+              )}
+            </td>
 
-              <td>
-                ${escapeHTML(
-                  player.lastName
-                )}
-              </td>
+            <td>
+              ${escapeHTML(
+                player.lastName
+              )}
+            </td>
 
-              <td>
-                ${escapeHTML(
-                  player.ageGroup
-                )}
-              </td>
+            <td>
+              ${escapeHTML(
+                player.ageGroup
+              )}
+            </td>
 
-              <td class="score-cell">
-                ${scoreDisplay}
-              </td>
+            <td class="score-cell">
+              ${scoreDisplay}
+            </td>
 
-              <td>
+            <td>
 
-                <button
-                  class="test-button"
-                  data-player-id="${player.id}"
-                >
-                  TEST
-                </button>
+              <button
+                class="test-button"
+                data-player-id="${player.id}"
+              >
+                TEST
+              </button>
 
-              </td>
+            </td>
 
-            </tr>
+          </tr>
+        `;
 
-          `;
-
-        }
-      )
-
-      .join("");
+      }
+    ).join("");
 
 }
 
@@ -2140,26 +1743,19 @@ function renderPlayersTable() {
    RESULTS SORTING
 ========================================================= */
 
-function getResultsSortValue(
+function resultsSortValue(
   player,
   sortKey,
   rankings
 ) {
 
-  const ranking =
-    rankings[
-      player.id
-    ];
-
-
-  switch (
-    sortKey
-  ) {
-
+  switch (sortKey) {
 
     case "overallRank":
 
-      return ranking.overallRank;
+      return rankings[
+        player.id
+      ].overallRank;
 
 
     case "lastName":
@@ -2176,51 +1772,20 @@ function getResultsSortValue(
 
     case "combineScore":
 
-      return ranking.combineScore;
-
-
-    case "pulldown":
-
-      return maxAttempt(
-        player.results.pulldown
-      );
-
-
-    case "exitVelo":
-
-      return maxAttempt(
-        player.results.exitVelo
-      );
-
-
-    case "fiveTenFive":
-
-      return bestTime(
-        player.results.fiveTenFive
-      );
-
-
-    case "tenYard":
-
-      return bestTime(
-        player.results.tenYard
-      );
+      return rankings[
+        player.id
+      ].combineScore;
 
 
     case "squat":
 
-      return (
-        player.results
-          .squat
-          ?.status ||
-        null
-      );
+      return player.squat?.status || null;
 
 
     default:
 
-      return getEventValue(
-        player,
+      return getBestAttemptValue(
+        player.id,
         sortKey
       );
 
@@ -2229,29 +1794,14 @@ function getResultsSortValue(
 }
 
 
-
-function fallbackPlayerSort(
-  a,
-  b
-) {
+function fallbackPlayerSort(a, b) {
 
   const ageDifference =
-
-    ageNumber(
-      a.ageGroup
-    )
-
-    -
-
-    ageNumber(
-      b.ageGroup
-    );
+    ageNumber(a.ageGroup) -
+    ageNumber(b.ageGroup);
 
 
-  if (
-    ageDifference !==
-    0
-  ) {
+  if (ageDifference !== 0) {
 
     return ageDifference;
 
@@ -2264,24 +1814,18 @@ function fallbackPlayerSort(
     );
 
 
-  if (
-    lastCompare !==
-    0
-  ) {
+  if (lastCompare !== 0) {
 
     return lastCompare;
 
   }
 
 
-  return (
-    a.firstName.localeCompare(
-      b.firstName
-    )
+  return a.firstName.localeCompare(
+    b.firstName
   );
 
 }
-
 
 
 function sortResultsPlayers(
@@ -2295,14 +1839,11 @@ function sortResultsPlayers(
     ];
 
 
-  return [
-    ...playerList
-  ].sort(
+  return [...playerList].sort(
     (a, b) => {
 
-
       const valueA =
-        getResultsSortValue(
+        resultsSortValue(
           a,
           resultsSort.key,
           rankings
@@ -2310,7 +1851,7 @@ function sortResultsPlayers(
 
 
       const valueB =
-        getResultsSortValue(
+        resultsSortValue(
           b,
           resultsSort.key,
           rankings
@@ -2318,20 +1859,14 @@ function sortResultsPlayers(
 
 
       const missingA =
-
         valueA === null ||
-
         valueA === undefined ||
-
         valueA === "";
 
 
       const missingB =
-
         valueB === null ||
-
         valueB === undefined ||
-
         valueB === "";
 
 
@@ -2368,87 +1903,57 @@ function sortResultsPlayers(
       }
 
 
-      let comparison =
-        0;
+      let comparison = 0;
 
 
       if (
-        config.type ===
-        "text"
+        config.type === "text"
       ) {
-
 
         comparison =
-          String(
-            valueA
-          ).localeCompare(
-            String(
-              valueB
-            )
-          );
+          String(valueA)
+            .localeCompare(
+              String(valueB)
+            );
 
+      }
 
-      } else if (
-        config.type ===
-        "squat"
+      else if (
+        config.type === "squat"
       ) {
 
-
         const order = {
-
-          PASS:
-            1,
-
-          FAIL:
-            2
-
+          PASS: 1,
+          FAIL: 2
         };
 
 
         comparison =
+          (order[valueA] || 999) -
+          (order[valueB] || 999);
 
-          (
-            order[valueA] ||
-            999
-          )
+      }
 
-          -
-
-          (
-            order[valueB] ||
-            999
-          );
-
-
-      } else {
-
+      else {
 
         comparison =
-
-          Number(valueA)
-
-          -
-
+          Number(valueA) -
           Number(valueB);
 
       }
 
 
       if (
-
         resultsSort.direction ===
         "desc"
-
       ) {
 
-        comparison *=
-          -1;
+        comparison *= -1;
 
       }
 
 
-      return comparison ===
-        0
+      return comparison === 0
 
         ? fallbackPlayerSort(
             a,
@@ -2463,7 +1968,6 @@ function sortResultsPlayers(
 }
 
 
-
 function updateSortHeaders() {
 
   document
@@ -2472,7 +1976,6 @@ function updateSortHeaders() {
     )
     .forEach(
       button => {
-
 
         const indicator =
           button.querySelector(
@@ -2486,12 +1989,9 @@ function updateSortHeaders() {
 
 
         if (
-
           button.dataset.sort ===
           resultsSort.key
-
         ) {
-
 
           button.classList.add(
             "active-sort"
@@ -2499,7 +1999,6 @@ function updateSortHeaders() {
 
 
           indicator.textContent =
-
             resultsSort.direction ===
             "asc"
 
@@ -2507,9 +2006,7 @@ function updateSortHeaders() {
 
               : "↓";
 
-
         } else {
-
 
           indicator.textContent =
             "↕";
@@ -2522,6 +2019,10 @@ function updateSortHeaders() {
 }
 
 
+
+/* =========================================================
+   RESULTS TABLE
+========================================================= */
 
 function renderResultsTable() {
 
@@ -2543,42 +2044,31 @@ function renderResultsTable() {
     players.filter(
       player => {
 
-
         const normal =
           `${player.firstName} ${player.lastName}`
             .toLowerCase();
-
 
         const reverse =
           `${player.lastName} ${player.firstName}`
             .toLowerCase();
 
 
-        const matchesSearch =
-
-          !search ||
-
-          normal.includes(
-            search
-          ) ||
-
-          reverse.includes(
-            search
-          );
-
-
-        const matchesAge =
-
-          ageFilter ===
-            "ALL" ||
-
-          player.ageGroup ===
-            ageFilter;
-
-
         return (
-          matchesSearch &&
-          matchesAge
+
+          (
+            !search ||
+            normal.includes(search) ||
+            reverse.includes(search)
+          )
+
+          &&
+
+          (
+            ageFilter === "ALL" ||
+            player.ageGroup ===
+              ageFilter
+          )
+
         );
 
       }
@@ -2595,9 +2085,7 @@ function renderResultsTable() {
   updateSortHeaders();
 
 
-  if (
-    !filtered.length
-  ) {
+  if (!filtered.length) {
 
     resultsTableBody.innerHTML = `
 
@@ -2611,9 +2099,7 @@ function renderResultsTable() {
         </td>
 
       </tr>
-
     `;
-
 
     return;
 
@@ -2621,232 +2107,129 @@ function renderResultsTable() {
 
 
   resultsTableBody.innerHTML =
-    filtered
+    filtered.map(
+      player => {
 
-      .map(
-        player => {
-
-
-          const r =
-            player.results;
+        const ranking =
+          rankings[player.id];
 
 
-          const ranking =
-            rankings[
-              player.id
-            ];
+        const rank =
+          ranking.overallRank !== null
+
+            ? `#${ranking.overallRank}`
+
+            : "—";
 
 
-          const rank =
+        const score =
+          ranking.combineScore !== null
 
-            ranking.overallRank !==
-            null
+            ? ranking.combineScore
+                .toFixed(2)
 
-              ? `#${ranking.overallRank}`
-
-              : "—";
-
-
-          const score =
-
-            ranking.combineScore !==
-            null
-
-              ? ranking.combineScore
-                  .toFixed(2)
-
-              : "—";
+            : "—";
 
 
-          const pulldown =
-            maxAttempt(
-              r.pulldown
+        const value =
+          key =>
+            formatEventValue(
+
+              key,
+
+              getBestAttemptValue(
+                player.id,
+                key
+              )
+
             );
 
 
-          const exitVelo =
-            maxAttempt(
-              r.exitVelo
-            );
+        return `
 
+          <tr>
 
-          const fiveTenFive =
-            bestTime(
-              r.fiveTenFive
-            );
+            <td class="rank-cell">
+              ${rank}
+            </td>
 
+            <td>
+              ${escapeHTML(
+                `${player.lastName}, ${player.firstName}`
+              )}
+            </td>
 
-          const tenYard =
-            bestTime(
-              r.tenYard
-            );
+            <td>
+              ${escapeHTML(
+                player.ageGroup
+              )}
+            </td>
 
+            <td class="score-cell">
+              ${score}
+            </td>
 
-          const squat =
-            r.squat?.status ||
-            "—";
+            <td>${value("pulldown")}</td>
 
+            <td>${value("exitVelo")}</td>
 
-          return `
+            <td>${value("internalRotation")}</td>
 
-            <tr>
+            <td>${value("externalRotation")}</td>
 
-              <td class="rank-cell">
-                ${rank}
-              </td>
+            <td>${value("dynoInternal")}</td>
 
-              <td>
-                ${escapeHTML(
-                  `${player.lastName}, ${player.firstName}`
-                )}
-              </td>
+            <td>${value("dynoExternal")}</td>
 
-              <td>
-                ${escapeHTML(
-                  player.ageGroup
-                )}
-              </td>
+            <td>${value("gripLeft")}</td>
 
-              <td class="score-cell">
-                ${score}
-              </td>
+            <td>${value("gripRight")}</td>
 
-              <td>
-                ${formatValue(
-                  pulldown
-                )}
-              </td>
+            <td>${value("medBallLeft")}</td>
 
-              <td>
-                ${formatValue(
-                  exitVelo
-                )}
-              </td>
+            <td>${value("medBallRight")}</td>
 
-              <td>
-                ${formatValue(
-                  r.internalRotation
-                )}
-              </td>
+            <td>${value("fiveTenFive")}</td>
 
-              <td>
-                ${formatValue(
-                  r.externalRotation
-                )}
-              </td>
+            <td>${value("tenYard")}</td>
 
-              <td>
-                ${formatValue(
-                  r.dynoInternal
-                )}
-              </td>
+            <td>
+              ${escapeHTML(
+                player.squat?.status ||
+                "—"
+              )}
+            </td>
 
-              <td>
-                ${formatValue(
-                  r.dynoExternal
-                )}
-              </td>
+            <td>${value("broadJump")}</td>
 
-              <td>
-                ${formatValue(
-                  r.gripLeft
-                )}
-              </td>
+            <td>
 
-              <td>
-                ${formatValue(
-                  r.gripRight
-                )}
-              </td>
+              <button
+                class="test-button"
+                data-player-id="${player.id}"
+              >
+                TEST
+              </button>
 
-              <td>
-                ${formatValue(
-                  r.medBallLeft
-                )}
-              </td>
+            </td>
 
-              <td>
-                ${formatValue(
-                  r.medBallRight
-                )}
-              </td>
+          </tr>
+        `;
 
-              <td>
-
-                ${
-                  fiveTenFive !==
-                  null
-
-                    ? fiveTenFive
-                        .toFixed(2)
-
-                    : "—"
-                }
-
-              </td>
-
-              <td>
-
-                ${
-                  tenYard !==
-                  null
-
-                    ? tenYard
-                        .toFixed(2)
-
-                    : "—"
-                }
-
-              </td>
-
-              <td>
-                ${escapeHTML(
-                  squat
-                )}
-              </td>
-
-              <td>
-                ${formatValue(
-                  r.broadJump
-                )}
-              </td>
-
-              <td>
-
-                <button
-                  class="test-button"
-                  data-player-id="${player.id}"
-                >
-                  TEST
-                </button>
-
-              </td>
-
-            </tr>
-
-          `;
-
-        }
-      )
-
-      .join("");
+      }
+    ).join("");
 
 }
 
 
 
 /* =========================================================
-   VIEWS
+   VIEW NAVIGATION
 ========================================================= */
 
-function showView(
-  viewName
-) {
+function showView(viewName) {
 
-  if (
-    viewName !==
-    "test"
-  ) {
+  if (viewName !== "test") {
 
     cancelAllTimers();
 
@@ -2857,11 +2240,9 @@ function showView(
     "active-view"
   );
 
-
   resultsView.classList.remove(
     "active-view"
   );
-
 
   testView.classList.remove(
     "active-view"
@@ -2872,60 +2253,46 @@ function showView(
     "active"
   );
 
-
   resultsNavButton.classList.remove(
     "active"
   );
 
 
-  if (
-    viewName ===
-    "players"
-  ) {
-
+  if (viewName === "players") {
 
     playersView.classList.add(
       "active-view"
     );
 
-
     playersNavButton.classList.add(
       "active"
     );
 
-
     renderPlayersTable();
 
+  }
 
-  } else if (
-    viewName ===
-    "results"
-  ) {
 
+  if (viewName === "results") {
 
     resultsView.classList.add(
       "active-view"
     );
 
-
     resultsNavButton.classList.add(
       "active"
     );
 
-
     renderResultsTable();
 
+  }
 
-  } else if (
-    viewName ===
-    "test"
-  ) {
 
+  if (viewName === "test") {
 
     testView.classList.add(
       "active-view"
     );
-
 
     renderTestView();
 
@@ -2933,62 +2300,242 @@ function showView(
 
 
   window.scrollTo({
-
-    top:
-      0,
-
-    behavior:
-      "smooth"
-
+    top: 0,
+    behavior: "smooth"
   });
 
 }
 
 
-
-function openPlayerTest(
-  playerId
-) {
+function openPlayerTest(playerId) {
 
   cancelAllTimers();
-
 
   currentPlayerId =
     playerId;
 
 
-  const player =
-    getCurrentPlayer();
-
-
-  if (!player) {
+  if (!getCurrentPlayer()) {
 
     return;
 
   }
 
 
-  selectedSquatStatus =
-    player.results
-      .squat
-      ?.status ||
-    null;
-
-
   closePlayerDrawer();
 
-
-  showView(
-    "test"
-  );
+  showView("test");
 
 }
 
 
 
 /* =========================================================
-   TEST VIEW
+   RENDER ATTEMPT HISTORY
 ========================================================= */
+
+function renderAttemptHistory(
+  playerId,
+  eventKey,
+  containerId
+) {
+
+  const container =
+    document.getElementById(
+      containerId
+    );
+
+
+  const entries =
+    getActiveAttempts(
+      playerId,
+      eventKey
+    );
+
+
+  if (!entries.length) {
+
+    container.innerHTML = `
+
+      <div class="attempt-row">
+
+        <span class="attempt-meta">
+          No entries yet
+        </span>
+
+      </div>
+    `;
+
+    return;
+
+  }
+
+
+  const best =
+    getBestAttemptValue(
+      playerId,
+      eventKey
+    );
+
+
+  const config =
+    EVENT_CONFIG[eventKey];
+
+
+  container.innerHTML =
+    entries.map(
+      attempt => {
+
+        const attemptValue =
+          Number(attempt.value);
+
+
+        const isBest =
+          Math.abs(
+            attemptValue -
+            best
+          ) < 0.000001;
+
+
+        return `
+
+          <div
+            class="attempt-row
+            ${isBest ? "best-entry" : ""}"
+          >
+
+            <div class="attempt-info">
+
+              <div class="attempt-value-line">
+
+                <span class="attempt-value">
+
+                  ${attemptValue.toFixed(
+                    config.decimals
+                  )}
+
+                  ${escapeHTML(
+                    config.unit
+                  )}
+
+                </span>
+
+
+                ${
+                  isBest
+
+                    ? `
+                      <span class="best-badge">
+                        BEST
+                      </span>
+                    `
+
+                    : ""
+                }
+
+              </div>
+
+
+              <span class="attempt-meta">
+
+                ${escapeHTML(
+                  coachName(attempt)
+                )}
+
+                •
+
+                ${escapeHTML(
+                  formatAttemptTime(
+                    attempt
+                  )
+                )}
+
+              </span>
+
+            </div>
+
+
+            <button
+              class="delete-attempt"
+              data-attempt-id="${attempt.id}"
+            >
+              VOID
+            </button>
+
+          </div>
+        `;
+
+      }
+    ).join("");
+
+}
+
+
+
+/* =========================================================
+   RENDER TEST VIEW
+========================================================= */
+
+function renderMeasurementCard(
+  player,
+  eventKey,
+  bestElementId,
+  attemptsElementId,
+  averageElementId = null
+) {
+
+  const best =
+    getBestAttemptValue(
+      player.id,
+      eventKey
+    );
+
+
+  document.getElementById(
+    bestElementId
+  ).textContent =
+    best !== null
+
+      ? Number(best).toFixed(
+          EVENT_CONFIG[eventKey]
+            .decimals
+        )
+
+      : "—";
+
+
+  if (averageElementId) {
+
+    const average =
+      getAverageAttemptValue(
+        player.id,
+        eventKey
+      );
+
+
+    document.getElementById(
+      averageElementId
+    ).textContent =
+      average !== null
+
+        ? Number(average).toFixed(
+            EVENT_CONFIG[eventKey]
+              .decimals
+          )
+
+        : "—";
+
+  }
+
+
+  renderAttemptHistory(
+    player.id,
+    eventKey,
+    attemptsElementId
+  );
+
+}
+
 
 function renderTestView() {
 
@@ -3011,97 +2558,128 @@ function renderTestView() {
     player.ageGroup;
 
 
-  [
-
-    "internalRotation",
-
-    "externalRotation",
-
-    "dynoInternal",
-
-    "dynoExternal",
-
-    "gripLeft",
-
-    "gripRight",
-
-    "medBallLeft",
-
-    "medBallRight",
-
-    "broadJump"
-
-  ].forEach(
-    key => {
-
-
-      const element =
-        document.getElementById(
-          `${key}Value`
-        );
-
-
-      if (
-        element
-      ) {
-
-        element.textContent =
-          formatValue(
-            player.results[
-              key
-            ]
-          );
-
-      }
-
-    }
-  );
-
-
-  renderVelocityAttempts(
-
+  renderMeasurementCard(
+    player,
     "pulldown",
-
-    "pulldownMax",
-
-    "pulldownAverage",
-
-    "pulldownAttempts"
-
+    "pulldownBest",
+    "pulldownAttempts",
+    "pulldownAverage"
   );
 
 
-  renderVelocityAttempts(
-
+  renderMeasurementCard(
+    player,
     "exitVelo",
-
-    "exitVeloMax",
-
-    "exitVeloAverage",
-
-    "exitVeloAttempts"
-
+    "exitVeloBest",
+    "exitVeloAttempts",
+    "exitVeloAverage"
   );
 
 
-  selectedSquatStatus =
-    player.results
-      .squat
-      ?.status ||
-    null;
+  renderMeasurementCard(
+    player,
+    "internalRotation",
+    "internalRotationBest",
+    "internalRotationAttempts"
+  );
 
 
-  squatNotes.value =
-    player.results
-      .squat
-      ?.notes ||
-    "";
+  renderMeasurementCard(
+    player,
+    "externalRotation",
+    "externalRotationBest",
+    "externalRotationAttempts"
+  );
 
 
-  updateSquatButtons();
+  renderMeasurementCard(
+    player,
+    "dynoInternal",
+    "dynoInternalBest",
+    "dynoInternalAttempts"
+  );
 
 
-  renderAllTimerAttempts();
+  renderMeasurementCard(
+    player,
+    "dynoExternal",
+    "dynoExternalBest",
+    "dynoExternalAttempts"
+  );
+
+
+  renderMeasurementCard(
+    player,
+    "gripLeft",
+    "gripLeftBest",
+    "gripLeftAttempts"
+  );
+
+
+  renderMeasurementCard(
+    player,
+    "gripRight",
+    "gripRightBest",
+    "gripRightAttempts"
+  );
+
+
+  renderMeasurementCard(
+    player,
+    "medBallLeft",
+    "medBallLeftBest",
+    "medBallLeftAttempts"
+  );
+
+
+  renderMeasurementCard(
+    player,
+    "medBallRight",
+    "medBallRightBest",
+    "medBallRightAttempts"
+  );
+
+
+  renderMeasurementCard(
+    player,
+    "fiveTenFive",
+    "fiveTenFiveBest",
+    "fiveTenFiveAttempts"
+  );
+
+
+  renderMeasurementCard(
+    player,
+    "tenYard",
+    "tenYardBest",
+    "tenYardAttempts"
+  );
+
+
+  renderMeasurementCard(
+    player,
+    "broadJump",
+    "broadJumpBest",
+    "broadJumpAttempts"
+  );
+
+
+  updateSquatButtons(
+    player.squat?.status ||
+    null
+  );
+
+
+  if (
+    document.activeElement !==
+    squatNotes
+  ) {
+
+    squatNotes.value =
+      player.squat?.notes ||
+      "";
+
+  }
 
 }
 
@@ -3113,16 +2691,11 @@ function renderTestView() {
 
 function openAddPlayerModal() {
 
-  newPlayerFirstName.value =
-    "";
+  newPlayerFirstName.value = "";
 
+  newPlayerLastName.value = "";
 
-  newPlayerLastName.value =
-    "";
-
-
-  newPlayerAgeGroup.value =
-    "";
+  newPlayerAgeGroup.value = "";
 
 
   addPlayerModal.classList.add(
@@ -3131,16 +2704,12 @@ function openAddPlayerModal() {
 
 
   setTimeout(
-
     () =>
       newPlayerFirstName.focus(),
-
     50
-
   );
 
 }
-
 
 
 function closeAddPlayerModal() {
@@ -3152,47 +2721,34 @@ function closeAddPlayerModal() {
 }
 
 
-
 async function addPlayer() {
 
   const firstName =
-    newPlayerFirstName.value
-      .trim();
-
+    newPlayerFirstName.value.trim();
 
   const lastName =
-    newPlayerLastName.value
-      .trim();
-
+    newPlayerLastName.value.trim();
 
   const ageGroup =
     newPlayerAgeGroup.value;
 
 
   if (
-
     !firstName ||
-
     !lastName ||
-
     !ageGroup
-
   ) {
-
 
     alert(
       "Enter first name, last name, and age group."
     );
-
 
     return;
 
   }
 
 
-  savePlayerButton.disabled =
-    true;
-
+  savePlayerButton.disabled = true;
 
   savePlayerButton.textContent =
     "ADDING...";
@@ -3200,113 +2756,66 @@ async function addPlayer() {
 
   try {
 
-
     const newRef =
       doc(
-
         collection(
           db,
           "players"
         )
-
       );
-
-
-    const newPlayer = {
-
-      firstName,
-
-      lastName,
-
-      ageGroup,
-
-
-      results:
-        defaultResults(),
-
-
-      createdAt:
-        serverTimestamp(),
-
-
-      createdBy:
-        auth.currentUser.uid,
-
-
-      updatedAt:
-        serverTimestamp(),
-
-
-      updatedBy:
-        auth.currentUser.uid
-
-    };
 
 
     await setDoc(
       newRef,
-      newPlayer
+      {
+
+        firstName,
+
+        lastName,
+
+        ageGroup,
+
+        squat: {
+          status: null,
+          notes: ""
+        },
+
+        createdAt:
+          serverTimestamp(),
+
+        createdByUid:
+          auth.currentUser.uid,
+
+        createdByEmail:
+          auth.currentUser.email || ""
+
+      }
     );
-
-
-    if (
-
-      !players.some(
-        player =>
-          player.id ===
-          newRef.id
-      )
-
-    ) {
-
-
-      players.push(
-
-        normalizePlayer({
-
-          id:
-            newRef.id,
-
-          ...newPlayer
-
-        })
-
-      );
-
-    }
 
 
     closeAddPlayerModal();
 
 
-    renderEverything();
+    currentPlayerId =
+      newRef.id;
 
 
-    openPlayerTest(
-      newRef.id
-    );
-
+    showView("test");
 
   } catch (error) {
-
 
     console.error(
       "Could not add player:",
       error
     );
 
-
     alert(
-      "Player could not be added. Check your connection and Firebase permissions."
+      "Player could not be added."
     );
-
 
   } finally {
 
-
-    savePlayerButton.disabled =
-      false;
-
+    savePlayerButton.disabled = false;
 
     savePlayerButton.textContent =
       "ADD PLAYER";
@@ -3318,18 +2827,16 @@ async function addPlayer() {
 
 
 /* =========================================================
-   PLAYER DRAWER
+   DRAWER
 ========================================================= */
 
 function openPlayerDrawer() {
 
   renderPlayerDrawer();
 
-
   playerDrawer.classList.add(
     "open"
   );
-
 
   drawerBackdrop.classList.add(
     "show"
@@ -3338,20 +2845,17 @@ function openPlayerDrawer() {
 }
 
 
-
 function closePlayerDrawer() {
 
   playerDrawer.classList.remove(
     "open"
   );
 
-
   drawerBackdrop.classList.remove(
     "show"
   );
 
 }
-
 
 
 function renderPlayerDrawer() {
@@ -3363,16 +2867,14 @@ function renderPlayerDrawer() {
 
 
   const filtered =
-    players
+    [...players]
 
       .filter(
         player => {
 
-
           const normal =
             `${player.firstName} ${player.lastName}`
               .toLowerCase();
-
 
           const reverse =
             `${player.lastName} ${player.firstName}`
@@ -3380,17 +2882,9 @@ function renderPlayerDrawer() {
 
 
           return (
-
             !search ||
-
-            normal.includes(
-              search
-            ) ||
-
-            reverse.includes(
-              search
-            )
-
+            normal.includes(search) ||
+            reverse.includes(search)
           );
 
         }
@@ -3399,24 +2893,12 @@ function renderPlayerDrawer() {
       .sort(
         (a, b) => {
 
-
           const ageDifference =
-
-            ageNumber(
-              a.ageGroup
-            )
-
-            -
-
-            ageNumber(
-              b.ageGroup
-            );
+            ageNumber(a.ageGroup) -
+            ageNumber(b.ageGroup);
 
 
-          if (
-            ageDifference !==
-            0
-          ) {
+          if (ageDifference !== 0) {
 
             return ageDifference;
 
@@ -3429,62 +2911,47 @@ function renderPlayerDrawer() {
             );
 
 
-          if (
-            lastCompare !==
-            0
-          ) {
+          if (lastCompare !== 0) {
 
             return lastCompare;
 
           }
 
 
-          return (
-            a.firstName.localeCompare(
-              b.firstName
-            )
+          return a.firstName.localeCompare(
+            b.firstName
           );
 
         }
       );
 
 
-  if (
-    !filtered.length
-  ) {
-
+  if (!filtered.length) {
 
     drawerPlayerList.innerHTML = `
 
       <div class="empty-state">
         No players found.
       </div>
-
     `;
-
 
     return;
 
   }
 
 
-  let html =
-    "";
+  let html = "";
 
-
-  let currentAge =
-    null;
+  let currentAge = null;
 
 
   filtered.forEach(
     player => {
 
-
       if (
         player.ageGroup !==
         currentAge
       ) {
-
 
         currentAge =
           player.ageGroup;
@@ -3499,7 +2966,6 @@ function renderPlayerDrawer() {
             )}
 
           </div>
-
         `;
 
       }
@@ -3517,7 +2983,6 @@ function renderPlayerDrawer() {
           )}
 
         </button>
-
       `;
 
     }
@@ -3535,15 +3000,9 @@ function renderPlayerDrawer() {
    CALCULATOR
 ========================================================= */
 
-function openCalculator(
-  card
-) {
+function openAttemptCalculator(button) {
 
-  const player =
-    getCurrentPlayer();
-
-
-  if (!player) {
+  if (!getCurrentPlayer()) {
 
     return;
 
@@ -3553,91 +3012,18 @@ function openCalculator(
   activeCalculatorTest = {
 
     key:
-      card.dataset.test,
-
-    label:
-      card.dataset.label,
-
-    unit:
-      card.dataset.unit,
-
-    isAttempt:
-      false
-
-  };
-
-
-  const existing =
-    player.results[
-      activeCalculatorTest.key
-    ];
-
-
-  calculatorInput =
-
-    isNumber(
-      existing
-    )
-
-      ? String(
-          existing
-        )
-
-      : "";
-
-
-  calculatorLabel.textContent =
-    activeCalculatorTest.label;
-
-
-  calculatorUnit.textContent =
-    activeCalculatorTest.unit;
-
-
-  updateCalculatorDisplay();
-
-
-  numberModal.classList.add(
-    "show"
-  );
-
-}
-
-
-
-function openAttemptCalculator(
-  button
-) {
-
-  if (
-    !getCurrentPlayer()
-  ) {
-
-    return;
-
-  }
-
-
-  activeCalculatorTest = {
-
-    key:
-      button.dataset
-        .attemptTest,
+      button.dataset.attemptTest,
 
     label:
       button.dataset.label,
 
     unit:
-      button.dataset.unit,
-
-    isAttempt:
-      true
+      button.dataset.unit
 
   };
 
 
-  calculatorInput =
-    "";
+  calculatorInput = "";
 
 
   calculatorLabel.textContent =
@@ -3656,7 +3042,6 @@ function openAttemptCalculator(
   );
 
 }
-
 
 
 function closeCalculator() {
@@ -3665,16 +3050,11 @@ function closeCalculator() {
     "show"
   );
 
+  activeCalculatorTest = null;
 
-  activeCalculatorTest =
-    null;
-
-
-  calculatorInput =
-    "";
+  calculatorInput = "";
 
 }
-
 
 
 function updateCalculatorDisplay() {
@@ -3685,16 +3065,9 @@ function updateCalculatorDisplay() {
 }
 
 
+function calculatorKeyPress(key) {
 
-function calculatorKeyPress(
-  key
-) {
-
-  if (
-    key ===
-    "backspace"
-  ) {
-
+  if (key === "backspace") {
 
     calculatorInput =
       calculatorInput.slice(
@@ -3702,24 +3075,17 @@ function calculatorKeyPress(
         -1
       );
 
-
     updateCalculatorDisplay();
-
 
     return;
 
   }
 
 
-  if (
-    key === "."
-  ) {
-
+  if (key === ".") {
 
     if (
-      calculatorInput.includes(
-        "."
-      )
+      calculatorInput.includes(".")
     ) {
 
       return;
@@ -3728,9 +3094,7 @@ function calculatorKeyPress(
 
 
     calculatorInput =
-
-      calculatorInput ===
-      ""
+      calculatorInput === ""
 
         ? "0."
 
@@ -3739,15 +3103,13 @@ function calculatorKeyPress(
 
     updateCalculatorDisplay();
 
-
     return;
 
   }
 
 
   if (
-    calculatorInput.length >=
-    8
+    calculatorInput.length >= 8
   ) {
 
     return;
@@ -3756,25 +3118,17 @@ function calculatorKeyPress(
 
 
   calculatorInput =
-
-    calculatorInput ===
-    "0"
+    calculatorInput === "0"
 
       ? key
 
-      : calculatorInput +
-        key;
+      : calculatorInput + key;
 
 
   updateCalculatorDisplay();
 
 }
 
-
-
-/* =========================================================
-   SAVE RESULT
-========================================================= */
 
 async function saveCalculatorResult() {
 
@@ -3783,11 +3137,8 @@ async function saveCalculatorResult() {
 
 
   if (
-
     !player ||
-
     !activeCalculatorTest
-
   ) {
 
     return;
@@ -3796,23 +3147,14 @@ async function saveCalculatorResult() {
 
 
   if (
-
-    calculatorInput ===
-      "" ||
-
-    calculatorInput ===
-      "." ||
-
-    calculatorInput ===
-      "0."
-
+    calculatorInput === "" ||
+    calculatorInput === "." ||
+    calculatorInput === "0."
   ) {
-
 
     alert(
       "Enter a result before saving."
     );
-
 
     return;
 
@@ -3820,22 +3162,14 @@ async function saveCalculatorResult() {
 
 
   const value =
-    Number(
-      calculatorInput
-    );
+    Number(calculatorInput);
 
 
-  if (
-    !Number.isFinite(
-      value
-    )
-  ) {
-
+  if (!Number.isFinite(value)) {
 
     alert(
       "Enter a valid number."
     );
-
 
     return;
 
@@ -3845,358 +3179,43 @@ async function saveCalculatorResult() {
   calculatorSaveButton.disabled =
     true;
 
-
   calculatorSaveButton.textContent =
     "SAVING...";
 
 
   try {
 
+    await addMeasurementAttempt(
 
-    const key =
-      activeCalculatorTest.key;
+      player.id,
 
+      activeCalculatorTest.key,
 
-    if (
-      activeCalculatorTest
-        .isAttempt
-    ) {
+      value
 
-
-      const attempts =
-
-        Array.isArray(
-          player.results[
-            key
-          ]
-        )
-
-          ? [
-              ...player.results[
-                key
-              ]
-            ]
-
-          : [];
-
-
-      attempts.push(
-        value
-      );
-
-
-      await updatePlayerFields(
-
-        player.id,
-
-        {
-          [`results.${key}`]:
-            attempts
-        }
-
-      );
-
-
-      player.results[
-        key
-      ] = attempts;
-
-
-    } else {
-
-
-      await updatePlayerFields(
-
-        player.id,
-
-        {
-          [`results.${key}`]:
-            value
-        }
-
-      );
-
-
-      player.results[
-        key
-      ] = value;
-
-    }
+    );
 
 
     closeCalculator();
 
-
-    renderEverything();
-
-
-    renderTestView();
-
-
   } catch (error) {
 
-
     console.error(
-      "Could not save result:",
+      "Could not save entry:",
       error
     );
 
-
     alert(
-      "Result could not be saved. Check your connection."
+      "Entry could not be saved."
     );
 
-
   } finally {
-
 
     calculatorSaveButton.disabled =
       false;
 
-
     calculatorSaveButton.textContent =
-      "SAVE RESULT";
-
-  }
-
-}
-
-
-
-/* =========================================================
-   VELOCITY ATTEMPTS
-========================================================= */
-
-function renderVelocityAttempts(
-  resultKey,
-  maxElementId,
-  averageElementId,
-  attemptsElementId
-) {
-
-  const player =
-    getCurrentPlayer();
-
-
-  if (!player) {
-
-    return;
-
-  }
-
-
-  const attempts =
-
-    Array.isArray(
-      player.results[
-        resultKey
-      ]
-    )
-
-      ? player.results[
-          resultKey
-        ]
-
-      : [];
-
-
-  const max =
-    maxAttempt(
-      attempts
-    );
-
-
-  const average =
-    averageAttempt(
-      attempts
-    );
-
-
-  document.getElementById(
-    maxElementId
-  ).textContent =
-
-    max !== null
-
-      ? max.toFixed(1)
-
-      : "—";
-
-
-  document.getElementById(
-    averageElementId
-  ).textContent =
-
-    average !== null
-
-      ? average.toFixed(1)
-
-      : "—";
-
-
-  const container =
-    document.getElementById(
-      attemptsElementId
-    );
-
-
-  if (
-    !attempts.length
-  ) {
-
-
-    container.innerHTML = `
-
-      <div class="attempt-row">
-
-        <span>
-          No entries yet
-        </span>
-
-      </div>
-
-    `;
-
-
-    return;
-
-  }
-
-
-  const lastThree =
-    attempts
-
-      .map(
-        (value, index) => ({
-
-          value,
-
-          originalIndex:
-            index
-
-        })
-      )
-
-      .slice(-3)
-
-      .reverse();
-
-
-  container.innerHTML =
-    lastThree
-
-      .map(
-        item => `
-
-          <div class="attempt-row">
-
-            <span>
-              Attempt ${item.originalIndex + 1}
-            </span>
-
-            <strong>
-              ${Number(item.value).toFixed(1)} MPH
-            </strong>
-
-            <button
-              class="delete-velocity-attempt"
-              data-test="${resultKey}"
-              data-index="${item.originalIndex}"
-            >
-              DELETE
-            </button>
-
-          </div>
-
-        `
-      )
-
-      .join("");
-
-}
-
-
-
-async function deleteVelocityAttempt(
-  resultKey,
-  index
-) {
-
-  const player =
-    getCurrentPlayer();
-
-
-  if (
-
-    !player ||
-
-    !Array.isArray(
-      player.results[
-        resultKey
-      ]
-    )
-
-  ) {
-
-    return;
-
-  }
-
-
-  const attempts =
-    [
-
-      ...player.results[
-        resultKey
-      ]
-
-    ];
-
-
-  attempts.splice(
-    index,
-    1
-  );
-
-
-  try {
-
-
-    await updatePlayerFields(
-
-      player.id,
-
-      {
-        [`results.${resultKey}`]:
-          attempts
-      }
-
-    );
-
-
-    player.results[
-      resultKey
-    ] = attempts;
-
-
-    renderEverything();
-
-
-    renderTestView();
-
-
-  } catch (error) {
-
-
-    console.error(
-      "Could not delete attempt:",
-      error
-    );
-
-
-    alert(
-      "Attempt could not be deleted."
-    );
+      "SAVE ENTRY";
 
   }
 
@@ -4208,22 +3227,18 @@ async function deleteVelocityAttempt(
    SQUAT
 ========================================================= */
 
-function updateSquatButtons() {
+function updateSquatButtons(status) {
 
   squatPassButton.classList.remove(
     "pass-selected"
   );
-
 
   squatFailButton.classList.remove(
     "fail-selected"
   );
 
 
-  if (
-    selectedSquatStatus ===
-    "PASS"
-  ) {
+  if (status === "PASS") {
 
     squatPassButton.classList.add(
       "pass-selected"
@@ -4232,10 +3247,7 @@ function updateSquatButtons() {
   }
 
 
-  if (
-    selectedSquatStatus ===
-    "FAIL"
-  ) {
+  if (status === "FAIL") {
 
     squatFailButton.classList.add(
       "fail-selected"
@@ -4246,10 +3258,7 @@ function updateSquatButtons() {
 }
 
 
-
-async function saveSquatStatus(
-  status
-) {
+async function saveSquatStatus(status) {
 
   const player =
     getCurrentPlayer();
@@ -4264,49 +3273,87 @@ async function saveSquatStatus(
 
   try {
 
+    const logRef =
+      doc(
+        collection(
+          db,
+          "players",
+          player.id,
+          "squatEntries"
+        )
+      );
 
-    await updatePlayerFields(
 
-      player.id,
+    const batch =
+      writeBatch(db);
+
+
+    batch.update(
+
+      playerRef(
+        player.id
+      ),
 
       {
-        "results.squat.status":
-          status
+
+        "squat.status":
+          status,
+
+        updatedAt:
+          serverTimestamp(),
+
+        updatedByUid:
+          auth.currentUser.uid,
+
+        updatedByEmail:
+          auth.currentUser.email || ""
+
       }
 
     );
 
 
-    player.results
-      .squat
-      .status =
-        status;
+    batch.set(
 
+      logRef,
 
-    selectedSquatStatus =
-      status;
+      {
 
+        status,
 
-    updateSquatButtons();
+        notesSnapshot:
+          squatNotes.value,
 
+        enteredAt:
+          serverTimestamp(),
 
-    renderPlayersTable();
+        enteredByUid:
+          auth.currentUser.uid,
 
+        enteredByEmail:
+          auth.currentUser.email || ""
 
-    renderResultsTable();
+      }
 
-
-  } catch (error) {
-
-
-    console.error(
-      "Could not save squat status:",
-      error
     );
 
 
+    await batch.commit();
+
+
+    updateSquatButtons(
+      status
+    );
+
+  } catch (error) {
+
+    console.error(
+      "Could not save squat:",
+      error
+    );
+
     alert(
-      "Squat status could not be saved."
+      "Squat assessment could not be saved."
     );
 
   }
@@ -4314,16 +3361,10 @@ async function saveSquatStatus(
 }
 
 
-
-/* =========================================================
-   SQUAT NOTES AUTOSAVE
-========================================================= */
-
 function queueSquatNotesSave() {
 
   const playerId =
     currentPlayerId;
-
 
   const notes =
     squatNotes.value;
@@ -4339,7 +3380,6 @@ function queueSquatNotesSave() {
 
       async () => {
 
-
         if (!playerId) {
 
           return;
@@ -4349,42 +3389,34 @@ function queueSquatNotesSave() {
 
         try {
 
+          await updateDoc(
 
-          await updatePlayerFields(
-
-            playerId,
+            playerRef(
+              playerId
+            ),
 
             {
-              "results.squat.notes":
-                notes
+
+              "squat.notes":
+                notes,
+
+              updatedAt:
+                serverTimestamp(),
+
+              updatedByUid:
+                auth.currentUser.uid,
+
+              updatedByEmail:
+                auth.currentUser.email || ""
+
             }
 
           );
 
-
-          const player =
-            players.find(
-              item =>
-                item.id ===
-                playerId
-            );
-
-
-          if (player) {
-
-            player.results
-              .squat
-              .notes =
-                notes;
-
-          }
-
-
         } catch (error) {
 
-
           console.error(
-            "Could not save squat notes:",
+            "Could not save notes:",
             error
           );
 
@@ -4405,35 +3437,21 @@ function queueSquatNotesSave() {
 ========================================================= */
 
 function createTimer({
-
   displayElement,
-
   buttonElement,
-
-  attemptsElement,
-
-  bestElement,
-
-  resultKey
-
+  eventKey
 }) {
 
+  let running = false;
 
-  let running =
-    false;
+  let saving = false;
 
+  let startTime = null;
 
-  let startTime =
-    null;
-
-
-  let animationFrame =
-    null;
-
+  let animationFrame = null;
 
 
   function updateTimer() {
-
 
     if (!running) {
 
@@ -4443,15 +3461,10 @@ function createTimer({
 
 
     const elapsed =
-
       (
         performance.now() -
         startTime
-      )
-
-      /
-
-      1000;
+      ) / 1000;
 
 
     displayElement.textContent =
@@ -4466,13 +3479,16 @@ function createTimer({
   }
 
 
-
   function startTimer() {
 
+    if (saving) {
 
-    running =
-      true;
+      return;
 
+    }
+
+
+    running = true;
 
     startTime =
       performance.now();
@@ -4499,9 +3515,7 @@ function createTimer({
   }
 
 
-
   async function stopTimer() {
-
 
     if (!running) {
 
@@ -4511,15 +3525,10 @@ function createTimer({
 
 
     const elapsed =
-
       (
         performance.now() -
         startTime
-      )
-
-      /
-
-      1000;
+      ) / 1000;
 
 
     const finalTime =
@@ -4528,8 +3537,7 @@ function createTimer({
       );
 
 
-    running =
-      false;
+    running = false;
 
 
     cancelAnimationFrame(
@@ -4537,12 +3545,7 @@ function createTimer({
     );
 
 
-    animationFrame =
-      null;
-
-
-    buttonElement.textContent =
-      "START";
+    animationFrame = null;
 
 
     buttonElement.classList.remove(
@@ -4560,90 +3563,66 @@ function createTimer({
 
     if (!player) {
 
+      buttonElement.textContent =
+        "START";
+
       return;
 
     }
 
 
-    const attempts =
+    saving = true;
 
-      Array.isArray(
-        player.results[
-          resultKey
-        ]
-      )
+    buttonElement.disabled = true;
 
-        ? [
-            ...player.results[
-              resultKey
-            ]
-          ]
-
-        : [];
-
-
-    attempts.push(
-      finalTime
-    );
+    buttonElement.textContent =
+      "SAVING...";
 
 
     try {
 
-
-      await updatePlayerFields(
+      await addMeasurementAttempt(
 
         player.id,
 
-        {
-          [`results.${resultKey}`]:
-            attempts
-        }
+        eventKey,
+
+        finalTime
 
       );
-
-
-      player.results[
-        resultKey
-      ] = attempts;
-
-
-      renderTimerAttempts(
-
-        attemptsElement,
-
-        bestElement,
-
-        resultKey
-
-      );
-
-
-      renderPlayersTable();
-
-
-      renderResultsTable();
-
 
     } catch (error) {
 
-
       console.error(
-        "Could not save timed attempt:",
+        "Could not save timer:",
         error
       );
 
-
       alert(
-        "Timed attempt could not be saved."
+        "Timed result could not be saved."
       );
+
+    } finally {
+
+      saving = false;
+
+      buttonElement.disabled = false;
+
+      buttonElement.textContent =
+        "START";
 
     }
 
   }
 
 
-
   function toggleTimer() {
+
+    if (saving) {
+
+      return;
+
+    }
 
 
     if (running) {
@@ -4659,13 +3638,9 @@ function createTimer({
   }
 
 
-
   function cancel() {
 
-
-    if (
-      animationFrame
-    ) {
+    if (animationFrame) {
 
       cancelAnimationFrame(
         animationFrame
@@ -4674,20 +3649,21 @@ function createTimer({
     }
 
 
-    animationFrame =
-      null;
+    animationFrame = null;
+
+    running = false;
+
+    startTime = null;
 
 
-    running =
-      false;
+    if (!saving) {
 
+      buttonElement.disabled = false;
 
-    startTime =
-      null;
+      buttonElement.textContent =
+        "START";
 
-
-    buttonElement.textContent =
-      "START";
+    }
 
 
     buttonElement.classList.remove(
@@ -4701,274 +3677,18 @@ function createTimer({
   }
 
 
-
   buttonElement.addEventListener(
     "click",
     toggleTimer
   );
 
 
-
-  attemptsElement.addEventListener(
-    "click",
-
-    async event => {
-
-
-      const button =
-        event.target.closest(
-          ".delete-attempt"
-        );
-
-
-      if (!button) {
-
-        return;
-
-      }
-
-
-      const player =
-        getCurrentPlayer();
-
-
-      if (!player) {
-
-        return;
-
-      }
-
-
-      const index =
-        Number(
-          button.dataset.index
-        );
-
-
-      const attempts =
-        [
-
-          ...player.results[
-            resultKey
-          ]
-
-        ];
-
-
-      attempts.splice(
-        index,
-        1
-      );
-
-
-      try {
-
-
-        await updatePlayerFields(
-
-          player.id,
-
-          {
-            [`results.${resultKey}`]:
-              attempts
-          }
-
-        );
-
-
-        player.results[
-          resultKey
-        ] = attempts;
-
-
-        renderTimerAttempts(
-
-          attemptsElement,
-
-          bestElement,
-
-          resultKey
-
-        );
-
-
-        renderPlayersTable();
-
-
-        renderResultsTable();
-
-
-      } catch (error) {
-
-
-        console.error(
-          "Could not delete timed attempt:",
-          error
-        );
-
-
-        alert(
-          "Attempt could not be deleted."
-        );
-
-      }
-
-    }
-
-  );
-
-
   return {
-
     cancel
-
   };
 
 }
 
-
-
-/* =========================================================
-   TIMER ATTEMPT DISPLAY
-========================================================= */
-
-function renderTimerAttempts(
-  container,
-  bestElement,
-  resultKey
-) {
-
-  const player =
-    getCurrentPlayer();
-
-
-  if (!player) {
-
-
-    container.innerHTML =
-      "";
-
-
-    bestElement.textContent =
-      "—";
-
-
-    return;
-
-  }
-
-
-  const attempts =
-
-    Array.isArray(
-      player.results[
-        resultKey
-      ]
-    )
-
-      ? player.results[
-          resultKey
-        ]
-
-      : [];
-
-
-  const best =
-    bestTime(
-      attempts
-    );
-
-
-  bestElement.textContent =
-
-    best !== null
-
-      ? `${best.toFixed(2)}s`
-
-      : "—";
-
-
-  if (
-    !attempts.length
-  ) {
-
-
-    container.innerHTML = `
-
-      <div class="attempt-row">
-
-        <span>
-          No attempts yet
-        </span>
-
-      </div>
-
-    `;
-
-
-    return;
-
-  }
-
-
-  container.innerHTML =
-    attempts
-
-      .map(
-        (attempt, index) => {
-
-
-          const isBest =
-
-            best !== null &&
-
-            Number(attempt) ===
-            Number(best);
-
-
-          return `
-
-            <div class="attempt-row">
-
-              <span>
-
-                Attempt ${index + 1}
-
-                ${
-                  isBest
-                    ? " • BEST"
-                    : ""
-                }
-
-              </span>
-
-              <strong>
-                ${Number(attempt).toFixed(2)}s
-              </strong>
-
-              <button
-                class="delete-attempt"
-                data-index="${index}"
-              >
-                DELETE
-              </button>
-
-            </div>
-
-          `;
-
-        }
-      )
-
-      .join("");
-
-}
-
-
-
-/* =========================================================
-   CREATE TIMERS
-========================================================= */
 
 const fiveTenFiveController =
   createTimer({
@@ -4983,21 +3703,10 @@ const fiveTenFiveController =
         "fiveTenFiveStartButton"
       ),
 
-    attemptsElement:
-      document.getElementById(
-        "fiveTenFiveAttempts"
-      ),
-
-    bestElement:
-      document.getElementById(
-        "fiveTenFiveBest"
-      ),
-
-    resultKey:
+    eventKey:
       "fiveTenFive"
 
   });
-
 
 
 const tenYardController =
@@ -5013,31 +3722,16 @@ const tenYardController =
         "tenYardStartButton"
       ),
 
-    attemptsElement:
-      document.getElementById(
-        "tenYardAttempts"
-      ),
-
-    bestElement:
-      document.getElementById(
-        "tenYardBest"
-      ),
-
-    resultKey:
+    eventKey:
       "tenYard"
 
   });
 
 
-
 timerControllers = [
-
   fiveTenFiveController,
-
   tenYardController
-
 ];
-
 
 
 function cancelAllTimers() {
@@ -5051,36 +3745,17 @@ function cancelAllTimers() {
 
 
 
-function renderAllTimerAttempts() {
+/* =========================================================
+   RENDER EVERYTHING
+========================================================= */
 
-  renderTimerAttempts(
+function renderEverything() {
 
-    document.getElementById(
-      "fiveTenFiveAttempts"
-    ),
+  renderPlayersTable();
 
-    document.getElementById(
-      "fiveTenFiveBest"
-    ),
+  renderResultsTable();
 
-    "fiveTenFive"
-
-  );
-
-
-  renderTimerAttempts(
-
-    document.getElementById(
-      "tenYardAttempts"
-    ),
-
-    document.getElementById(
-      "tenYardBest"
-    ),
-
-    "tenYard"
-
-  );
+  renderPlayerDrawer();
 
 }
 
@@ -5092,50 +3767,35 @@ function renderAllTimerAttempts() {
 
 playersNavButton.addEventListener(
   "click",
-
   () =>
-    showView(
-      "players"
-    )
+    showView("players")
 );
-
 
 
 resultsNavButton.addEventListener(
   "click",
-
   () =>
-    showView(
-      "results"
-    )
+    showView("results")
 );
-
 
 
 mainResultsButton.addEventListener(
   "click",
-
   () =>
-    showView(
-      "results"
-    )
+    showView("results")
 );
-
 
 
 backToPlayersButton.addEventListener(
   "click",
-
   () =>
-    showView(
-      "players"
-    )
+    showView("players")
 );
 
 
 
 /* =========================================================
-   SEARCH / FILTER
+   SEARCH
 ========================================================= */
 
 playerSearch.addEventListener(
@@ -5164,7 +3824,7 @@ resultsAgeFilter.addEventListener(
 
 
 /* =========================================================
-   RESULTS SORT
+   SORT EVENTS
 ========================================================= */
 
 document
@@ -5174,12 +3834,9 @@ document
   .forEach(
     button => {
 
-
       button.addEventListener(
         "click",
-
         () => {
-
 
           const sortKey =
             button.dataset.sort;
@@ -5197,15 +3854,11 @@ document
 
 
           if (
-
             resultsSort.key ===
             sortKey
-
           ) {
 
-
             resultsSort.direction =
-
               resultsSort.direction ===
               "asc"
 
@@ -5213,9 +3866,7 @@ document
 
                 : "asc";
 
-
           } else {
-
 
             resultsSort.key =
               sortKey;
@@ -5232,24 +3883,20 @@ document
           renderResultsTable();
 
         }
-
       );
 
     }
-
   );
 
 
 
 /* =========================================================
-   TEST BUTTONS
+   PLAYER TEST BUTTONS
 ========================================================= */
 
 playersTableBody.addEventListener(
   "click",
-
   event => {
-
 
     const button =
       event.target.closest(
@@ -5257,10 +3904,7 @@ playersTableBody.addEventListener(
       );
 
 
-    if (
-      button
-    ) {
-
+    if (button) {
 
       openPlayerTest(
         button.dataset.playerId
@@ -5269,16 +3913,12 @@ playersTableBody.addEventListener(
     }
 
   }
-
 );
-
 
 
 resultsTableBody.addEventListener(
   "click",
-
   event => {
-
 
     const button =
       event.target.closest(
@@ -5286,10 +3926,7 @@ resultsTableBody.addEventListener(
       );
 
 
-    if (
-      button
-    ) {
-
+    if (button) {
 
       openPlayerTest(
         button.dataset.playerId
@@ -5298,7 +3935,6 @@ resultsTableBody.addEventListener(
     }
 
   }
-
 );
 
 
@@ -5327,22 +3963,18 @@ savePlayerButton.addEventListener(
 
 addPlayerModal.addEventListener(
   "click",
-
   event => {
-
 
     if (
       event.target ===
       addPlayerModal
     ) {
 
-
       closeAddPlayerModal();
 
     }
 
   }
-
 );
 
 
@@ -5377,9 +4009,7 @@ drawerSearch.addEventListener(
 
 drawerPlayerList.addEventListener(
   "click",
-
   event => {
-
 
     const button =
       event.target.closest(
@@ -5387,10 +4017,7 @@ drawerPlayerList.addEventListener(
       );
 
 
-    if (
-      button
-    ) {
-
+    if (button) {
 
       openPlayerTest(
         button.dataset.playerId
@@ -5399,38 +4026,13 @@ drawerPlayerList.addEventListener(
     }
 
   }
-
 );
 
 
 
 /* =========================================================
-   NUMBER TESTS
+   MEASUREMENT ENTRY BUTTONS
 ========================================================= */
-
-document
-  .querySelectorAll(
-    ".number-test"
-  )
-  .forEach(
-    card => {
-
-
-      card.addEventListener(
-        "click",
-
-        () =>
-          openCalculator(
-            card
-          )
-
-      );
-
-    }
-
-  );
-
-
 
 document
   .querySelectorAll(
@@ -5439,36 +4041,31 @@ document
   .forEach(
     button => {
 
-
       button.addEventListener(
         "click",
-
         () =>
           openAttemptCalculator(
             button
           )
-
       );
 
     }
-
   );
 
 
 
 /* =========================================================
-   DELETE VELOCITY
+   VOID ATTEMPT
 ========================================================= */
 
 document.addEventListener(
   "click",
 
-  event => {
-
+  async event => {
 
     const button =
       event.target.closest(
-        ".delete-velocity-attempt"
+        ".delete-attempt"
       );
 
 
@@ -5479,18 +4076,52 @@ document.addEventListener(
     }
 
 
-    deleteVelocityAttempt(
+    const attempt =
+      attempts.find(
+        item =>
+          item.id ===
+          button.dataset.attemptId
+      );
 
-      button.dataset.test,
 
-      Number(
-        button.dataset.index
-      )
+    if (!attempt) {
 
-    );
+      return;
+
+    }
+
+
+    button.disabled = true;
+
+    button.textContent =
+      "VOIDING...";
+
+
+    try {
+
+      await voidAttempt(
+        attempt
+      );
+
+    } catch (error) {
+
+      console.error(
+        "Could not void attempt:",
+        error
+      );
+
+      button.disabled = false;
+
+      button.textContent =
+        "VOID";
+
+      alert(
+        "Entry could not be voided."
+      );
+
+    }
 
   }
-
 );
 
 
@@ -5502,21 +4133,16 @@ document.addEventListener(
 calculatorButtons.forEach(
   button => {
 
-
     button.addEventListener(
       "click",
-
       () =>
         calculatorKeyPress(
           button.dataset.key
         )
-
     );
 
   }
-
 );
-
 
 
 calculatorSaveButton.addEventListener(
@@ -5525,32 +4151,26 @@ calculatorSaveButton.addEventListener(
 );
 
 
-
 closeCalculatorButton.addEventListener(
   "click",
   closeCalculator
 );
 
 
-
 numberModal.addEventListener(
   "click",
-
   event => {
-
 
     if (
       event.target ===
       numberModal
     ) {
 
-
       closeCalculator();
 
     }
 
   }
-
 );
 
 
@@ -5561,7 +4181,6 @@ numberModal.addEventListener(
 
 squatPassButton.addEventListener(
   "click",
-
   () =>
     saveSquatStatus(
       "PASS"
@@ -5569,16 +4188,13 @@ squatPassButton.addEventListener(
 );
 
 
-
 squatFailButton.addEventListener(
   "click",
-
   () =>
     saveSquatStatus(
       "FAIL"
     )
 );
-
 
 
 squatNotes.addEventListener(
@@ -5594,15 +4210,11 @@ squatNotes.addEventListener(
 
 document.addEventListener(
   "keydown",
-
   event => {
 
-
     if (
-      event.key ===
-      "Escape"
+      event.key === "Escape"
     ) {
-
 
       closeCalculator();
 
@@ -5610,20 +4222,15 @@ document.addEventListener(
 
       closePlayerDrawer();
 
-
       return;
 
     }
 
 
     if (
-
       !numberModal
         .classList
-        .contains(
-          "show"
-        )
-
+        .contains("show")
     ) {
 
       return;
@@ -5637,62 +4244,51 @@ document.addEventListener(
       )
     ) {
 
-
       calculatorKeyPress(
         event.key
       );
 
+      return;
 
-    } else if (
+    }
+
+
+    if (
       event.key === "."
     ) {
 
+      calculatorKeyPress(".");
 
-      calculatorKeyPress(
-        "."
-      );
+      return;
+
+    }
 
 
-    } else if (
+    if (
       event.key ===
       "Backspace"
     ) {
-
 
       calculatorKeyPress(
         "backspace"
       );
 
+      return;
 
-    } else if (
+    }
+
+
+    if (
       event.key ===
       "Enter"
     ) {
-
 
       saveCalculatorResult();
 
     }
 
   }
-
 );
-
-
-
-/* =========================================================
-   RENDER
-========================================================= */
-
-function renderEverything() {
-
-  renderPlayersTable();
-
-  renderResultsTable();
-
-  renderPlayerDrawer();
-
-}
 
 
 
