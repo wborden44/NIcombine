@@ -1,108 +1,44 @@
 /* =========================================================
    NINTH INNING COMBINE
-   COMPLETE APPLICATION LOGIC
-
-   CURRENT STORAGE:
-   Browser localStorage
-
-   IMPORTANT:
-   This is our prototype storage layer.
-   We will replace this with Firebase / Firestore once
-   the testing workflow is finalized.
-========================================================= */
-
-
-/* =========================================================
-   APP CONFIGURATION
 ========================================================= */
 
 const STORAGE_KEY = "niCombineData_v2";
 
 
-/*
-   These events count toward the Combine Score.
+/* =========================================================
+   RANKED EVENTS
 
-   direction:
-   "high" = higher number is better
-   "low"  = lower number is better
-*/
+   high = higher is better
+   low  = lower is better
+========================================================= */
 
 const RANKED_EVENTS = [
+  { key: "pulldown", direction: "high" },
+  { key: "exitVelo", direction: "high" },
 
-  {
-    key: "pulldown",
-    direction: "high"
-  },
+  { key: "internalRotation", direction: "high" },
+  { key: "externalRotation", direction: "high" },
 
-  {
-    key: "exitVelo",
-    direction: "high"
-  },
+  { key: "dynoInternal", direction: "high" },
+  { key: "dynoExternal", direction: "high" },
 
-  {
-    key: "internalRotation",
-    direction: "high"
-  },
+  { key: "gripLeft", direction: "high" },
+  { key: "gripRight", direction: "high" },
 
-  {
-    key: "externalRotation",
-    direction: "high"
-  },
+  { key: "medBallLeft", direction: "high" },
+  { key: "medBallRight", direction: "high" },
 
-  {
-    key: "dynoInternal",
-    direction: "high"
-  },
+  { key: "fiveTenFive", direction: "low" },
+  { key: "tenYard", direction: "low" },
 
-  {
-    key: "dynoExternal",
-    direction: "high"
-  },
-
-  {
-    key: "gripLeft",
-    direction: "high"
-  },
-
-  {
-    key: "gripRight",
-    direction: "high"
-  },
-
-  {
-    key: "medBallLeft",
-    direction: "high"
-  },
-
-  {
-    key: "medBallRight",
-    direction: "high"
-  },
-
-  {
-    key: "fiveTenFive",
-    direction: "low"
-  },
-
-  {
-    key: "tenYard",
-    direction: "low"
-  },
-
-  {
-    key: "broadJump",
-    direction: "high"
-  }
-
+  { key: "broadJump", direction: "high" }
 ];
 
-
-const TOTAL_RANKED_EVENTS =
-  RANKED_EVENTS.length;
+const TOTAL_RANKED_EVENTS = RANKED_EVENTS.length;
 
 
 /* =========================================================
-   RESULTS SORTING CONFIGURATION
+   RESULTS SORTING
 ========================================================= */
 
 const SORT_CONFIG = {
@@ -135,11 +71,6 @@ const SORT_CONFIG = {
   exitVelo: {
     type: "number",
     defaultDirection: "desc"
-  },
-
-  squat: {
-    type: "squat",
-    defaultDirection: "asc"
   },
 
   internalRotation: {
@@ -192,6 +123,11 @@ const SORT_CONFIG = {
     defaultDirection: "asc"
   },
 
+  squat: {
+    type: "squat",
+    defaultDirection: "asc"
+  },
+
   broadJump: {
     type: "number",
     defaultDirection: "desc"
@@ -200,11 +136,6 @@ const SORT_CONFIG = {
 };
 
 
-/*
-   Default Results page sorting:
-   Combine Score, best to worst.
-*/
-
 let resultsSort = {
   key: "combineScore",
   direction: "asc"
@@ -212,7 +143,7 @@ let resultsSort = {
 
 
 /* =========================================================
-   APP STATE
+   STATE
 ========================================================= */
 
 let players = loadPlayers();
@@ -229,65 +160,37 @@ let timerControllers = [];
 
 
 /* =========================================================
-   DEFAULT RESULT STRUCTURE
+   RESULT TEMPLATE
 ========================================================= */
 
 function defaultResults() {
 
   return {
 
-    /*
-       These store multiple attempts.
-    */
-
     pulldown: [],
-
     exitVelo: [],
 
-
-    /*
-       These currently store one value.
-    */
-
     internalRotation: null,
-
     externalRotation: null,
 
     dynoInternal: null,
-
     dynoExternal: null,
 
     gripLeft: null,
-
     gripRight: null,
 
     medBallLeft: null,
-
     medBallRight: null,
 
-    broadJump: null,
-
-
-    /*
-       Squat does NOT count toward Combine Score.
-    */
+    fiveTenFive: [],
+    tenYard: [],
 
     squat: {
-
       status: null,
-
       notes: ""
-
     },
 
-
-    /*
-       Timed events store every attempt.
-    */
-
-    fiveTenFive: [],
-
-    tenYard: []
+    broadJump: null
 
   };
 
@@ -302,57 +205,31 @@ function loadPlayers() {
 
   try {
 
-    /*
-       First try the new storage key.
-    */
-
     let stored =
-      localStorage.getItem(
-        STORAGE_KEY
-      );
-
-
-    /*
-       If you already created test players with the
-       previous version, try importing that data.
-    */
+      localStorage.getItem(STORAGE_KEY);
 
     if (!stored) {
-
       stored =
-        localStorage.getItem(
-          "niCombineData_v1"
-        );
-
+        localStorage.getItem("niCombineData_v1");
     }
-
 
     if (!stored) {
-
       return [];
-
     }
-
 
     const parsed =
       JSON.parse(stored);
 
-
     if (!Array.isArray(parsed)) {
-
       return [];
-
     }
 
-
-    return parsed.map(
-      normalizePlayer
-    );
+    return parsed.map(normalizePlayer);
 
   } catch (error) {
 
     console.error(
-      "Could not load players:",
+      "Could not load player data:",
       error
     );
 
@@ -368,17 +245,14 @@ function savePlayers() {
   try {
 
     localStorage.setItem(
-
       STORAGE_KEY,
-
       JSON.stringify(players)
-
     );
 
   } catch (error) {
 
     console.error(
-      "Could not save players:",
+      "Could not save player data:",
       error
     );
 
@@ -388,7 +262,7 @@ function savePlayers() {
 
 
 /* =========================================================
-   NORMALIZE / MIGRATE PLAYER DATA
+   NORMALIZE OLD DATA
 ========================================================= */
 
 function normalizePlayer(player) {
@@ -396,67 +270,35 @@ function normalizePlayer(player) {
   const defaults =
     defaultResults();
 
-
-  const oldResults =
+  const old =
     player.results || {};
 
 
-  /*
-     Old Pulldown and Exit Velo versions may have stored
-     one number instead of an array.
-
-     Convert those old values into arrays automatically.
-  */
-
-  const pulldownAttempts =
-    Array.isArray(oldResults.pulldown)
-
-      ? oldResults.pulldown
-          .map(Number)
-          .filter(Number.isFinite)
-
-      : isNumber(oldResults.pulldown)
-
-        ? [Number(oldResults.pulldown)]
-
+  const pulldown =
+    Array.isArray(old.pulldown)
+      ? old.pulldown.map(Number).filter(Number.isFinite)
+      : isNumber(old.pulldown)
+        ? [Number(old.pulldown)]
         : [];
 
 
-  const exitVeloAttempts =
-    Array.isArray(oldResults.exitVelo)
-
-      ? oldResults.exitVelo
-          .map(Number)
-          .filter(Number.isFinite)
-
-      : isNumber(oldResults.exitVelo)
-
-        ? [Number(oldResults.exitVelo)]
-
+  const exitVelo =
+    Array.isArray(old.exitVelo)
+      ? old.exitVelo.map(Number).filter(Number.isFinite)
+      : isNumber(old.exitVelo)
+        ? [Number(old.exitVelo)]
         : [];
 
 
-  const fiveTenFiveAttempts =
-    Array.isArray(
-      oldResults.fiveTenFive
-    )
-
-      ? oldResults.fiveTenFive
-          .map(Number)
-          .filter(Number.isFinite)
-
+  const fiveTenFive =
+    Array.isArray(old.fiveTenFive)
+      ? old.fiveTenFive.map(Number).filter(Number.isFinite)
       : [];
 
 
-  const tenYardAttempts =
-    Array.isArray(
-      oldResults.tenYard
-    )
-
-      ? oldResults.tenYard
-          .map(Number)
-          .filter(Number.isFinite)
-
+  const tenYard =
+    Array.isArray(old.tenYard)
+      ? old.tenYard.map(Number).filter(Number.isFinite)
       : [];
 
 
@@ -464,37 +306,20 @@ function normalizePlayer(player) {
 
     ...player,
 
-
     results: {
 
       ...defaults,
+      ...old,
 
-      ...oldResults,
-
-
-      pulldown:
-        pulldownAttempts,
-
-
-      exitVelo:
-        exitVeloAttempts,
-
+      pulldown,
+      exitVelo,
+      fiveTenFive,
+      tenYard,
 
       squat: {
-
         ...defaults.squat,
-
-        ...(oldResults.squat || {})
-
-      },
-
-
-      fiveTenFive:
-        fiveTenFiveAttempts,
-
-
-      tenYard:
-        tenYardAttempts
+        ...(old.squat || {})
+      }
 
     }
 
@@ -504,303 +329,148 @@ function normalizePlayer(player) {
 
 
 /* =========================================================
-   DOM REFERENCES — VIEWS
+   DOM REFERENCES
 ========================================================= */
 
 const playersView =
-  document.getElementById(
-    "playersView"
-  );
-
+  document.getElementById("playersView");
 
 const resultsView =
-  document.getElementById(
-    "resultsView"
-  );
-
+  document.getElementById("resultsView");
 
 const testView =
-  document.getElementById(
-    "testView"
-  );
+  document.getElementById("testView");
 
-
-/* =========================================================
-   DOM REFERENCES — NAVIGATION
-========================================================= */
 
 const playersNavButton =
-  document.getElementById(
-    "playersNavButton"
-  );
-
+  document.getElementById("playersNavButton");
 
 const resultsNavButton =
-  document.getElementById(
-    "resultsNavButton"
-  );
-
+  document.getElementById("resultsNavButton");
 
 const mainResultsButton =
-  document.getElementById(
-    "mainResultsButton"
-  );
-
+  document.getElementById("mainResultsButton");
 
 const backToPlayersButton =
-  document.getElementById(
-    "backToPlayersButton"
-  );
+  document.getElementById("backToPlayersButton");
 
-
-/* =========================================================
-   DOM REFERENCES — TABLES
-========================================================= */
 
 const playersTableBody =
-  document.getElementById(
-    "playersTableBody"
-  );
-
+  document.getElementById("playersTableBody");
 
 const resultsTableBody =
-  document.getElementById(
-    "resultsTableBody"
-  );
+  document.getElementById("resultsTableBody");
 
-
-/* =========================================================
-   DOM REFERENCES — SEARCH / FILTER
-========================================================= */
 
 const playerSearch =
-  document.getElementById(
-    "playerSearch"
-  );
-
+  document.getElementById("playerSearch");
 
 const playerAgeFilter =
-  document.getElementById(
-    "playerAgeFilter"
-  );
-
+  document.getElementById("playerAgeFilter");
 
 const resultsSearch =
-  document.getElementById(
-    "resultsSearch"
-  );
-
+  document.getElementById("resultsSearch");
 
 const resultsAgeFilter =
-  document.getElementById(
-    "resultsAgeFilter"
-  );
+  document.getElementById("resultsAgeFilter");
 
-
-/* =========================================================
-   DOM REFERENCES — TEST PLAYER
-========================================================= */
 
 const testPlayerName =
-  document.getElementById(
-    "testPlayerName"
-  );
-
+  document.getElementById("testPlayerName");
 
 const testPlayerAge =
-  document.getElementById(
-    "testPlayerAge"
-  );
+  document.getElementById("testPlayerAge");
 
-
-/* =========================================================
-   DOM REFERENCES — ADD PLAYER
-========================================================= */
 
 const addPlayerButton =
-  document.getElementById(
-    "addPlayerButton"
-  );
-
+  document.getElementById("addPlayerButton");
 
 const addPlayerModal =
-  document.getElementById(
-    "addPlayerModal"
-  );
-
+  document.getElementById("addPlayerModal");
 
 const closeAddPlayerButton =
-  document.getElementById(
-    "closeAddPlayerButton"
-  );
-
+  document.getElementById("closeAddPlayerButton");
 
 const savePlayerButton =
-  document.getElementById(
-    "savePlayerButton"
-  );
-
+  document.getElementById("savePlayerButton");
 
 const newPlayerFirstName =
-  document.getElementById(
-    "newPlayerFirstName"
-  );
-
+  document.getElementById("newPlayerFirstName");
 
 const newPlayerLastName =
-  document.getElementById(
-    "newPlayerLastName"
-  );
-
+  document.getElementById("newPlayerLastName");
 
 const newPlayerAgeGroup =
-  document.getElementById(
-    "newPlayerAgeGroup"
-  );
+  document.getElementById("newPlayerAgeGroup");
 
-
-/* =========================================================
-   DOM REFERENCES — PLAYER DRAWER
-========================================================= */
 
 const indexButton =
-  document.getElementById(
-    "indexButton"
-  );
-
+  document.getElementById("indexButton");
 
 const playerDrawer =
-  document.getElementById(
-    "playerDrawer"
-  );
-
+  document.getElementById("playerDrawer");
 
 const drawerBackdrop =
-  document.getElementById(
-    "drawerBackdrop"
-  );
-
+  document.getElementById("drawerBackdrop");
 
 const closeDrawerButton =
-  document.getElementById(
-    "closeDrawerButton"
-  );
-
+  document.getElementById("closeDrawerButton");
 
 const drawerSearch =
-  document.getElementById(
-    "drawerSearch"
-  );
-
+  document.getElementById("drawerSearch");
 
 const drawerPlayerList =
-  document.getElementById(
-    "drawerPlayerList"
-  );
+  document.getElementById("drawerPlayerList");
 
-
-/* =========================================================
-   DOM REFERENCES — CALCULATOR
-========================================================= */
 
 const numberModal =
-  document.getElementById(
-    "numberModal"
-  );
-
+  document.getElementById("numberModal");
 
 const calculatorLabel =
-  document.getElementById(
-    "calculatorLabel"
-  );
-
+  document.getElementById("calculatorLabel");
 
 const calculatorValue =
-  document.getElementById(
-    "calculatorValue"
-  );
-
+  document.getElementById("calculatorValue");
 
 const calculatorUnit =
-  document.getElementById(
-    "calculatorUnit"
-  );
-
+  document.getElementById("calculatorUnit");
 
 const calculatorSaveButton =
-  document.getElementById(
-    "calculatorSaveButton"
-  );
-
+  document.getElementById("calculatorSaveButton");
 
 const closeCalculatorButton =
-  document.getElementById(
-    "closeCalculatorButton"
-  );
-
+  document.getElementById("closeCalculatorButton");
 
 const calculatorButtons =
-  document.querySelectorAll(
-    ".calculator-grid button"
-  );
+  document.querySelectorAll(".calculator-grid button");
 
-
-/* =========================================================
-   DOM REFERENCES — SQUAT
-========================================================= */
 
 const squatPassButton =
-  document.getElementById(
-    "squatPassButton"
-  );
-
+  document.getElementById("squatPassButton");
 
 const squatFailButton =
-  document.getElementById(
-    "squatFailButton"
-  );
-
+  document.getElementById("squatFailButton");
 
 const squatNotes =
-  document.getElementById(
-    "squatNotes"
-  );
-
-
-const saveSquatButton =
-  document.getElementById(
-    "saveSquatButton"
-  );
+  document.getElementById("squatNotes");
 
 
 /* =========================================================
-   GENERAL UTILITIES
+   UTILITIES
 ========================================================= */
 
 function generateId() {
 
   if (
-
     typeof crypto !== "undefined" &&
-
-    typeof crypto.randomUUID ===
-      "function"
-
+    typeof crypto.randomUUID === "function"
   ) {
-
     return crypto.randomUUID();
-
   }
 
-
   return (
-
     Date.now().toString(36) +
-
-    Math.random()
-      .toString(36)
-      .substring(2)
-
+    Math.random().toString(36).substring(2)
   );
 
 }
@@ -809,10 +479,7 @@ function generateId() {
 function getCurrentPlayer() {
 
   return players.find(
-
-    player =>
-      player.id === currentPlayerId
-
+    player => player.id === currentPlayerId
   );
 
 }
@@ -820,10 +487,7 @@ function getCurrentPlayer() {
 
 function ageNumber(ageGroup) {
 
-  return (
-    parseInt(ageGroup, 10) ||
-    999
-  );
+  return parseInt(ageGroup, 10) || 999;
 
 }
 
@@ -831,31 +495,11 @@ function ageNumber(ageGroup) {
 function escapeHTML(value) {
 
   return String(value ?? "")
-
-    .replaceAll(
-      "&",
-      "&amp;"
-    )
-
-    .replaceAll(
-      "<",
-      "&lt;"
-    )
-
-    .replaceAll(
-      ">",
-      "&gt;"
-    )
-
-    .replaceAll(
-      '"',
-      "&quot;"
-    )
-
-    .replaceAll(
-      "'",
-      "&#039;"
-    );
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 
 }
 
@@ -863,48 +507,28 @@ function escapeHTML(value) {
 function isNumber(value) {
 
   return (
-
     value !== null &&
-
     value !== "" &&
-
-    Number.isFinite(
-      Number(value)
-    )
-
+    Number.isFinite(Number(value))
   );
 
 }
 
 
-function formatValue(
-  value,
-  decimals = 1
-) {
+function formatValue(value, decimals = 1) {
 
   if (!isNumber(value)) {
-
     return "—";
-
   }
 
-
-  const numeric =
+  const number =
     Number(value);
 
-
-  if (
-    Number.isInteger(numeric)
-  ) {
-
-    return numeric.toString();
-
+  if (Number.isInteger(number)) {
+    return number.toString();
   }
 
-
-  return numeric.toFixed(
-    decimals
-  );
+  return number.toFixed(decimals);
 
 }
 
@@ -916,36 +540,22 @@ function formatValue(
 function maxAttempt(attempts) {
 
   if (
-
     !Array.isArray(attempts) ||
-
     attempts.length === 0
-
   ) {
-
     return null;
-
   }
 
-
-  const numbers =
+  const values =
     attempts
       .map(Number)
       .filter(Number.isFinite);
 
-
-  if (
-    numbers.length === 0
-  ) {
-
+  if (values.length === 0) {
     return null;
-
   }
 
-
-  return Math.max(
-    ...numbers
-  );
+  return Math.max(...values);
 
 }
 
@@ -953,48 +563,28 @@ function maxAttempt(attempts) {
 function averageAttempt(attempts) {
 
   if (
-
     !Array.isArray(attempts) ||
-
     attempts.length === 0
-
   ) {
-
     return null;
-
   }
 
-
-  const numbers =
+  const values =
     attempts
       .map(Number)
       .filter(Number.isFinite);
 
-
-  if (
-    numbers.length === 0
-  ) {
-
+  if (values.length === 0) {
     return null;
-
   }
 
-
   const total =
-    numbers.reduce(
-
-      (sum, value) =>
-        sum + value,
-
+    values.reduce(
+      (sum, value) => sum + value,
       0
-
     );
 
-
-  return (
-    total /
-    numbers.length
-  );
+  return total / values.length;
 
 }
 
@@ -1002,59 +592,36 @@ function averageAttempt(attempts) {
 function bestTime(attempts) {
 
   if (
-
     !Array.isArray(attempts) ||
-
     attempts.length === 0
-
   ) {
-
     return null;
-
   }
 
-
-  const numbers =
+  const values =
     attempts
       .map(Number)
       .filter(Number.isFinite);
 
-
-  if (
-    numbers.length === 0
-  ) {
-
+  if (values.length === 0) {
     return null;
-
   }
 
-
-  return Math.min(
-    ...numbers
-  );
+  return Math.min(...values);
 
 }
 
 
 /* =========================================================
-   GET PERFORMANCE VALUE FOR RANKING
+   EVENT VALUE USED FOR RANKING
 ========================================================= */
 
-function getEventValue(
-  player,
-  eventKey
-) {
+function getEventValue(player, eventKey) {
 
   if (!player) {
-
     return null;
-
   }
 
-
-  /*
-     Pulldown and Exit Velo rankings use MAX.
-  */
 
   if (
     eventKey === "pulldown" ||
@@ -1068,13 +635,7 @@ function getEventValue(
   }
 
 
-  /*
-     Timed events use fastest attempt.
-  */
-
-  if (
-    eventKey === "fiveTenFive"
-  ) {
+  if (eventKey === "fiveTenFive") {
 
     return bestTime(
       player.results.fiveTenFive
@@ -1083,9 +644,7 @@ function getEventValue(
   }
 
 
-  if (
-    eventKey === "tenYard"
-  ) {
+  if (eventKey === "tenYard") {
 
     return bestTime(
       player.results.tenYard
@@ -1094,44 +653,26 @@ function getEventValue(
   }
 
 
-  /*
-     All remaining events are single values.
-  */
-
   const value =
     player.results[eventKey];
 
 
   return isNumber(value)
-
     ? Number(value)
-
     : null;
 
 }
 
 
 /* =========================================================
-   COMBINE RANKING ENGINE
+   RANKING ENGINE
 
-   Formula:
+   Combine Score =
+   average event finish within age group.
 
-   1. Rank every athlete within his age group
-      for every event.
+   Lower score is better.
 
-   2. Add the athlete's event placements.
-
-   3. Divide by number of ranked events.
-
-   Example:
-
-   1 + 2 + 1 + 3 = 7
-
-   7 / 4 = 1.75 Combine Score
-
-   LOWER COMBINE SCORE = BETTER.
-
-   Squat is not included.
+   Squat does NOT count.
 ========================================================= */
 
 function calculateRankings() {
@@ -1156,271 +697,61 @@ function calculateRankings() {
   });
 
 
-  const ageGroups =
-    [
-
-      ...new Set(
-
-        players.map(
-          player =>
-            player.ageGroup
-        )
-
-      )
-
-    ];
+  const ageGroups = [
+    ...new Set(
+      players.map(player => player.ageGroup)
+    )
+  ];
 
 
-  ageGroups.forEach(
-    ageGroup => {
+  ageGroups.forEach(ageGroup => {
 
-
-      const agePlayers =
-        players.filter(
-
-          player =>
-            player.ageGroup ===
-            ageGroup
-
-        );
-
-
-      /* =====================================
-         RANK EACH INDIVIDUAL EVENT
-      ===================================== */
-
-      RANKED_EVENTS.forEach(
-        event => {
-
-
-          const competitors =
-            agePlayers
-
-              .map(player => ({
-
-                player,
-
-                value:
-                  getEventValue(
-                    player,
-                    event.key
-                  )
-
-              }))
-
-              .filter(
-                item =>
-                  isNumber(
-                    item.value
-                  )
-              );
-
-
-          competitors.sort(
-            (a, b) => {
-
-              if (
-                event.direction ===
-                "low"
-              ) {
-
-                return (
-                  a.value -
-                  b.value
-                );
-
-              }
-
-
-              return (
-                b.value -
-                a.value
-              );
-
-            }
-          );
-
-
-          /*
-             Competition ranking:
-
-             1st
-             2nd
-             2nd
-             4th
-          */
-
-          let previousValue = null;
-
-          let previousRank = null;
-
-
-          competitors.forEach(
-            (item, index) => {
-
-
-              let rank;
-
-
-              if (
-
-                previousValue !== null &&
-
-                item.value ===
-                  previousValue
-
-              ) {
-
-                rank =
-                  previousRank;
-
-              } else {
-
-                rank =
-                  index + 1;
-
-              }
-
-
-              rankingData[
-                item.player.id
-              ].eventRanks[
-                event.key
-              ] = rank;
-
-
-              previousValue =
-                item.value;
-
-
-              previousRank =
-                rank;
-
-            }
-          );
-
-        }
+    const agePlayers =
+      players.filter(
+        player => player.ageGroup === ageGroup
       );
 
 
-      /* =====================================
-         CALCULATE COMBINE SCORE
-      ===================================== */
+    RANKED_EVENTS.forEach(event => {
 
-      agePlayers.forEach(
-        player => {
-
-
-          const ranks =
-            Object.values(
-
-              rankingData[
-                player.id
-              ].eventRanks
-
-            );
-
-
-          rankingData[
-            player.id
-          ].completedEvents =
-            ranks.length;
-
-
-          /*
-             Athlete must complete every
-             ranked event before receiving
-             an official Combine Score.
-          */
-
-          if (
-
-            ranks.length ===
-            TOTAL_RANKED_EVENTS
-
-          ) {
-
-
-            const total =
-              ranks.reduce(
-
-                (sum, rank) =>
-                  sum + rank,
-
-                0
-
-              );
-
-
-            rankingData[
-              player.id
-            ].combineScore =
-              total /
-              ranks.length;
-
-          }
-
-        }
-      );
-
-
-      /* =====================================
-         OVERALL AGE-GROUP RANK
-      ===================================== */
-
-      const eligible =
+      const competitors =
         agePlayers
-
-          .filter(
-            player =>
-
-              rankingData[
-                player.id
-              ].combineScore !==
-              null
-          )
-
-          .sort(
-            (a, b) =>
-
-              rankingData[
-                a.id
-              ].combineScore -
-
-              rankingData[
-                b.id
-              ].combineScore
-
+          .map(player => ({
+            player,
+            value: getEventValue(
+              player,
+              event.key
+            )
+          }))
+          .filter(item =>
+            isNumber(item.value)
           );
 
 
-      let previousScore = null;
+      competitors.sort((a, b) => {
 
+        if (event.direction === "low") {
+          return a.value - b.value;
+        }
+
+        return b.value - a.value;
+
+      });
+
+
+      let previousValue = null;
       let previousRank = null;
 
 
-      eligible.forEach(
-        (player, index) => {
-
-
-          const score =
-            rankingData[
-              player.id
-            ].combineScore;
-
+      competitors.forEach(
+        (item, index) => {
 
           let rank;
 
 
           if (
-
-            previousScore !== null &&
-
-            Math.abs(
-              score -
-              previousScore
-            ) < 0.000001
-
+            previousValue !== null &&
+            item.value === previousValue
           ) {
 
             rank =
@@ -1435,14 +766,14 @@ function calculateRankings() {
 
 
           rankingData[
-            player.id
-          ].overallRank =
-            rank;
+            item.player.id
+          ].eventRanks[
+            event.key
+          ] = rank;
 
 
-          previousScore =
-            score;
-
+          previousValue =
+            item.value;
 
           previousRank =
             rank;
@@ -1450,8 +781,113 @@ function calculateRankings() {
         }
       );
 
-    }
-  );
+    });
+
+
+    agePlayers.forEach(player => {
+
+      const ranks =
+        Object.values(
+          rankingData[player.id].eventRanks
+        );
+
+
+      rankingData[
+        player.id
+      ].completedEvents =
+        ranks.length;
+
+
+      if (
+        ranks.length === TOTAL_RANKED_EVENTS
+      ) {
+
+        const total =
+          ranks.reduce(
+            (sum, rank) => sum + rank,
+            0
+          );
+
+
+        rankingData[
+          player.id
+        ].combineScore =
+          total / ranks.length;
+
+      }
+
+    });
+
+
+    const eligible =
+      agePlayers
+        .filter(
+          player =>
+            rankingData[
+              player.id
+            ].combineScore !== null
+        )
+        .sort(
+          (a, b) =>
+            rankingData[
+              a.id
+            ].combineScore -
+            rankingData[
+              b.id
+            ].combineScore
+        );
+
+
+    let previousScore = null;
+    let previousRank = null;
+
+
+    eligible.forEach(
+      (player, index) => {
+
+        const score =
+          rankingData[
+            player.id
+          ].combineScore;
+
+
+        let rank;
+
+
+        if (
+          previousScore !== null &&
+          Math.abs(
+            score - previousScore
+          ) < 0.000001
+        ) {
+
+          rank =
+            previousRank;
+
+        } else {
+
+          rank =
+            index + 1;
+
+        }
+
+
+        rankingData[
+          player.id
+        ].overallRank =
+          rank;
+
+
+        previousScore =
+          score;
+
+        previousRank =
+          rank;
+
+      }
+    );
+
+  });
 
 
   return rankingData;
@@ -1460,7 +896,7 @@ function calculateRankings() {
 
 
 /* =========================================================
-   DEFAULT PLAYER INDEX SORT
+   DEFAULT PLAYER SORT
 ========================================================= */
 
 function sortPlayersForMain(
@@ -1471,88 +907,49 @@ function sortPlayersForMain(
   return [...playerList].sort(
     (a, b) => {
 
-
-      /*
-         Age group first.
-      */
-
       const ageDifference =
         ageNumber(a.ageGroup) -
         ageNumber(b.ageGroup);
 
 
-      if (
-        ageDifference !== 0
-      ) {
-
+      if (ageDifference !== 0) {
         return ageDifference;
-
       }
 
-
-      /*
-         Ranked athletes first.
-      */
 
       const rankA =
-        rankings[
-          a.id
-        ].overallRank;
-
+        rankings[a.id].overallRank;
 
       const rankB =
-        rankings[
-          b.id
-        ].overallRank;
+        rankings[b.id].overallRank;
 
 
       if (
-
         rankA !== null &&
-
         rankB !== null &&
-
         rankA !== rankB
-
       ) {
 
-        return (
-          rankA -
-          rankB
-        );
+        return rankA - rankB;
 
       }
 
 
       if (
-
         rankA !== null &&
-
         rankB === null
-
       ) {
-
         return -1;
-
       }
 
 
       if (
-
         rankA === null &&
-
         rankB !== null
-
       ) {
-
         return 1;
-
       }
 
-
-      /*
-         Then last name.
-      */
 
       const lastCompare =
         a.lastName.localeCompare(
@@ -1560,19 +957,13 @@ function sortPlayersForMain(
         );
 
 
-      if (
-        lastCompare !== 0
-      ) {
-
+      if (lastCompare !== 0) {
         return lastCompare;
-
       }
 
 
-      return (
-        a.firstName.localeCompare(
-          b.firstName
-        )
+      return a.firstName.localeCompare(
+        b.firstName
       );
 
     }
@@ -1582,7 +973,7 @@ function sortPlayersForMain(
 
 
 /* =========================================================
-   MAIN PLAYERS TABLE
+   PLAYERS TABLE
 ========================================================= */
 
 function renderPlayersTable() {
@@ -1602,51 +993,31 @@ function renderPlayersTable() {
 
 
   let filtered =
-    players.filter(
-      player => {
+    players.filter(player => {
+
+      const normal =
+        `${player.firstName} ${player.lastName}`
+          .toLowerCase();
+
+      const reverse =
+        `${player.lastName} ${player.firstName}`
+          .toLowerCase();
 
 
-        const fullName =
-          `${player.firstName} ${player.lastName}`
-            .toLowerCase();
+      const matchesSearch =
+        !search ||
+        normal.includes(search) ||
+        reverse.includes(search);
 
 
-        const reverseName =
-          `${player.lastName} ${player.firstName}`
-            .toLowerCase();
+      const matchesAge =
+        ageFilter === "ALL" ||
+        player.ageGroup === ageFilter;
 
 
-        const matchesSearch =
+      return matchesSearch && matchesAge;
 
-          !search ||
-
-          fullName.includes(
-            search
-          ) ||
-
-          reverseName.includes(
-            search
-          );
-
-
-        const matchesAge =
-
-          ageFilter === "ALL" ||
-
-          player.ageGroup ===
-            ageFilter;
-
-
-        return (
-
-          matchesSearch &&
-
-          matchesAge
-
-        );
-
-      }
-    );
+    });
 
 
   filtered =
@@ -1656,23 +1027,14 @@ function renderPlayersTable() {
     );
 
 
-  if (
-    filtered.length === 0
-  ) {
+  if (filtered.length === 0) {
 
     playersTableBody.innerHTML = `
-
       <tr>
-
-        <td
-          colspan="6"
-          class="empty-state"
-        >
+        <td colspan="6" class="empty-state">
           No players found.
         </td>
-
       </tr>
-
     `;
 
     return;
@@ -1681,109 +1043,66 @@ function renderPlayersTable() {
 
 
   playersTableBody.innerHTML =
-    filtered
+    filtered.map(player => {
 
-      .map(
-        player => {
-
-
-          const ranking =
-            rankings[
-              player.id
-            ];
+      const ranking =
+        rankings[player.id];
 
 
-          const rankDisplay =
-
-            ranking.overallRank !==
-            null
-
-              ? `#${ranking.overallRank}`
-
-              : "—";
+      const rankDisplay =
+        ranking.overallRank !== null
+          ? `#${ranking.overallRank}`
+          : "—";
 
 
-          const scoreDisplay =
-
-            ranking.combineScore !==
-            null
-
-              ? ranking.combineScore
-                  .toFixed(2)
-
-              : `INCOMPLETE (${ranking.completedEvents}/${TOTAL_RANKED_EVENTS})`;
+      const scoreDisplay =
+        ranking.combineScore !== null
+          ? ranking.combineScore.toFixed(2)
+          : `INCOMPLETE (${ranking.completedEvents}/${TOTAL_RANKED_EVENTS})`;
 
 
-          return `
+      return `
+        <tr>
 
-            <tr>
+          <td class="rank-cell">
+            ${rankDisplay}
+          </td>
 
-              <td class="rank-cell">
+          <td>
+            ${escapeHTML(player.firstName)}
+          </td>
 
-                ${rankDisplay}
+          <td>
+            ${escapeHTML(player.lastName)}
+          </td>
 
-              </td>
+          <td>
+            ${escapeHTML(player.ageGroup)}
+          </td>
 
+          <td class="score-cell">
+            ${scoreDisplay}
+          </td>
 
-              <td>
+          <td>
+            <button
+              class="test-button"
+              data-player-id="${player.id}"
+            >
+              TEST
+            </button>
+          </td>
 
-                ${escapeHTML(
-                  player.firstName
-                )}
+        </tr>
+      `;
 
-              </td>
-
-
-              <td>
-
-                ${escapeHTML(
-                  player.lastName
-                )}
-
-              </td>
-
-
-              <td>
-
-                ${escapeHTML(
-                  player.ageGroup
-                )}
-
-              </td>
-
-
-              <td class="score-cell">
-
-                ${scoreDisplay}
-
-              </td>
-
-
-              <td>
-
-                <button
-                  class="test-button"
-                  data-player-id="${player.id}"
-                >
-                  TEST
-                </button>
-
-              </td>
-
-            </tr>
-
-          `;
-
-        }
-      )
-
-      .join("");
+    }).join("");
 
 }
 
 
 /* =========================================================
-   RESULTS SORT VALUE
+   RESULT SORT VALUES
 ========================================================= */
 
 function getResultsSortValue(
@@ -1798,73 +1117,35 @@ function getResultsSortValue(
 
   switch (sortKey) {
 
-
     case "overallRank":
-
       return ranking.overallRank;
 
-
     case "lastName":
-
-      return (
-        `${player.lastName} ${player.firstName}`
-      );
-
+      return `${player.lastName} ${player.firstName}`;
 
     case "ageGroup":
-
-      return ageNumber(
-        player.ageGroup
-      );
-
+      return ageNumber(player.ageGroup);
 
     case "combineScore":
-
       return ranking.combineScore;
 
-
     case "pulldown":
-
-      return maxAttempt(
-        player.results.pulldown
-      );
-
+      return maxAttempt(player.results.pulldown);
 
     case "exitVelo":
-
-      return maxAttempt(
-        player.results.exitVelo
-      );
-
-
-    case "squat":
-
-      return (
-        player.results.squat?.status ||
-        null
-      );
-
+      return maxAttempt(player.results.exitVelo);
 
     case "fiveTenFive":
-
-      return bestTime(
-        player.results.fiveTenFive
-      );
-
+      return bestTime(player.results.fiveTenFive);
 
     case "tenYard":
+      return bestTime(player.results.tenYard);
 
-      return bestTime(
-        player.results.tenYard
-      );
-
+    case "squat":
+      return player.results.squat?.status || null;
 
     default:
-
-      return getEventValue(
-        player,
-        sortKey
-      );
+      return getEventValue(player, sortKey);
 
   }
 
@@ -1872,8 +1153,38 @@ function getResultsSortValue(
 
 
 /* =========================================================
-   RESULTS SORTING
+   RESULTS SORT
 ========================================================= */
+
+function fallbackPlayerSort(a, b) {
+
+  const ageDifference =
+    ageNumber(a.ageGroup) -
+    ageNumber(b.ageGroup);
+
+
+  if (ageDifference !== 0) {
+    return ageDifference;
+  }
+
+
+  const lastCompare =
+    a.lastName.localeCompare(
+      b.lastName
+    );
+
+
+  if (lastCompare !== 0) {
+    return lastCompare;
+  }
+
+
+  return a.firstName.localeCompare(
+    b.firstName
+  );
+
+}
+
 
 function sortResultsPlayers(
   playerList,
@@ -1881,21 +1192,11 @@ function sortResultsPlayers(
 ) {
 
   const config =
-    SORT_CONFIG[
-      resultsSort.key
-    ];
-
-
-  if (!config) {
-
-    return playerList;
-
-  }
+    SORT_CONFIG[resultsSort.key];
 
 
   return [...playerList].sort(
     (a, b) => {
-
 
       const valueA =
         getResultsSortValue(
@@ -1925,97 +1226,44 @@ function sortResultsPlayers(
         valueB === "";
 
 
-      /*
-         Missing results always stay at bottom,
-         regardless of ascending / descending.
-      */
-
-      if (
-        missingA &&
-        !missingB
-      ) {
-
+      if (missingA && !missingB) {
         return 1;
-
       }
 
-
-      if (
-        !missingA &&
-        missingB
-      ) {
-
+      if (!missingA && missingB) {
         return -1;
-
       }
 
-
-      if (
-        missingA &&
-        missingB
-      ) {
-
-        return fallbackPlayerSort(
-          a,
-          b
-        );
-
+      if (missingA && missingB) {
+        return fallbackPlayerSort(a, b);
       }
 
 
       let comparison = 0;
 
 
-      if (
-        config.type === "text"
-      ) {
+      if (config.type === "text") {
 
         comparison =
-          String(valueA)
-            .localeCompare(
-              String(valueB)
-            );
+          String(valueA).localeCompare(
+            String(valueB)
+          );
 
       }
 
+      else if (config.type === "squat") {
 
-      else if (
-        config.type === "age"
-      ) {
-
-        comparison =
-          Number(valueA) -
-          Number(valueB);
-
-      }
-
-
-      else if (
-        config.type === "squat"
-      ) {
-
-        const squatOrder = {
+        const order = {
           PASS: 1,
           FAIL: 2
         };
 
 
         comparison =
-
-          (
-            squatOrder[valueA] ||
-            999
-          )
-
-          -
-
-          (
-            squatOrder[valueB] ||
-            999
-          );
+          (order[valueA] || 999) -
+          (order[valueB] || 999);
 
       }
-
 
       else {
 
@@ -2027,8 +1275,7 @@ function sortResultsPlayers(
 
 
       if (
-        resultsSort.direction ===
-        "desc"
+        resultsSort.direction === "desc"
       ) {
 
         comparison *= -1;
@@ -2036,20 +1283,8 @@ function sortResultsPlayers(
       }
 
 
-      /*
-         Tie breaker:
-         age group then last name.
-      */
-
-      if (
-        comparison === 0
-      ) {
-
-        return fallbackPlayerSort(
-          a,
-          b
-        );
-
+      if (comparison === 0) {
+        return fallbackPlayerSort(a, b);
       }
 
 
@@ -2061,114 +1296,50 @@ function sortResultsPlayers(
 }
 
 
-function fallbackPlayerSort(
-  a,
-  b
-) {
-
-  const ageDiff =
-
-    ageNumber(a.ageGroup) -
-
-    ageNumber(b.ageGroup);
-
-
-  if (
-    ageDiff !== 0
-  ) {
-
-    return ageDiff;
-
-  }
-
-
-  const lastCompare =
-    a.lastName.localeCompare(
-      b.lastName
-    );
-
-
-  if (
-    lastCompare !== 0
-  ) {
-
-    return lastCompare;
-
-  }
-
-
-  return (
-    a.firstName.localeCompare(
-      b.firstName
-    )
-  );
-
-}
-
-
 /* =========================================================
-   SORT HEADER VISUALS
+   SORT HEADER DISPLAY
 ========================================================= */
 
 function updateSortHeaders() {
 
   document
-    .querySelectorAll(
-      ".sort-header"
-    )
-    .forEach(
-      button => {
+    .querySelectorAll(".sort-header")
+    .forEach(button => {
+
+      const indicator =
+        button.querySelector(
+          ".sort-indicator"
+        );
 
 
-        const indicator =
-          button.querySelector(
-            ".sort-indicator"
-          );
+      button.classList.remove(
+        "active-sort"
+      );
 
 
-        button.classList.remove(
+      if (
+        button.dataset.sort ===
+        resultsSort.key
+      ) {
+
+        button.classList.add(
           "active-sort"
         );
 
 
-        if (
-          button.dataset.sort ===
-          resultsSort.key
-        ) {
+        indicator.textContent =
+          resultsSort.direction === "asc"
+            ? "↑"
+            : "↓";
 
-          button.classList.add(
-            "active-sort"
-          );
+      } else {
 
-
-          if (indicator) {
-
-            indicator.textContent =
-
-              resultsSort.direction ===
-              "asc"
-
-                ? "↑"
-
-                : "↓";
-
-          }
-
-        }
-
-        else {
-
-          if (indicator) {
-
-            indicator.textContent =
-              "↕";
-
-          }
-
-        }
+        indicator.textContent =
+          "↕";
 
       }
-    );
+
+    });
 
 }
 
@@ -2194,51 +1365,31 @@ function renderResultsTable() {
 
 
   let filtered =
-    players.filter(
-      player => {
+    players.filter(player => {
+
+      const normal =
+        `${player.firstName} ${player.lastName}`
+          .toLowerCase();
+
+      const reverse =
+        `${player.lastName} ${player.firstName}`
+          .toLowerCase();
 
 
-        const fullName =
-          `${player.firstName} ${player.lastName}`
-            .toLowerCase();
+      const matchesSearch =
+        !search ||
+        normal.includes(search) ||
+        reverse.includes(search);
 
 
-        const reverseName =
-          `${player.lastName} ${player.firstName}`
-            .toLowerCase();
+      const matchesAge =
+        ageFilter === "ALL" ||
+        player.ageGroup === ageFilter;
 
 
-        const matchesSearch =
+      return matchesSearch && matchesAge;
 
-          !search ||
-
-          fullName.includes(
-            search
-          ) ||
-
-          reverseName.includes(
-            search
-          );
-
-
-        const matchesAge =
-
-          ageFilter === "ALL" ||
-
-          player.ageGroup ===
-            ageFilter;
-
-
-        return (
-
-          matchesSearch &&
-
-          matchesAge
-
-        );
-
-      }
-    );
+    });
 
 
   filtered =
@@ -2251,23 +1402,14 @@ function renderResultsTable() {
   updateSortHeaders();
 
 
-  if (
-    filtered.length === 0
-  ) {
+  if (filtered.length === 0) {
 
     resultsTableBody.innerHTML = `
-
       <tr>
-
-        <td
-          colspan="19"
-          class="empty-state"
-        >
+        <td colspan="19" class="empty-state">
           No results found.
         </td>
-
       </tr>
-
     `;
 
     return;
@@ -2276,355 +1418,161 @@ function renderResultsTable() {
 
 
   resultsTableBody.innerHTML =
-    filtered
+    filtered.map(player => {
 
-      .map(
-        player => {
+      const r =
+        player.results;
 
+      const ranking =
+        rankings[player.id];
 
-          const r =
-            player.results;
 
+      const rank =
+        ranking.overallRank !== null
+          ? `#${ranking.overallRank}`
+          : "—";
 
-          const ranking =
-            rankings[
-              player.id
-            ];
 
+      const score =
+        ranking.combineScore !== null
+          ? ranking.combineScore.toFixed(2)
+          : "—";
 
-          const overallRank =
 
-            ranking.overallRank !==
-            null
+      const pulldown =
+        maxAttempt(r.pulldown);
 
-              ? `#${ranking.overallRank}`
+      const exitVelo =
+        maxAttempt(r.exitVelo);
 
-              : "—";
+      const fiveTenFive =
+        bestTime(r.fiveTenFive);
 
+      const tenYard =
+        bestTime(r.tenYard);
 
-          const combineScore =
+      const squat =
+        r.squat?.status || "—";
 
-            ranking.combineScore !==
-            null
 
-              ? ranking.combineScore
-                  .toFixed(2)
+      return `
+        <tr>
 
-              : "—";
+          <td class="rank-cell">
+            ${rank}
+          </td>
 
+          <td>
+            ${escapeHTML(
+              `${player.lastName}, ${player.firstName}`
+            )}
+          </td>
 
-          const pulldown =
-            maxAttempt(
-              r.pulldown
-            );
+          <td>
+            ${escapeHTML(player.ageGroup)}
+          </td>
 
+          <td class="score-cell">
+            ${score}
+          </td>
 
-          const exitVelo =
-            maxAttempt(
-              r.exitVelo
-            );
+          <td>${formatValue(pulldown)}</td>
+          <td>${formatValue(exitVelo)}</td>
 
+          <td>${formatValue(r.internalRotation)}</td>
+          <td>${formatValue(r.externalRotation)}</td>
 
-          const fiveTenFive =
-            bestTime(
-              r.fiveTenFive
-            );
+          <td>${formatValue(r.dynoInternal)}</td>
+          <td>${formatValue(r.dynoExternal)}</td>
 
+          <td>${formatValue(r.gripLeft)}</td>
+          <td>${formatValue(r.gripRight)}</td>
 
-          const tenYard =
-            bestTime(
-              r.tenYard
-            );
+          <td>${formatValue(r.medBallLeft)}</td>
+          <td>${formatValue(r.medBallRight)}</td>
 
+          <td>
+            ${
+              fiveTenFive !== null
+                ? fiveTenFive.toFixed(2)
+                : "—"
+            }
+          </td>
 
-          const squat =
-            r.squat?.status ||
-            "—";
+          <td>
+            ${
+              tenYard !== null
+                ? tenYard.toFixed(2)
+                : "—"
+            }
+          </td>
 
+          <td>${escapeHTML(squat)}</td>
 
-          return `
+          <td>${formatValue(r.broadJump)}</td>
 
-            <tr>
+          <td>
+            <button
+              class="test-button"
+              data-player-id="${player.id}"
+            >
+              TEST
+            </button>
+          </td>
 
+        </tr>
+      `;
 
-              <td class="rank-cell">
-
-                ${overallRank}
-
-              </td>
-
-
-              <td>
-
-                ${escapeHTML(
-                  `${player.lastName}, ${player.firstName}`
-                )}
-
-              </td>
-
-
-              <td>
-
-                ${escapeHTML(
-                  player.ageGroup
-                )}
-
-              </td>
-
-
-              <td class="score-cell">
-
-                ${combineScore}
-
-              </td>
-
-
-              <td>
-
-                ${formatValue(
-                  pulldown
-                )}
-
-              </td>
-
-
-              <td>
-
-                ${formatValue(
-                  exitVelo
-                )}
-
-              </td>
-
-
-              <td>
-
-                ${escapeHTML(
-                  squat
-                )}
-
-              </td>
-
-
-              <td>
-
-                ${formatValue(
-                  r.internalRotation
-                )}
-
-              </td>
-
-
-              <td>
-
-                ${formatValue(
-                  r.externalRotation
-                )}
-
-              </td>
-
-
-              <td>
-
-                ${formatValue(
-                  r.dynoInternal
-                )}
-
-              </td>
-
-
-              <td>
-
-                ${formatValue(
-                  r.dynoExternal
-                )}
-
-              </td>
-
-
-              <td>
-
-                ${formatValue(
-                  r.gripLeft
-                )}
-
-              </td>
-
-
-              <td>
-
-                ${formatValue(
-                  r.gripRight
-                )}
-
-              </td>
-
-
-              <td>
-
-                ${formatValue(
-                  r.medBallLeft
-                )}
-
-              </td>
-
-
-              <td>
-
-                ${formatValue(
-                  r.medBallRight
-                )}
-
-              </td>
-
-
-              <td>
-
-                ${
-                  fiveTenFive !== null
-
-                    ? fiveTenFive
-                        .toFixed(2)
-
-                    : "—"
-                }
-
-              </td>
-
-
-              <td>
-
-                ${
-                  tenYard !== null
-
-                    ? tenYard
-                        .toFixed(2)
-
-                    : "—"
-                }
-
-              </td>
-
-
-              <td>
-
-                ${formatValue(
-                  r.broadJump
-                )}
-
-              </td>
-
-
-              <td>
-
-                <button
-                  class="test-button"
-                  data-player-id="${player.id}"
-                >
-                  TEST
-                </button>
-
-              </td>
-
-
-            </tr>
-
-          `;
-
-        }
-      )
-
-      .join("");
+    }).join("");
 
 }
 
 
 /* =========================================================
-   VIEW NAVIGATION
+   NAVIGATION
 ========================================================= */
 
 function showView(viewName) {
 
-  if (
-    viewName !== "test"
-  ) {
-
+  if (viewName !== "test") {
     cancelAllTimers();
-
   }
 
 
-  playersView.classList.remove(
-    "active-view"
-  );
+  playersView.classList.remove("active-view");
+  resultsView.classList.remove("active-view");
+  testView.classList.remove("active-view");
 
 
-  resultsView.classList.remove(
-    "active-view"
-  );
+  playersNavButton.classList.remove("active");
+  resultsNavButton.classList.remove("active");
 
 
-  testView.classList.remove(
-    "active-view"
-  );
+  if (viewName === "players") {
 
+    playersView.classList.add("active-view");
 
-  playersNavButton.classList.remove(
-    "active"
-  );
-
-
-  resultsNavButton.classList.remove(
-    "active"
-  );
-
-
-  if (
-    viewName === "players"
-  ) {
-
-    playersView.classList.add(
-      "active-view"
-    );
-
-
-    playersNavButton.classList.add(
-      "active"
-    );
-
+    playersNavButton.classList.add("active");
 
     renderPlayersTable();
 
   }
 
 
-  if (
-    viewName === "results"
-  ) {
+  if (viewName === "results") {
 
-    resultsView.classList.add(
-      "active-view"
-    );
+    resultsView.classList.add("active-view");
 
-
-    resultsNavButton.classList.add(
-      "active"
-    );
-
+    resultsNavButton.classList.add("active");
 
     renderResultsTable();
 
   }
 
 
-  if (
-    viewName === "test"
-  ) {
+  if (viewName === "test") {
 
-    testView.classList.add(
-      "active-view"
-    );
-
+    testView.classList.add("active-view");
 
     renderTestView();
 
@@ -2632,26 +1580,16 @@ function showView(viewName) {
 
 
   window.scrollTo({
-
     top: 0,
-
     behavior: "smooth"
-
   });
 
 }
 
 
-/* =========================================================
-   OPEN PLAYER TEST PAGE
-========================================================= */
-
-function openPlayerTest(
-  playerId
-) {
+function openPlayerTest(playerId) {
 
   cancelAllTimers();
-
 
   currentPlayerId =
     playerId;
@@ -2662,29 +1600,23 @@ function openPlayerTest(
 
 
   if (!player) {
-
     return;
-
   }
 
 
   selectedSquatStatus =
-    player.results.squat?.status ||
-    null;
+    player.results.squat?.status || null;
 
 
   closePlayerDrawer();
 
-
-  showView(
-    "test"
-  );
+  showView("test");
 
 }
 
 
 /* =========================================================
-   RENDER TEST SCREEN
+   TEST VIEW
 ========================================================= */
 
 function renderTestView() {
@@ -2694,17 +1626,7 @@ function renderTestView() {
 
 
   if (!player) {
-
-    testPlayerName.textContent =
-      "Select Player";
-
-
-    testPlayerAge.textContent =
-      "";
-
-
     return;
-
   }
 
 
@@ -2716,26 +1638,18 @@ function renderTestView() {
     player.ageGroup;
 
 
-  /*
-     Single-value cards.
-  */
-
-  const numberFields = [
+  const singleValueFields = [
 
     "internalRotation",
-
     "externalRotation",
 
     "dynoInternal",
-
     "dynoExternal",
 
     "gripLeft",
-
     "gripRight",
 
     "medBallLeft",
-
     "medBallRight",
 
     "broadJump"
@@ -2743,22 +1657,15 @@ function renderTestView() {
   ];
 
 
-  numberFields.forEach(
-    key => {
+  singleValueFields.forEach(key => {
+
+    const element =
+      document.getElementById(
+        `${key}Value`
+      );
 
 
-      const element =
-        document.getElementById(
-          `${key}Value`
-        );
-
-
-      if (!element) {
-
-        return;
-
-      }
-
+    if (element) {
 
       element.textContent =
         formatValue(
@@ -2766,59 +1673,36 @@ function renderTestView() {
         );
 
     }
-  );
 
+  });
 
-  /*
-     Pulldown / Exit Velo.
-  */
 
   renderVelocityAttempts(
-
     "pulldown",
-
     "pulldownMax",
-
     "pulldownAverage",
-
     "pulldownAttempts"
-
   );
 
 
   renderVelocityAttempts(
-
     "exitVelo",
-
     "exitVeloMax",
-
     "exitVeloAverage",
-
     "exitVeloAttempts"
-
   );
 
-
-  /*
-     Squat.
-  */
 
   selectedSquatStatus =
-    player.results.squat?.status ||
-    null;
+    player.results.squat?.status || null;
 
 
   squatNotes.value =
-    player.results.squat?.notes ||
-    "";
+    player.results.squat?.notes || "";
 
 
   updateSquatButtons();
 
-
-  /*
-     Timers.
-  */
 
   renderAllTimerAttempts();
 
@@ -2831,30 +1715,16 @@ function renderTestView() {
 
 function openAddPlayerModal() {
 
-  newPlayerFirstName.value =
-    "";
+  newPlayerFirstName.value = "";
+  newPlayerLastName.value = "";
+  newPlayerAgeGroup.value = "";
 
 
-  newPlayerLastName.value =
-    "";
-
-
-  newPlayerAgeGroup.value =
-    "";
-
-
-  addPlayerModal.classList.add(
-    "show"
-  );
+  addPlayerModal.classList.add("show");
 
 
   setTimeout(
-    () => {
-
-      newPlayerFirstName.focus();
-
-    },
-
+    () => newPlayerFirstName.focus(),
     50
   );
 
@@ -2863,9 +1733,7 @@ function openAddPlayerModal() {
 
 function closeAddPlayerModal() {
 
-  addPlayerModal.classList.remove(
-    "show"
-  );
+  addPlayerModal.classList.remove("show");
 
 }
 
@@ -2873,31 +1741,23 @@ function closeAddPlayerModal() {
 function addPlayer() {
 
   const firstName =
-    newPlayerFirstName.value
-      .trim();
-
+    newPlayerFirstName.value.trim();
 
   const lastName =
-    newPlayerLastName.value
-      .trim();
-
+    newPlayerLastName.value.trim();
 
   const ageGroup =
     newPlayerAgeGroup.value;
 
 
   if (
-
     !firstName ||
-
     !lastName ||
-
     !ageGroup
-
   ) {
 
     alert(
-      "Enter the player's first name, last name, and age group."
+      "Enter first name, last name, and age group."
     );
 
     return;
@@ -2907,21 +1767,14 @@ function addPlayer() {
 
   const player = {
 
-    id:
-      generateId(),
-
+    id: generateId(),
 
     firstName,
-
     lastName,
-
     ageGroup,
 
-
     createdAt:
-      new Date()
-        .toISOString(),
-
+      new Date().toISOString(),
 
     results:
       defaultResults()
@@ -2929,58 +1782,39 @@ function addPlayer() {
   };
 
 
-  players.push(
-    player
-  );
-
+  players.push(player);
 
   savePlayers();
 
-
   closeAddPlayerModal();
-
 
   renderEverything();
 
-
-  openPlayerTest(
-    player.id
-  );
+  openPlayerTest(player.id);
 
 }
 
 
 /* =========================================================
-   PLAYER INDEX DRAWER
+   PLAYER DRAWER
 ========================================================= */
 
 function openPlayerDrawer() {
 
   renderPlayerDrawer();
 
+  playerDrawer.classList.add("open");
 
-  playerDrawer.classList.add(
-    "open"
-  );
-
-
-  drawerBackdrop.classList.add(
-    "show"
-  );
+  drawerBackdrop.classList.add("show");
 
 }
 
 
 function closePlayerDrawer() {
 
-  playerDrawer.classList.remove(
-    "open"
-  );
+  playerDrawer.classList.remove("open");
 
-
-  drawerBackdrop.classList.remove(
-    "show"
-  );
+  drawerBackdrop.classList.remove("show");
 
 }
 
@@ -2994,100 +1828,62 @@ function renderPlayerDrawer() {
 
 
   let filtered =
-    players.filter(
-      player => {
+    players.filter(player => {
 
+      const normal =
+        `${player.firstName} ${player.lastName}`
+          .toLowerCase();
 
-        const fullName =
-          `${player.firstName} ${player.lastName}`
-            .toLowerCase();
-
-
-        const reverseName =
-          `${player.lastName} ${player.firstName}`
-            .toLowerCase();
-
-
-        return (
-
-          !search ||
-
-          fullName.includes(
-            search
-          ) ||
-
-          reverseName.includes(
-            search
-          )
-
-        );
-
-      }
-    );
-
-
-  /*
-     Requested index order:
-
-     Age group first,
-     then last name.
-  */
-
-  filtered.sort(
-    (a, b) => {
-
-
-      const ageDifference =
-        ageNumber(a.ageGroup) -
-        ageNumber(b.ageGroup);
-
-
-      if (
-        ageDifference !== 0
-      ) {
-
-        return ageDifference;
-
-      }
-
-
-      const lastCompare =
-        a.lastName.localeCompare(
-          b.lastName
-        );
-
-
-      if (
-        lastCompare !== 0
-      ) {
-
-        return lastCompare;
-
-      }
+      const reverse =
+        `${player.lastName} ${player.firstName}`
+          .toLowerCase();
 
 
       return (
-        a.firstName.localeCompare(
-          b.firstName
-        )
+        !search ||
+        normal.includes(search) ||
+        reverse.includes(search)
       );
 
+    });
+
+
+  filtered.sort((a, b) => {
+
+    const ageDifference =
+      ageNumber(a.ageGroup) -
+      ageNumber(b.ageGroup);
+
+
+    if (ageDifference !== 0) {
+      return ageDifference;
     }
-  );
 
 
-  if (
-    filtered.length === 0
-  ) {
+    const lastCompare =
+      a.lastName.localeCompare(
+        b.lastName
+      );
+
+
+    if (lastCompare !== 0) {
+      return lastCompare;
+    }
+
+
+    return a.firstName.localeCompare(
+      b.firstName
+    );
+
+  });
+
+
+  if (filtered.length === 0) {
 
     drawerPlayerList.innerHTML = `
-
       <div class="empty-state">
-
         No players found.
-
       </div>
-
     `;
 
     return;
@@ -3096,55 +1892,38 @@ function renderPlayerDrawer() {
 
 
   let html = "";
-
   let currentAge = null;
 
 
-  filtered.forEach(
-    player => {
+  filtered.forEach(player => {
 
+    if (player.ageGroup !== currentAge) {
 
-      if (
-        player.ageGroup !==
-        currentAge
-      ) {
-
-        currentAge =
-          player.ageGroup;
-
-
-        html += `
-
-          <div class="drawer-age-heading">
-
-            ${escapeHTML(
-              currentAge
-            )}
-
-          </div>
-
-        `;
-
-      }
+      currentAge =
+        player.ageGroup;
 
 
       html += `
-
-        <button
-          class="drawer-player-button"
-          data-player-id="${player.id}"
-        >
-
-          ${escapeHTML(
-            `${player.lastName}, ${player.firstName}`
-          )}
-
-        </button>
-
+        <div class="drawer-age-heading">
+          ${escapeHTML(currentAge)}
+        </div>
       `;
 
     }
-  );
+
+
+    html += `
+      <button
+        class="drawer-player-button"
+        data-player-id="${player.id}"
+      >
+        ${escapeHTML(
+          `${player.lastName}, ${player.firstName}`
+        )}
+      </button>
+    `;
+
+  });
 
 
   drawerPlayerList.innerHTML =
@@ -3154,21 +1933,17 @@ function renderPlayerDrawer() {
 
 
 /* =========================================================
-   STANDARD NUMBER CALCULATOR
+   STANDARD CALCULATOR
 ========================================================= */
 
-function openCalculator(
-  card
-) {
+function openCalculator(card) {
 
   const player =
     getCurrentPlayer();
 
 
   if (!player) {
-
     return;
-
   }
 
 
@@ -3189,11 +1964,6 @@ function openCalculator(
   };
 
 
-  /*
-     For single-value tests, show the existing
-     number so it can be edited.
-  */
-
   const existing =
     player.results[
       activeCalculatorTest.key
@@ -3202,15 +1972,12 @@ function openCalculator(
 
   calculatorInput =
     isNumber(existing)
-
       ? String(existing)
-
       : "";
 
 
   calculatorLabel.textContent =
     activeCalculatorTest.label;
-
 
   calculatorUnit.textContent =
     activeCalculatorTest.unit;
@@ -3218,32 +1985,25 @@ function openCalculator(
 
   updateCalculatorDisplay();
 
-
-  numberModal.classList.add(
-    "show"
-  );
+  numberModal.classList.add("show");
 
 }
 
 
 /* =========================================================
-   ATTEMPT CALCULATOR
+   PULLDOWN / EXIT VELO CALCULATOR
 
-   Pulldown / Exit Velo always open BLANK.
+   Always starts blank.
 ========================================================= */
 
-function openAttemptCalculator(
-  button
-) {
+function openAttemptCalculator(button) {
 
   const player =
     getCurrentPlayer();
 
 
   if (!player) {
-
     return;
-
   }
 
 
@@ -3264,19 +2024,11 @@ function openAttemptCalculator(
   };
 
 
-  /*
-     This is intentional.
-
-     Every velocity entry starts blank.
-  */
-
-  calculatorInput =
-    "";
+  calculatorInput = "";
 
 
   calculatorLabel.textContent =
     activeCalculatorTest.label;
-
 
   calculatorUnit.textContent =
     activeCalculatorTest.unit;
@@ -3284,38 +2036,21 @@ function openAttemptCalculator(
 
   updateCalculatorDisplay();
 
-
-  numberModal.classList.add(
-    "show"
-  );
+  numberModal.classList.add("show");
 
 }
 
-
-/* =========================================================
-   CLOSE CALCULATOR
-========================================================= */
 
 function closeCalculator() {
 
-  numberModal.classList.remove(
-    "show"
-  );
+  numberModal.classList.remove("show");
 
+  activeCalculatorTest = null;
 
-  activeCalculatorTest =
-    null;
-
-
-  calculatorInput =
-    "";
+  calculatorInput = "";
 
 }
 
-
-/* =========================================================
-   CALCULATOR DISPLAY
-========================================================= */
 
 function updateCalculatorDisplay() {
 
@@ -3325,101 +2060,51 @@ function updateCalculatorDisplay() {
 }
 
 
-/* =========================================================
-   CALCULATOR KEYS
-========================================================= */
+function calculatorKeyPress(key) {
 
-function calculatorKeyPress(
-  key
-) {
-
-  /*
-     Backspace.
-  */
-
-  if (
-    key === "backspace"
-  ) {
+  if (key === "backspace") {
 
     calculatorInput =
-      calculatorInput.slice(
-        0,
-        -1
-      );
-
+      calculatorInput.slice(0, -1);
 
     updateCalculatorDisplay();
-
 
     return;
 
   }
 
 
-  /*
-     Decimal.
-  */
+  if (key === ".") {
 
-  if (
-    key === "."
-  ) {
-
-    if (
-      calculatorInput.includes(
-        "."
-      )
-    ) {
-
+    if (calculatorInput.includes(".")) {
       return;
-
     }
 
 
     calculatorInput =
-
       calculatorInput === ""
-
         ? "0."
-
         : `${calculatorInput}.`;
 
 
     updateCalculatorDisplay();
 
-
     return;
 
   }
 
 
-  /*
-     Prevent accidentally entering
-     absurdly long numbers.
-  */
-
-  if (
-    calculatorInput.length >= 8
-  ) {
-
+  if (calculatorInput.length >= 8) {
     return;
-
   }
 
 
-  /*
-     Avoid 00000072.
-  */
-
-  if (
-    calculatorInput === "0"
-  ) {
+  if (calculatorInput === "0") {
 
     calculatorInput =
       key;
 
-  }
-
-  else {
+  } else {
 
     calculatorInput +=
       key;
@@ -3432,10 +2117,6 @@ function calculatorKeyPress(
 }
 
 
-/* =========================================================
-   SAVE CALCULATOR RESULT
-========================================================= */
-
 function saveCalculatorResult() {
 
   const player =
@@ -3443,31 +2124,20 @@ function saveCalculatorResult() {
 
 
   if (
-
     !player ||
-
     !activeCalculatorTest
-
   ) {
-
     return;
-
   }
 
 
   if (
-
     calculatorInput === "" ||
-
     calculatorInput === "." ||
-
     calculatorInput === "0."
-
   ) {
 
-    alert(
-      "Enter a result before saving."
-    );
+    alert("Enter a result before saving.");
 
     return;
 
@@ -3475,63 +2145,32 @@ function saveCalculatorResult() {
 
 
   const value =
-    Number(
-      calculatorInput
-    );
+    Number(calculatorInput);
 
 
-  if (
-    !Number.isFinite(value)
-  ) {
+  if (!Number.isFinite(value)) {
 
-    alert(
-      "Enter a valid number."
-    );
+    alert("Enter a valid number.");
 
     return;
 
   }
 
 
-  /*
-     Pulldown / Exit Velo:
-     ADD another attempt.
-  */
-
-  if (
-    activeCalculatorTest.isAttempt
-  ) {
-
+  if (activeCalculatorTest.isAttempt) {
 
     const key =
       activeCalculatorTest.key;
 
 
-    if (
-      !Array.isArray(
-        player.results[key]
-      )
-    ) {
-
-      player.results[key] =
-        [];
-
+    if (!Array.isArray(player.results[key])) {
+      player.results[key] = [];
     }
 
 
-    player.results[key].push(
-      value
-    );
+    player.results[key].push(value);
 
-  }
-
-
-  /*
-     Other tests:
-     REPLACE the single value.
-  */
-
-  else {
+  } else {
 
     player.results[
       activeCalculatorTest.key
@@ -3542,12 +2181,9 @@ function saveCalculatorResult() {
 
   savePlayers();
 
-
   closeCalculator();
 
-
   renderEverything();
-
 
   renderTestView();
 
@@ -3555,7 +2191,7 @@ function saveCalculatorResult() {
 
 
 /* =========================================================
-   PULLDOWN / EXIT VELO DISPLAY
+   VELOCITY DISPLAY
 ========================================================= */
 
 function renderVelocityAttempts(
@@ -3570,9 +2206,7 @@ function renderVelocityAttempts(
 
 
   if (!player) {
-
     return;
-
   }
 
 
@@ -3580,34 +2214,31 @@ function renderVelocityAttempts(
     Array.isArray(
       player.results[resultKey]
     )
-
       ? player.results[resultKey]
-
       : [];
 
 
   const max =
-    maxAttempt(
-      attempts
-    );
-
+    maxAttempt(attempts);
 
   const average =
-    averageAttempt(
-      attempts
-    );
+    averageAttempt(attempts);
 
 
-  const maxElement =
-    document.getElementById(
-      maxElementId
-    );
+  document.getElementById(
+    maxElementId
+  ).textContent =
+    max !== null
+      ? max.toFixed(1)
+      : "—";
 
 
-  const averageElement =
-    document.getElementById(
-      averageElementId
-    );
+  document.getElementById(
+    averageElementId
+  ).textContent =
+    average !== null
+      ? average.toFixed(1)
+      : "—";
 
 
   const container =
@@ -3616,53 +2247,12 @@ function renderVelocityAttempts(
     );
 
 
-  if (maxElement) {
-
-    maxElement.textContent =
-
-      max !== null
-
-        ? max.toFixed(1)
-
-        : "—";
-
-  }
-
-
-  if (averageElement) {
-
-    averageElement.textContent =
-
-      average !== null
-
-        ? average.toFixed(1)
-
-        : "—";
-
-  }
-
-
-  if (!container) {
-
-    return;
-
-  }
-
-
-  if (
-    attempts.length === 0
-  ) {
+  if (attempts.length === 0) {
 
     container.innerHTML = `
-
       <div class="attempt-row">
-
-        <span>
-          No entries yet
-        </span>
-
+        <span>No entries yet</span>
       </div>
-
     `;
 
     return;
@@ -3670,127 +2260,46 @@ function renderVelocityAttempts(
   }
 
 
-  /*
-     Show only the newest three entries.
-
-     Newest appears at the top.
-  */
-
   const lastThree =
     attempts
-
-      .map(
-        (value, index) => ({
-
-          value,
-
-          originalIndex:
-            index
-
-        })
-      )
-
+      .map((value, index) => ({
+        value,
+        originalIndex: index
+      }))
       .slice(-3)
-
       .reverse();
 
 
   container.innerHTML =
-    lastThree
+    lastThree.map(item => `
 
-      .map(
-        item => `
+      <div class="attempt-row">
 
-          <div class="attempt-row">
+        <span>
+          Attempt ${item.originalIndex + 1}
+        </span>
 
-            <span>
+        <strong>
+          ${Number(item.value).toFixed(1)} MPH
+        </strong>
 
-              Attempt ${
-                item.originalIndex + 1
-              }
+        <button
+          class="delete-velocity-attempt"
+          data-test="${resultKey}"
+          data-index="${item.originalIndex}"
+        >
+          DELETE
+        </button>
 
-            </span>
+      </div>
 
-
-            <strong>
-
-              ${Number(
-                item.value
-              ).toFixed(1)} MPH
-
-            </strong>
-
-
-            <button
-              class="delete-velocity-attempt"
-              data-test="${resultKey}"
-              data-index="${item.originalIndex}"
-            >
-              DELETE
-            </button>
-
-          </div>
-
-        `
-      )
-
-      .join("");
+    `).join("");
 
 }
 
 
 /* =========================================================
-   DELETE VELOCITY ATTEMPT
-========================================================= */
-
-function deleteVelocityAttempt(
-  resultKey,
-  index
-) {
-
-  const player =
-    getCurrentPlayer();
-
-
-  if (!player) {
-
-    return;
-
-  }
-
-
-  if (
-    !Array.isArray(
-      player.results[resultKey]
-    )
-  ) {
-
-    return;
-
-  }
-
-
-  player.results[
-    resultKey
-  ].splice(
-    index,
-    1
-  );
-
-
-  savePlayers();
-
-
-  renderEverything();
-
-
-  renderTestView();
-
-}
-
-
-/* =========================================================
-   SQUAT ASSESSMENT
+   SQUAT — AUTO SAVE
 ========================================================= */
 
 function updateSquatButtons() {
@@ -3799,16 +2308,12 @@ function updateSquatButtons() {
     "pass-selected"
   );
 
-
   squatFailButton.classList.remove(
     "fail-selected"
   );
 
 
-  if (
-    selectedSquatStatus ===
-    "PASS"
-  ) {
+  if (selectedSquatStatus === "PASS") {
 
     squatPassButton.classList.add(
       "pass-selected"
@@ -3817,10 +2322,7 @@ function updateSquatButtons() {
   }
 
 
-  if (
-    selectedSquatStatus ===
-    "FAIL"
-  ) {
+  if (selectedSquatStatus === "FAIL") {
 
     squatFailButton.classList.add(
       "fail-selected"
@@ -3831,50 +2333,56 @@ function updateSquatButtons() {
 }
 
 
-function saveSquatAssessment() {
+function saveSquatStatus(status) {
 
   const player =
     getCurrentPlayer();
 
 
   if (!player) {
-
     return;
-
   }
 
 
-  if (
-    !selectedSquatStatus
-  ) {
-
-    alert(
-      "Select PASS or FAIL before saving."
-    );
-
-    return;
-
-  }
+  selectedSquatStatus =
+    status;
 
 
-  player.results.squat = {
+  player.results.squat.status =
+    status;
 
-    status:
-      selectedSquatStatus,
 
-    notes:
-      squatNotes.value.trim()
-
-  };
+  player.results.squat.notes =
+    squatNotes.value;
 
 
   savePlayers();
 
-
-  renderEverything();
-
-
   updateSquatButtons();
+
+  renderPlayersTable();
+
+  renderResultsTable();
+
+}
+
+
+function saveSquatNotes() {
+
+  const player =
+    getCurrentPlayer();
+
+
+  if (!player) {
+    return;
+  }
+
+
+  player.results.squat.notes =
+    squatNotes.value;
+
+
+  savePlayers();
 
 }
 
@@ -3884,48 +2392,32 @@ function saveSquatAssessment() {
 ========================================================= */
 
 function createTimer({
-
   displayElement,
-
   buttonElement,
-
   attemptsElement,
-
   bestElement,
-
   resultKey
-
 }) {
 
-  let running =
-    false;
+  let running = false;
 
+  let startTime = null;
 
-  let startTime =
-    null;
-
-
-  let animationFrame =
-    null;
+  let animationFrame = null;
 
 
   function updateTimer() {
 
     if (!running) {
-
       return;
-
     }
 
 
     const elapsed =
-
       (
         performance.now() -
         startTime
-      )
-
-      / 1000;
+      ) / 1000;
 
 
     displayElement.textContent =
@@ -3940,28 +2432,20 @@ function createTimer({
   }
 
 
-  function toggle() {
+  function toggleTimer() {
 
     if (running) {
-
-      stop();
-
-    }
-
-    else {
-
-      start();
-
+      stopTimer();
+    } else {
+      startTimer();
     }
 
   }
 
 
-  function start() {
+  function startTimer() {
 
-    running =
-      true;
-
+    running = true;
 
     startTime =
       performance.now();
@@ -3988,12 +2472,10 @@ function createTimer({
   }
 
 
-  function stop() {
+  function stopTimer() {
 
     if (!running) {
-
       return;
-
     }
 
 
@@ -4002,13 +2484,10 @@ function createTimer({
 
 
     const elapsed =
-
       (
         performance.now() -
         startTime
-      )
-
-      / 1000;
+      ) / 1000;
 
 
     const finalTime =
@@ -4017,13 +2496,15 @@ function createTimer({
       );
 
 
-    running =
-      false;
+    running = false;
 
 
     cancelAnimationFrame(
       animationFrame
     );
+
+
+    animationFrame = null;
 
 
     buttonElement.textContent =
@@ -4040,9 +2521,7 @@ function createTimer({
 
 
     if (!player) {
-
       return;
-
     }
 
 
@@ -4052,35 +2531,27 @@ function createTimer({
       )
     ) {
 
-      player.results[resultKey] =
-        [];
+      player.results[resultKey] = [];
 
     }
 
 
     player.results[
       resultKey
-    ].push(
-      finalTime
-    );
+    ].push(finalTime);
 
 
     savePlayers();
 
 
     renderTimerAttempts(
-
       attemptsElement,
-
       bestElement,
-
       resultKey
-
     );
 
 
     renderPlayersTable();
-
 
     renderResultsTable();
 
@@ -4089,9 +2560,7 @@ function createTimer({
 
   function cancel() {
 
-    if (
-      animationFrame
-    ) {
+    if (animationFrame) {
 
       cancelAnimationFrame(
         animationFrame
@@ -4100,16 +2569,11 @@ function createTimer({
     }
 
 
-    running =
-      false;
+    animationFrame = null;
 
+    running = false;
 
-    startTime =
-      null;
-
-
-    animationFrame =
-      null;
+    startTime = null;
 
 
     buttonElement.textContent =
@@ -4129,7 +2593,7 @@ function createTimer({
 
   buttonElement.addEventListener(
     "click",
-    toggle
+    toggleTimer
   );
 
 
@@ -4137,17 +2601,14 @@ function createTimer({
     "click",
     event => {
 
-
-      const deleteButton =
+      const button =
         event.target.closest(
           ".delete-attempt"
         );
 
 
-      if (!deleteButton) {
-
+      if (!button) {
         return;
-
       }
 
 
@@ -4156,51 +2617,32 @@ function createTimer({
 
 
       if (!player) {
-
         return;
-
       }
 
 
       const index =
         Number(
-          deleteButton.dataset.index
+          button.dataset.index
         );
-
-
-      if (
-        !Number.isInteger(index)
-      ) {
-
-        return;
-
-      }
 
 
       player.results[
         resultKey
-      ].splice(
-        index,
-        1
-      );
+      ].splice(index, 1);
 
 
       savePlayers();
 
 
       renderTimerAttempts(
-
         attemptsElement,
-
         bestElement,
-
         resultKey
-
       );
 
 
       renderPlayersTable();
-
 
       renderResultsTable();
 
@@ -4209,16 +2651,14 @@ function createTimer({
 
 
   return {
-
     cancel
-
   };
 
 }
 
 
 /* =========================================================
-   RENDER TIMER ATTEMPTS
+   TIMER ATTEMPT DISPLAY
 ========================================================= */
 
 function renderTimerAttempts(
@@ -4233,13 +2673,9 @@ function renderTimerAttempts(
 
   if (!player) {
 
-    container.innerHTML =
-      "";
+    container.innerHTML = "";
 
-
-    bestElement.textContent =
-      "—";
-
+    bestElement.textContent = "—";
 
     return;
 
@@ -4250,41 +2686,26 @@ function renderTimerAttempts(
     Array.isArray(
       player.results[resultKey]
     )
-
       ? player.results[resultKey]
-
       : [];
 
 
   const best =
-    bestTime(
-      attempts
-    );
+    bestTime(attempts);
 
 
   bestElement.textContent =
-
     best !== null
-
       ? `${best.toFixed(2)}s`
-
       : "—";
 
 
-  if (
-    attempts.length === 0
-  ) {
+  if (attempts.length === 0) {
 
     container.innerHTML = `
-
       <div class="attempt-row">
-
-        <span>
-          No attempts yet
-        </span>
-
+        <span>No attempts yet</span>
       </div>
-
     `;
 
     return;
@@ -4293,71 +2714,44 @@ function renderTimerAttempts(
 
 
   container.innerHTML =
-    attempts
+    attempts.map(
+      (attempt, index) => {
 
-      .map(
-        (attempt, index) => {
-
-
-          const isBest =
-
-            best !== null &&
-
-            Number(attempt) ===
-            Number(best);
+        const isBest =
+          best !== null &&
+          Number(attempt) === Number(best);
 
 
-          return `
+        return `
+          <div class="attempt-row">
 
-            <div class="attempt-row">
+            <span>
+              Attempt ${index + 1}
+              ${isBest ? " • BEST" : ""}
+            </span>
 
-              <span>
+            <strong>
+              ${Number(attempt).toFixed(2)}s
+            </strong>
 
-                Attempt ${
-                  index + 1
-                }
+            <button
+              class="delete-attempt"
+              data-index="${index}"
+            >
+              DELETE
+            </button>
 
-                ${
-                  isBest
+          </div>
+        `;
 
-                    ? " • BEST"
-
-                    : ""
-                }
-
-              </span>
-
-
-              <strong>
-
-                ${Number(
-                  attempt
-                ).toFixed(2)}s
-
-              </strong>
-
-
-              <button
-                class="delete-attempt"
-                data-index="${index}"
-              >
-                DELETE
-              </button>
-
-            </div>
-
-          `;
-
-        }
-      )
-
-      .join("");
+      }
+    ).join("");
 
 }
 
 
 /* =========================================================
-   SETUP TIMERS
+   TIMERS
 ========================================================= */
 
 const fiveTenFiveController =
@@ -4419,20 +2813,15 @@ const tenYardController =
 
 
 timerControllers = [
-
   fiveTenFiveController,
-
   tenYardController
-
 ];
 
 
 function cancelAllTimers() {
 
   timerControllers.forEach(
-    controller =>
-
-      controller.cancel()
+    controller => controller.cancel()
   );
 
 }
@@ -4473,59 +2862,35 @@ function renderAllTimerAttempts() {
 
 
 /* =========================================================
-   NAVIGATION EVENTS
+   NAV EVENTS
 ========================================================= */
 
 playersNavButton.addEventListener(
   "click",
-  () => {
-
-    showView(
-      "players"
-    );
-
-  }
+  () => showView("players")
 );
 
 
 resultsNavButton.addEventListener(
   "click",
-  () => {
-
-    showView(
-      "results"
-    );
-
-  }
+  () => showView("results")
 );
 
 
 mainResultsButton.addEventListener(
   "click",
-  () => {
-
-    showView(
-      "results"
-    );
-
-  }
+  () => showView("results")
 );
 
 
 backToPlayersButton.addEventListener(
   "click",
-  () => {
-
-    showView(
-      "players"
-    );
-
-  }
+  () => showView("players")
 );
 
 
 /* =========================================================
-   SEARCH / FILTER EVENTS
+   SEARCH / FILTER
 ========================================================= */
 
 playerSearch.addEventListener(
@@ -4553,92 +2918,62 @@ resultsAgeFilter.addEventListener(
 
 
 /* =========================================================
-   RESULTS SORT HEADER EVENTS
+   RESULTS SORT
 ========================================================= */
 
 document
-  .querySelectorAll(
-    ".sort-header"
-  )
-  .forEach(
-    button => {
+  .querySelectorAll(".sort-header")
+  .forEach(button => {
+
+    button.addEventListener(
+      "click",
+      () => {
+
+        const sortKey =
+          button.dataset.sort;
 
 
-      button.addEventListener(
-        "click",
-        () => {
+        if (!SORT_CONFIG[sortKey]) {
+          return;
+        }
 
 
-          const sortKey =
-            button.dataset.sort;
+        if (resultsSort.key === sortKey) {
+
+          resultsSort.direction =
+            resultsSort.direction === "asc"
+              ? "desc"
+              : "asc";
+
+        } else {
+
+          resultsSort.key =
+            sortKey;
 
 
-          if (
-            !SORT_CONFIG[sortKey]
-          ) {
-
-            return;
-
-          }
-
-
-          /*
-             Clicking same column reverses it.
-          */
-
-          if (
-            resultsSort.key ===
-            sortKey
-          ) {
-
-            resultsSort.direction =
-
-              resultsSort.direction ===
-              "asc"
-
-                ? "desc"
-
-                : "asc";
-
-          }
-
-
-          /*
-             Clicking a new column starts
-             with its best-to-worst direction.
-          */
-
-          else {
-
-            resultsSort.key =
-              sortKey;
-
-
-            resultsSort.direction =
-              SORT_CONFIG[
-                sortKey
-              ].defaultDirection;
-
-          }
-
-
-          renderResultsTable();
+          resultsSort.direction =
+            SORT_CONFIG[
+              sortKey
+            ].defaultDirection;
 
         }
-      );
 
-    }
-  );
+
+        renderResultsTable();
+
+      }
+    );
+
+  });
 
 
 /* =========================================================
-   TABLE TEST BUTTON EVENTS
+   TEST BUTTONS
 ========================================================= */
 
 playersTableBody.addEventListener(
   "click",
   event => {
-
 
     const button =
       event.target.closest(
@@ -4646,16 +2981,13 @@ playersTableBody.addEventListener(
       );
 
 
-    if (!button) {
+    if (button) {
 
-      return;
+      openPlayerTest(
+        button.dataset.playerId
+      );
 
     }
-
-
-    openPlayerTest(
-      button.dataset.playerId
-    );
 
   }
 );
@@ -4665,23 +2997,19 @@ resultsTableBody.addEventListener(
   "click",
   event => {
 
-
     const button =
       event.target.closest(
         ".test-button"
       );
 
 
-    if (!button) {
+    if (button) {
 
-      return;
+      openPlayerTest(
+        button.dataset.playerId
+      );
 
     }
-
-
-    openPlayerTest(
-      button.dataset.playerId
-    );
 
   }
 );
@@ -4713,14 +3041,8 @@ addPlayerModal.addEventListener(
   "click",
   event => {
 
-
-    if (
-      event.target ===
-      addPlayerModal
-    ) {
-
+    if (event.target === addPlayerModal) {
       closeAddPlayerModal();
-
     }
 
   }
@@ -4728,7 +3050,7 @@ addPlayerModal.addEventListener(
 
 
 /* =========================================================
-   PLAYER DRAWER EVENTS
+   DRAWER EVENTS
 ========================================================= */
 
 indexButton.addEventListener(
@@ -4759,90 +3081,59 @@ drawerPlayerList.addEventListener(
   "click",
   event => {
 
-
     const button =
       event.target.closest(
         ".drawer-player-button"
       );
 
 
-    if (!button) {
+    if (button) {
 
-      return;
+      openPlayerTest(
+        button.dataset.playerId
+      );
 
     }
-
-
-    openPlayerTest(
-      button.dataset.playerId
-    );
 
   }
 );
 
 
 /* =========================================================
-   SINGLE NUMBER TEST EVENTS
+   NUMBER TESTS
 ========================================================= */
 
 document
-  .querySelectorAll(
-    ".number-test"
-  )
-  .forEach(
-    card => {
+  .querySelectorAll(".number-test")
+  .forEach(card => {
 
+    card.addEventListener(
+      "click",
+      () => openCalculator(card)
+    );
 
-      card.addEventListener(
-        "click",
-        () => {
+  });
 
-          openCalculator(
-            card
-          );
-
-        }
-      );
-
-    }
-  );
-
-
-/* =========================================================
-   PULLDOWN / EXIT VELO ENTRY EVENTS
-========================================================= */
 
 document
-  .querySelectorAll(
-    ".add-attempt-button"
-  )
-  .forEach(
-    button => {
+  .querySelectorAll(".add-attempt-button")
+  .forEach(button => {
 
+    button.addEventListener(
+      "click",
+      () => openAttemptCalculator(button)
+    );
 
-      button.addEventListener(
-        "click",
-        () => {
-
-          openAttemptCalculator(
-            button
-          );
-
-        }
-      );
-
-    }
-  );
+  });
 
 
 /* =========================================================
-   VELOCITY ATTEMPT DELETE EVENT
+   DELETE VELOCITY
 ========================================================= */
 
 document.addEventListener(
   "click",
   event => {
-
 
     const button =
       event.target.closest(
@@ -4851,9 +3142,16 @@ document.addEventListener(
 
 
     if (!button) {
-
       return;
+    }
 
+
+    const player =
+      getCurrentPlayer();
+
+
+    if (!player) {
+      return;
     }
 
 
@@ -4867,19 +3165,16 @@ document.addEventListener(
       );
 
 
-    if (
-      !Number.isInteger(index)
-    ) {
-
-      return;
-
-    }
+    player.results[
+      resultKey
+    ].splice(index, 1);
 
 
-    deleteVelocityAttempt(
-      resultKey,
-      index
-    );
+    savePlayers();
+
+    renderEverything();
+
+    renderTestView();
 
   }
 );
@@ -4889,24 +3184,16 @@ document.addEventListener(
    CALCULATOR EVENTS
 ========================================================= */
 
-calculatorButtons.forEach(
-  button => {
+calculatorButtons.forEach(button => {
 
+  button.addEventListener(
+    "click",
+    () => calculatorKeyPress(
+      button.dataset.key
+    )
+  );
 
-    button.addEventListener(
-      "click",
-      () => {
-
-
-        calculatorKeyPress(
-          button.dataset.key
-        );
-
-      }
-    );
-
-  }
-);
+});
 
 
 calculatorSaveButton.addEventListener(
@@ -4925,14 +3212,8 @@ numberModal.addEventListener(
   "click",
   event => {
 
-
-    if (
-      event.target ===
-      numberModal
-    ) {
-
+    if (event.target === numberModal) {
       closeCalculator();
-
     }
 
   }
@@ -4940,61 +3221,36 @@ numberModal.addEventListener(
 
 
 /* =========================================================
-   SQUAT EVENTS
+   SQUAT AUTO SAVE
 ========================================================= */
 
 squatPassButton.addEventListener(
   "click",
-  () => {
-
-
-    selectedSquatStatus =
-      "PASS";
-
-
-    updateSquatButtons();
-
-  }
+  () => saveSquatStatus("PASS")
 );
 
 
 squatFailButton.addEventListener(
   "click",
-  () => {
-
-
-    selectedSquatStatus =
-      "FAIL";
-
-
-    updateSquatButtons();
-
-  }
+  () => saveSquatStatus("FAIL")
 );
 
 
-saveSquatButton.addEventListener(
-  "click",
-  saveSquatAssessment
+squatNotes.addEventListener(
+  "input",
+  saveSquatNotes
 );
 
 
 /* =========================================================
-   KEYBOARD SUPPORT
+   KEYBOARD CALCULATOR
 ========================================================= */
 
 document.addEventListener(
   "keydown",
   event => {
 
-
-    /*
-       Escape closes any overlay.
-    */
-
-    if (
-      event.key === "Escape"
-    ) {
+    if (event.key === "Escape") {
 
       closeCalculator();
 
@@ -5007,31 +3263,16 @@ document.addEventListener(
     }
 
 
-    /*
-       If calculator is closed,
-       ignore remaining keys.
-    */
-
     if (
       !numberModal.classList.contains(
         "show"
       )
     ) {
-
       return;
-
     }
 
 
-    /*
-       Number keys.
-    */
-
-    if (
-      /^[0-9]$/.test(
-        event.key
-      )
-    ) {
+    if (/^[0-9]$/.test(event.key)) {
 
       calculatorKeyPress(
         event.key
@@ -5042,30 +3283,16 @@ document.addEventListener(
     }
 
 
-    /*
-       Decimal.
-    */
+    if (event.key === ".") {
 
-    if (
-      event.key === "."
-    ) {
-
-      calculatorKeyPress(
-        "."
-      );
+      calculatorKeyPress(".");
 
       return;
 
     }
 
 
-    /*
-       Backspace.
-    */
-
-    if (
-      event.key === "Backspace"
-    ) {
+    if (event.key === "Backspace") {
 
       calculatorKeyPress(
         "backspace"
@@ -5076,13 +3303,7 @@ document.addEventListener(
     }
 
 
-    /*
-       Enter saves.
-    */
-
-    if (
-      event.key === "Enter"
-    ) {
+    if (event.key === "Enter") {
 
       saveCalculatorResult();
 
@@ -5108,12 +3329,9 @@ function renderEverything() {
 
 
 /* =========================================================
-   START APPLICATION
+   START APP
 ========================================================= */
 
 renderEverything();
 
-
-showView(
-  "players"
-);
+showView("players");
