@@ -1,40 +1,153 @@
+import {
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+
+
+import {
+  getAuth,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signOut,
+  setPersistence,
+  browserLocalPersistence
+} from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
+
+
+import {
+  getFirestore,
+  collection,
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+  onSnapshot,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+
+
 /* =========================================================
-   NINTH INNING COMBINE
+   FIREBASE CONFIG
 ========================================================= */
 
-const STORAGE_KEY = "niCombineData_v2";
+const firebaseConfig = {
+
+  apiKey:
+    "AIzaSyAJxv5u5UfWETCKQjEl3JLT1W2CMR17oeY",
+
+  authDomain:
+    "ni-kennesaw-combine.firebaseapp.com",
+
+  projectId:
+    "ni-kennesaw-combine",
+
+  storageBucket:
+    "ni-kennesaw-combine.firebasestorage.app",
+
+  messagingSenderId:
+    "963104261958",
+
+  appId:
+    "1:963104261958:web:1a3aa62125299084f30747"
+
+};
+
+
+const app =
+  initializeApp(firebaseConfig);
+
+
+const auth =
+  getAuth(app);
+
+
+const db =
+  getFirestore(app);
+
+
+setPersistence(
+  auth,
+  browserLocalPersistence
+).catch(console.error);
+
 
 
 /* =========================================================
    RANKED EVENTS
-
-   high = higher is better
-   low  = lower is better
 ========================================================= */
 
 const RANKED_EVENTS = [
-  { key: "pulldown", direction: "high" },
-  { key: "exitVelo", direction: "high" },
 
-  { key: "internalRotation", direction: "high" },
-  { key: "externalRotation", direction: "high" },
+  {
+    key: "pulldown",
+    direction: "high"
+  },
 
-  { key: "dynoInternal", direction: "high" },
-  { key: "dynoExternal", direction: "high" },
+  {
+    key: "exitVelo",
+    direction: "high"
+  },
 
-  { key: "gripLeft", direction: "high" },
-  { key: "gripRight", direction: "high" },
+  {
+    key: "internalRotation",
+    direction: "high"
+  },
 
-  { key: "medBallLeft", direction: "high" },
-  { key: "medBallRight", direction: "high" },
+  {
+    key: "externalRotation",
+    direction: "high"
+  },
 
-  { key: "fiveTenFive", direction: "low" },
-  { key: "tenYard", direction: "low" },
+  {
+    key: "dynoInternal",
+    direction: "high"
+  },
 
-  { key: "broadJump", direction: "high" }
+  {
+    key: "dynoExternal",
+    direction: "high"
+  },
+
+  {
+    key: "gripLeft",
+    direction: "high"
+  },
+
+  {
+    key: "gripRight",
+    direction: "high"
+  },
+
+  {
+    key: "medBallLeft",
+    direction: "high"
+  },
+
+  {
+    key: "medBallRight",
+    direction: "high"
+  },
+
+  {
+    key: "fiveTenFive",
+    direction: "low"
+  },
+
+  {
+    key: "tenYard",
+    direction: "low"
+  },
+
+  {
+    key: "broadJump",
+    direction: "high"
+  }
+
 ];
 
-const TOTAL_RANKED_EVENTS = RANKED_EVENTS.length;
+
+const TOTAL_RANKED_EVENTS =
+  RANKED_EVENTS.length;
+
 
 
 /* =========================================================
@@ -136,17 +249,12 @@ const SORT_CONFIG = {
 };
 
 
-let resultsSort = {
-  key: "combineScore",
-  direction: "asc"
-};
-
 
 /* =========================================================
    STATE
 ========================================================= */
 
-let players = loadPlayers();
+let players = [];
 
 let currentPlayerId = null;
 
@@ -158,9 +266,19 @@ let selectedSquatStatus = null;
 
 let timerControllers = [];
 
+let unsubscribePlayers = null;
+
+let resultsSort = {
+  key: "combineScore",
+  direction: "asc"
+};
+
+let squatNotesSaveTimer = null;
+
+
 
 /* =========================================================
-   RESULT TEMPLATE
+   DEFAULT RESULTS
 ========================================================= */
 
 function defaultResults() {
@@ -168,27 +286,43 @@ function defaultResults() {
   return {
 
     pulldown: [],
+
     exitVelo: [],
 
+
     internalRotation: null,
+
     externalRotation: null,
 
+
     dynoInternal: null,
+
     dynoExternal: null,
 
+
     gripLeft: null,
+
     gripRight: null,
 
+
     medBallLeft: null,
+
     medBallRight: null,
 
+
     fiveTenFive: [],
+
     tenYard: [],
 
+
     squat: {
+
       status: null,
+
       notes: ""
+
     },
+
 
     broadJump: null
 
@@ -197,72 +331,9 @@ function defaultResults() {
 }
 
 
-/* =========================================================
-   STORAGE
-========================================================= */
-
-function loadPlayers() {
-
-  try {
-
-    let stored =
-      localStorage.getItem(STORAGE_KEY);
-
-    if (!stored) {
-      stored =
-        localStorage.getItem("niCombineData_v1");
-    }
-
-    if (!stored) {
-      return [];
-    }
-
-    const parsed =
-      JSON.parse(stored);
-
-    if (!Array.isArray(parsed)) {
-      return [];
-    }
-
-    return parsed.map(normalizePlayer);
-
-  } catch (error) {
-
-    console.error(
-      "Could not load player data:",
-      error
-    );
-
-    return [];
-
-  }
-
-}
-
-
-function savePlayers() {
-
-  try {
-
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify(players)
-    );
-
-  } catch (error) {
-
-    console.error(
-      "Could not save player data:",
-      error
-    );
-
-  }
-
-}
-
 
 /* =========================================================
-   NORMALIZE OLD DATA
+   NORMALIZE DATABASE DATA
 ========================================================= */
 
 function normalizePlayer(player) {
@@ -270,55 +341,83 @@ function normalizePlayer(player) {
   const defaults =
     defaultResults();
 
+
   const old =
     player.results || {};
 
 
-  const pulldown =
-    Array.isArray(old.pulldown)
-      ? old.pulldown.map(Number).filter(Number.isFinite)
-      : isNumber(old.pulldown)
-        ? [Number(old.pulldown)]
-        : [];
+  const toArray =
+    value => {
+
+      if (
+        Array.isArray(value)
+      ) {
+
+        return value
+          .map(Number)
+          .filter(Number.isFinite);
+
+      }
 
 
-  const exitVelo =
-    Array.isArray(old.exitVelo)
-      ? old.exitVelo.map(Number).filter(Number.isFinite)
-      : isNumber(old.exitVelo)
-        ? [Number(old.exitVelo)]
-        : [];
+      if (
+        isNumber(value)
+      ) {
+
+        return [
+          Number(value)
+        ];
+
+      }
 
 
-  const fiveTenFive =
-    Array.isArray(old.fiveTenFive)
-      ? old.fiveTenFive.map(Number).filter(Number.isFinite)
-      : [];
+      return [];
 
-
-  const tenYard =
-    Array.isArray(old.tenYard)
-      ? old.tenYard.map(Number).filter(Number.isFinite)
-      : [];
+    };
 
 
   return {
 
     ...player,
 
+
     results: {
 
       ...defaults,
+
       ...old,
 
-      pulldown,
-      exitVelo,
-      fiveTenFive,
-      tenYard,
+
+      pulldown:
+        toArray(
+          old.pulldown
+        ),
+
+
+      exitVelo:
+        toArray(
+          old.exitVelo
+        ),
+
+
+      fiveTenFive:
+        toArray(
+          old.fiveTenFive
+        ),
+
+
+      tenYard:
+        toArray(
+          old.tenYard
+        ),
+
 
       squat: {
+
         ...defaults.squat,
+
         ...(old.squat || {})
+
       }
 
     }
@@ -328,314 +427,1081 @@ function normalizePlayer(player) {
 }
 
 
+
 /* =========================================================
-   DOM REFERENCES
+   DOM — LOGIN
+========================================================= */
+
+const loginView =
+  document.getElementById(
+    "loginView"
+  );
+
+
+const appShell =
+  document.getElementById(
+    "appShell"
+  );
+
+
+const loginForm =
+  document.getElementById(
+    "loginForm"
+  );
+
+
+const loginEmail =
+  document.getElementById(
+    "loginEmail"
+  );
+
+
+const loginPassword =
+  document.getElementById(
+    "loginPassword"
+  );
+
+
+const loginButton =
+  document.getElementById(
+    "loginButton"
+  );
+
+
+const loginError =
+  document.getElementById(
+    "loginError"
+  );
+
+
+const logoutButton =
+  document.getElementById(
+    "logoutButton"
+  );
+
+
+const signedInUser =
+  document.getElementById(
+    "signedInUser"
+  );
+
+
+
+/* =========================================================
+   DOM — APP
 ========================================================= */
 
 const playersView =
-  document.getElementById("playersView");
+  document.getElementById(
+    "playersView"
+  );
+
 
 const resultsView =
-  document.getElementById("resultsView");
+  document.getElementById(
+    "resultsView"
+  );
+
 
 const testView =
-  document.getElementById("testView");
+  document.getElementById(
+    "testView"
+  );
 
 
 const playersNavButton =
-  document.getElementById("playersNavButton");
+  document.getElementById(
+    "playersNavButton"
+  );
+
 
 const resultsNavButton =
-  document.getElementById("resultsNavButton");
+  document.getElementById(
+    "resultsNavButton"
+  );
+
 
 const mainResultsButton =
-  document.getElementById("mainResultsButton");
+  document.getElementById(
+    "mainResultsButton"
+  );
+
 
 const backToPlayersButton =
-  document.getElementById("backToPlayersButton");
+  document.getElementById(
+    "backToPlayersButton"
+  );
 
 
 const playersTableBody =
-  document.getElementById("playersTableBody");
+  document.getElementById(
+    "playersTableBody"
+  );
+
 
 const resultsTableBody =
-  document.getElementById("resultsTableBody");
+  document.getElementById(
+    "resultsTableBody"
+  );
 
 
 const playerSearch =
-  document.getElementById("playerSearch");
+  document.getElementById(
+    "playerSearch"
+  );
+
 
 const playerAgeFilter =
-  document.getElementById("playerAgeFilter");
+  document.getElementById(
+    "playerAgeFilter"
+  );
+
 
 const resultsSearch =
-  document.getElementById("resultsSearch");
+  document.getElementById(
+    "resultsSearch"
+  );
+
 
 const resultsAgeFilter =
-  document.getElementById("resultsAgeFilter");
+  document.getElementById(
+    "resultsAgeFilter"
+  );
 
 
 const testPlayerName =
-  document.getElementById("testPlayerName");
+  document.getElementById(
+    "testPlayerName"
+  );
+
 
 const testPlayerAge =
-  document.getElementById("testPlayerAge");
+  document.getElementById(
+    "testPlayerAge"
+  );
 
+
+
+/* =========================================================
+   DOM — ADD PLAYER
+========================================================= */
 
 const addPlayerButton =
-  document.getElementById("addPlayerButton");
+  document.getElementById(
+    "addPlayerButton"
+  );
+
 
 const addPlayerModal =
-  document.getElementById("addPlayerModal");
+  document.getElementById(
+    "addPlayerModal"
+  );
+
 
 const closeAddPlayerButton =
-  document.getElementById("closeAddPlayerButton");
+  document.getElementById(
+    "closeAddPlayerButton"
+  );
+
 
 const savePlayerButton =
-  document.getElementById("savePlayerButton");
+  document.getElementById(
+    "savePlayerButton"
+  );
+
 
 const newPlayerFirstName =
-  document.getElementById("newPlayerFirstName");
+  document.getElementById(
+    "newPlayerFirstName"
+  );
+
 
 const newPlayerLastName =
-  document.getElementById("newPlayerLastName");
+  document.getElementById(
+    "newPlayerLastName"
+  );
+
 
 const newPlayerAgeGroup =
-  document.getElementById("newPlayerAgeGroup");
+  document.getElementById(
+    "newPlayerAgeGroup"
+  );
 
+
+
+/* =========================================================
+   DOM — DRAWER
+========================================================= */
 
 const indexButton =
-  document.getElementById("indexButton");
+  document.getElementById(
+    "indexButton"
+  );
+
 
 const playerDrawer =
-  document.getElementById("playerDrawer");
+  document.getElementById(
+    "playerDrawer"
+  );
+
 
 const drawerBackdrop =
-  document.getElementById("drawerBackdrop");
+  document.getElementById(
+    "drawerBackdrop"
+  );
+
 
 const closeDrawerButton =
-  document.getElementById("closeDrawerButton");
+  document.getElementById(
+    "closeDrawerButton"
+  );
+
 
 const drawerSearch =
-  document.getElementById("drawerSearch");
+  document.getElementById(
+    "drawerSearch"
+  );
+
 
 const drawerPlayerList =
-  document.getElementById("drawerPlayerList");
+  document.getElementById(
+    "drawerPlayerList"
+  );
 
+
+
+/* =========================================================
+   DOM — CALCULATOR
+========================================================= */
 
 const numberModal =
-  document.getElementById("numberModal");
+  document.getElementById(
+    "numberModal"
+  );
+
 
 const calculatorLabel =
-  document.getElementById("calculatorLabel");
+  document.getElementById(
+    "calculatorLabel"
+  );
+
 
 const calculatorValue =
-  document.getElementById("calculatorValue");
+  document.getElementById(
+    "calculatorValue"
+  );
+
 
 const calculatorUnit =
-  document.getElementById("calculatorUnit");
+  document.getElementById(
+    "calculatorUnit"
+  );
+
 
 const calculatorSaveButton =
-  document.getElementById("calculatorSaveButton");
+  document.getElementById(
+    "calculatorSaveButton"
+  );
+
 
 const closeCalculatorButton =
-  document.getElementById("closeCalculatorButton");
+  document.getElementById(
+    "closeCalculatorButton"
+  );
+
 
 const calculatorButtons =
-  document.querySelectorAll(".calculator-grid button");
+  document.querySelectorAll(
+    ".calculator-grid button"
+  );
 
+
+
+/* =========================================================
+   DOM — SQUAT
+========================================================= */
 
 const squatPassButton =
-  document.getElementById("squatPassButton");
+  document.getElementById(
+    "squatPassButton"
+  );
+
 
 const squatFailButton =
-  document.getElementById("squatFailButton");
+  document.getElementById(
+    "squatFailButton"
+  );
+
 
 const squatNotes =
-  document.getElementById("squatNotes");
+  document.getElementById(
+    "squatNotes"
+  );
+
+
+
+/* =========================================================
+   AUTHENTICATION
+========================================================= */
+
+function showLogin(
+  message = ""
+) {
+
+  loginError.textContent =
+    message;
+
+
+  loginView.classList.remove(
+    "hidden"
+  );
+
+
+  appShell.classList.add(
+    "hidden"
+  );
+
+}
+
+
+
+function showApp(user) {
+
+  loginError.textContent =
+    "";
+
+
+  loginView.classList.add(
+    "hidden"
+  );
+
+
+  appShell.classList.remove(
+    "hidden"
+  );
+
+
+  signedInUser.textContent =
+    user.email ||
+    "SIGNED IN";
+
+
+  showView(
+    "players"
+  );
+
+}
+
+
+
+function authErrorMessage(error) {
+
+  switch (error.code) {
+
+
+    case "auth/invalid-credential":
+
+    case "auth/wrong-password":
+
+    case "auth/user-not-found":
+
+      return "Incorrect email or password.";
+
+
+    case "auth/user-disabled":
+
+      return "This account has been disabled.";
+
+
+    case "auth/too-many-requests":
+
+      return "Too many sign-in attempts. Try again later.";
+
+
+    case "auth/network-request-failed":
+
+      return "Network error. Check your connection and try again.";
+
+
+    default:
+
+      return "Sign-in failed. Check your information and try again.";
+
+  }
+
+}
+
+
+
+async function isApprovedStaff(
+  user
+) {
+
+  const staffSnap =
+    await getDoc(
+
+      doc(
+        db,
+        "staff",
+        user.uid
+      )
+
+    );
+
+
+  return staffSnap.exists();
+
+}
+
+
+
+/* =========================================================
+   REAL-TIME PLAYER DATABASE
+========================================================= */
+
+function startPlayersListener() {
+
+  if (
+    unsubscribePlayers
+  ) {
+
+    unsubscribePlayers();
+
+  }
+
+
+  unsubscribePlayers =
+    onSnapshot(
+
+      collection(
+        db,
+        "players"
+      ),
+
+
+      snapshot => {
+
+
+        players =
+          snapshot.docs.map(
+            playerDoc =>
+
+              normalizePlayer({
+
+                id:
+                  playerDoc.id,
+
+                ...playerDoc.data()
+
+              })
+
+          );
+
+
+        renderEverything();
+
+
+        if (
+          currentPlayerId &&
+          getCurrentPlayer()
+        ) {
+
+          renderTestView();
+
+        }
+
+      },
+
+
+      error => {
+
+        console.error(
+          "Player listener failed:",
+          error
+        );
+
+
+        alert(
+          "The player database could not be loaded. Check Firebase permissions and your connection."
+        );
+
+      }
+
+    );
+
+}
+
+
+
+/* =========================================================
+   AUTH STATE
+========================================================= */
+
+onAuthStateChanged(
+  auth,
+
+  async user => {
+
+
+    if (!user) {
+
+
+      if (
+        unsubscribePlayers
+      ) {
+
+        unsubscribePlayers();
+
+        unsubscribePlayers =
+          null;
+
+      }
+
+
+      players = [];
+
+      currentPlayerId =
+        null;
+
+
+      showLogin();
+
+
+      return;
+
+    }
+
+
+    try {
+
+
+      const approved =
+        await isApprovedStaff(
+          user
+        );
+
+
+      if (!approved) {
+
+
+        await signOut(
+          auth
+        );
+
+
+        showLogin(
+          "This account is not approved for Combine access."
+        );
+
+
+        return;
+
+      }
+
+
+      showApp(
+        user
+      );
+
+
+      startPlayersListener();
+
+
+    } catch (error) {
+
+
+      console.error(
+        "Staff verification failed:",
+        error
+      );
+
+
+      await signOut(
+        auth
+      ).catch(
+        () => {}
+      );
+
+
+      showLogin(
+        "Could not verify staff access. Check Firestore rules and try again."
+      );
+
+    }
+
+  }
+
+);
+
+
+
+/* =========================================================
+   LOGIN
+========================================================= */
+
+loginForm.addEventListener(
+  "submit",
+
+  async event => {
+
+
+    event.preventDefault();
+
+
+    loginError.textContent =
+      "";
+
+
+    loginButton.disabled =
+      true;
+
+
+    loginButton.textContent =
+      "SIGNING IN...";
+
+
+    try {
+
+
+      await signInWithEmailAndPassword(
+
+        auth,
+
+        loginEmail.value.trim(),
+
+        loginPassword.value
+
+      );
+
+
+      loginPassword.value =
+        "";
+
+
+    } catch (error) {
+
+
+      loginError.textContent =
+        authErrorMessage(
+          error
+        );
+
+
+    } finally {
+
+
+      loginButton.disabled =
+        false;
+
+
+      loginButton.textContent =
+        "SIGN IN";
+
+    }
+
+  }
+
+);
+
+
+
+logoutButton.addEventListener(
+  "click",
+
+  async () => {
+
+
+    cancelAllTimers();
+
+    closePlayerDrawer();
+
+    closeCalculator();
+
+    closeAddPlayerModal();
+
+
+    await signOut(
+      auth
+    );
+
+  }
+
+);
+
+
+
+/* =========================================================
+   FIRESTORE HELPERS
+========================================================= */
+
+function playerRef(
+  playerId
+) {
+
+  return doc(
+    db,
+    "players",
+    playerId
+  );
+
+}
+
+
+
+async function updatePlayerFields(
+  playerId,
+  fields
+) {
+
+  if (
+    !auth.currentUser
+  ) {
+
+    throw new Error(
+      "Not signed in"
+    );
+
+  }
+
+
+  await updateDoc(
+
+    playerRef(
+      playerId
+    ),
+
+    {
+
+      ...fields,
+
+
+      updatedAt:
+        serverTimestamp(),
+
+
+      updatedBy:
+        auth.currentUser.uid
+
+    }
+
+  );
+
+}
+
 
 
 /* =========================================================
    UTILITIES
 ========================================================= */
 
-function generateId() {
-
-  if (
-    typeof crypto !== "undefined" &&
-    typeof crypto.randomUUID === "function"
-  ) {
-    return crypto.randomUUID();
-  }
-
-  return (
-    Date.now().toString(36) +
-    Math.random().toString(36).substring(2)
-  );
-
-}
-
-
 function getCurrentPlayer() {
 
   return players.find(
-    player => player.id === currentPlayerId
+    player =>
+      player.id ===
+      currentPlayerId
   );
 
 }
 
 
-function ageNumber(ageGroup) {
 
-  return parseInt(ageGroup, 10) || 999;
-
-}
-
-
-function escapeHTML(value) {
-
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-
-}
-
-
-function isNumber(value) {
+function ageNumber(
+  ageGroup
+) {
 
   return (
-    value !== null &&
-    value !== "" &&
-    Number.isFinite(Number(value))
+    parseInt(
+      ageGroup,
+      10
+    ) ||
+    999
   );
 
 }
 
 
-function formatValue(value, decimals = 1) {
 
-  if (!isNumber(value)) {
+function escapeHTML(
+  value
+) {
+
+  return String(
+    value ?? ""
+  )
+
+    .replaceAll(
+      "&",
+      "&amp;"
+    )
+
+    .replaceAll(
+      "<",
+      "&lt;"
+    )
+
+    .replaceAll(
+      ">",
+      "&gt;"
+    )
+
+    .replaceAll(
+      '"',
+      "&quot;"
+    )
+
+    .replaceAll(
+      "'",
+      "&#039;"
+    );
+
+}
+
+
+
+function isNumber(
+  value
+) {
+
+  return (
+
+    value !== null &&
+
+    value !== "" &&
+
+    Number.isFinite(
+      Number(value)
+    )
+
+  );
+
+}
+
+
+
+function formatValue(
+  value,
+  decimals = 1
+) {
+
+  if (
+    !isNumber(value)
+  ) {
+
     return "—";
+
   }
+
 
   const number =
     Number(value);
 
-  if (Number.isInteger(number)) {
+
+  if (
+    Number.isInteger(
+      number
+    )
+  ) {
+
     return number.toString();
+
   }
 
-  return number.toFixed(decimals);
+
+  return number.toFixed(
+    decimals
+  );
 
 }
+
 
 
 /* =========================================================
    ATTEMPT CALCULATIONS
 ========================================================= */
 
-function maxAttempt(attempts) {
+function maxAttempt(
+  attempts
+) {
 
   if (
-    !Array.isArray(attempts) ||
+
+    !Array.isArray(
+      attempts
+    ) ||
+
     attempts.length === 0
+
   ) {
+
     return null;
+
   }
+
 
   const values =
     attempts
+
       .map(Number)
-      .filter(Number.isFinite);
 
-  if (values.length === 0) {
-    return null;
-  }
+      .filter(
+        Number.isFinite
+      );
 
-  return Math.max(...values);
+
+  return values.length
+
+    ? Math.max(
+        ...values
+      )
+
+    : null;
 
 }
 
 
-function averageAttempt(attempts) {
+
+function averageAttempt(
+  attempts
+) {
 
   if (
-    !Array.isArray(attempts) ||
+
+    !Array.isArray(
+      attempts
+    ) ||
+
     attempts.length === 0
+
   ) {
+
     return null;
+
   }
+
 
   const values =
     attempts
-      .map(Number)
-      .filter(Number.isFinite);
 
-  if (values.length === 0) {
+      .map(Number)
+
+      .filter(
+        Number.isFinite
+      );
+
+
+  if (
+    !values.length
+  ) {
+
     return null;
+
   }
 
-  const total =
+
+  return (
+
     values.reduce(
-      (sum, value) => sum + value,
-      0
-    );
 
-  return total / values.length;
+      (sum, value) =>
+        sum + value,
+
+      0
+
+    )
+
+    /
+
+    values.length
+
+  );
 
 }
 
 
-function bestTime(attempts) {
+
+function bestTime(
+  attempts
+) {
 
   if (
-    !Array.isArray(attempts) ||
+
+    !Array.isArray(
+      attempts
+    ) ||
+
     attempts.length === 0
+
   ) {
+
     return null;
+
   }
+
 
   const values =
     attempts
+
       .map(Number)
-      .filter(Number.isFinite);
 
-  if (values.length === 0) {
-    return null;
-  }
+      .filter(
+        Number.isFinite
+      );
 
-  return Math.min(...values);
+
+  return values.length
+
+    ? Math.min(
+        ...values
+      )
+
+    : null;
 
 }
+
 
 
 /* =========================================================
-   EVENT VALUE USED FOR RANKING
+   EVENT VALUE FOR RANKING
 ========================================================= */
 
-function getEventValue(player, eventKey) {
+function getEventValue(
+  player,
+  eventKey
+) {
 
   if (!player) {
+
     return null;
+
   }
 
 
   if (
-    eventKey === "pulldown" ||
-    eventKey === "exitVelo"
+
+    eventKey ===
+      "pulldown" ||
+
+    eventKey ===
+      "exitVelo"
+
   ) {
 
     return maxAttempt(
-      player.results[eventKey]
+
+      player.results[
+        eventKey
+      ]
+
     );
 
   }
 
 
-  if (eventKey === "fiveTenFive") {
+  if (
+    eventKey ===
+    "fiveTenFive"
+  ) {
 
     return bestTime(
       player.results.fiveTenFive
@@ -644,7 +1510,10 @@ function getEventValue(player, eventKey) {
   }
 
 
-  if (eventKey === "tenYard") {
+  if (
+    eventKey ===
+    "tenYard"
+  ) {
 
     return bestTime(
       player.results.tenYard
@@ -654,126 +1523,297 @@ function getEventValue(player, eventKey) {
 
 
   const value =
-    player.results[eventKey];
+    player.results[
+      eventKey
+    ];
 
 
-  return isNumber(value)
+  return isNumber(
+    value
+  )
+
     ? Number(value)
+
     : null;
 
 }
 
 
+
 /* =========================================================
    RANKING ENGINE
-
-   Combine Score =
-   average event finish within age group.
-
-   Lower score is better.
-
-   Squat does NOT count.
 ========================================================= */
 
 function calculateRankings() {
 
-  const rankingData = {};
+  const rankingData =
+    {};
 
 
-  players.forEach(player => {
-
-    rankingData[player.id] = {
-
-      eventRanks: {},
-
-      completedEvents: 0,
-
-      combineScore: null,
-
-      overallRank: null
-
-    };
-
-  });
+  players.forEach(
+    player => {
 
 
-  const ageGroups = [
-    ...new Set(
-      players.map(player => player.ageGroup)
-    )
-  ];
+      rankingData[
+        player.id
+      ] = {
+
+        eventRanks:
+          {},
+
+        completedEvents:
+          0,
+
+        combineScore:
+          null,
+
+        overallRank:
+          null
+
+      };
+
+    }
+  );
 
 
-  ageGroups.forEach(ageGroup => {
+  const ageGroups =
+    [
 
-    const agePlayers =
-      players.filter(
-        player => player.ageGroup === ageGroup
-      );
+      ...new Set(
+
+        players.map(
+          player =>
+            player.ageGroup
+        )
+
+      )
+
+    ];
 
 
-    RANKED_EVENTS.forEach(event => {
+  ageGroups.forEach(
+    ageGroup => {
 
-      const competitors =
-        agePlayers
-          .map(player => ({
-            player,
-            value: getEventValue(
-              player,
-              event.key
-            )
-          }))
-          .filter(item =>
-            isNumber(item.value)
+
+      const agePlayers =
+        players.filter(
+          player =>
+            player.ageGroup ===
+            ageGroup
+        );
+
+
+      RANKED_EVENTS.forEach(
+        event => {
+
+
+          const competitors =
+            agePlayers
+
+              .map(
+                player => ({
+
+                  player,
+
+                  value:
+                    getEventValue(
+                      player,
+                      event.key
+                    )
+
+                })
+              )
+
+              .filter(
+                item =>
+                  isNumber(
+                    item.value
+                  )
+              );
+
+
+          competitors.sort(
+            (a, b) =>
+
+              event.direction ===
+              "low"
+
+                ? a.value -
+                  b.value
+
+                : b.value -
+                  a.value
+
           );
 
 
-      competitors.sort((a, b) => {
+          let previousValue =
+            null;
 
-        if (event.direction === "low") {
-          return a.value - b.value;
+
+          let previousRank =
+            null;
+
+
+          competitors.forEach(
+            (item, index) => {
+
+
+              const rank =
+
+                previousValue !==
+                  null &&
+
+                item.value ===
+                  previousValue
+
+                  ? previousRank
+
+                  : index + 1;
+
+
+              rankingData[
+                item.player.id
+              ].eventRanks[
+                event.key
+              ] = rank;
+
+
+              previousValue =
+                item.value;
+
+
+              previousRank =
+                rank;
+
+            }
+          );
+
         }
-
-        return b.value - a.value;
-
-      });
+      );
 
 
-      let previousValue = null;
-      let previousRank = null;
+      agePlayers.forEach(
+        player => {
 
 
-      competitors.forEach(
-        (item, index) => {
+          const ranks =
+            Object.values(
 
-          let rank;
+              rankingData[
+                player.id
+              ].eventRanks
 
-
-          if (
-            previousValue !== null &&
-            item.value === previousValue
-          ) {
-
-            rank =
-              previousRank;
-
-          } else {
-
-            rank =
-              index + 1;
-
-          }
+            );
 
 
           rankingData[
-            item.player.id
-          ].eventRanks[
-            event.key
-          ] = rank;
+            player.id
+          ].completedEvents =
+            ranks.length;
 
 
-          previousValue =
-            item.value;
+          if (
+
+            ranks.length ===
+            TOTAL_RANKED_EVENTS
+
+          ) {
+
+
+            rankingData[
+              player.id
+            ].combineScore =
+
+              ranks.reduce(
+
+                (sum, rank) =>
+                  sum + rank,
+
+                0
+
+              )
+
+              /
+
+              ranks.length;
+
+          }
+
+        }
+      );
+
+
+      const eligible =
+        agePlayers
+
+          .filter(
+            player =>
+
+              rankingData[
+                player.id
+              ].combineScore !==
+              null
+          )
+
+          .sort(
+            (a, b) =>
+
+              rankingData[
+                a.id
+              ].combineScore
+
+              -
+
+              rankingData[
+                b.id
+              ].combineScore
+
+          );
+
+
+      let previousScore =
+        null;
+
+
+      let previousRank =
+        null;
+
+
+      eligible.forEach(
+        (player, index) => {
+
+
+          const score =
+            rankingData[
+              player.id
+            ].combineScore;
+
+
+          const rank =
+
+            previousScore !==
+              null &&
+
+            Math.abs(
+              score -
+              previousScore
+            ) < 0.000001
+
+              ? previousRank
+
+              : index + 1;
+
+
+          rankingData[
+            player.id
+          ].overallRank =
+            rank;
+
+
+          previousScore =
+            score;
+
 
           previousRank =
             rank;
@@ -781,113 +1821,8 @@ function calculateRankings() {
         }
       );
 
-    });
-
-
-    agePlayers.forEach(player => {
-
-      const ranks =
-        Object.values(
-          rankingData[player.id].eventRanks
-        );
-
-
-      rankingData[
-        player.id
-      ].completedEvents =
-        ranks.length;
-
-
-      if (
-        ranks.length === TOTAL_RANKED_EVENTS
-      ) {
-
-        const total =
-          ranks.reduce(
-            (sum, rank) => sum + rank,
-            0
-          );
-
-
-        rankingData[
-          player.id
-        ].combineScore =
-          total / ranks.length;
-
-      }
-
-    });
-
-
-    const eligible =
-      agePlayers
-        .filter(
-          player =>
-            rankingData[
-              player.id
-            ].combineScore !== null
-        )
-        .sort(
-          (a, b) =>
-            rankingData[
-              a.id
-            ].combineScore -
-            rankingData[
-              b.id
-            ].combineScore
-        );
-
-
-    let previousScore = null;
-    let previousRank = null;
-
-
-    eligible.forEach(
-      (player, index) => {
-
-        const score =
-          rankingData[
-            player.id
-          ].combineScore;
-
-
-        let rank;
-
-
-        if (
-          previousScore !== null &&
-          Math.abs(
-            score - previousScore
-          ) < 0.000001
-        ) {
-
-          rank =
-            previousRank;
-
-        } else {
-
-          rank =
-            index + 1;
-
-        }
-
-
-        rankingData[
-          player.id
-        ].overallRank =
-          rank;
-
-
-        previousScore =
-          score;
-
-        previousRank =
-          rank;
-
-      }
-    );
-
-  });
+    }
+  );
 
 
   return rankingData;
@@ -895,8 +1830,9 @@ function calculateRankings() {
 }
 
 
+
 /* =========================================================
-   DEFAULT PLAYER SORT
+   PLAYER TABLE
 ========================================================= */
 
 function sortPlayersForMain(
@@ -904,50 +1840,88 @@ function sortPlayersForMain(
   rankings
 ) {
 
-  return [...playerList].sort(
+  return [
+    ...playerList
+  ].sort(
     (a, b) => {
 
+
       const ageDifference =
-        ageNumber(a.ageGroup) -
-        ageNumber(b.ageGroup);
+
+        ageNumber(
+          a.ageGroup
+        )
+
+        -
+
+        ageNumber(
+          b.ageGroup
+        );
 
 
-      if (ageDifference !== 0) {
+      if (
+        ageDifference !==
+        0
+      ) {
+
         return ageDifference;
+
       }
 
 
       const rankA =
-        rankings[a.id].overallRank;
+        rankings[
+          a.id
+        ].overallRank;
+
 
       const rankB =
-        rankings[b.id].overallRank;
+        rankings[
+          b.id
+        ].overallRank;
 
 
       if (
+
         rankA !== null &&
+
         rankB !== null &&
+
         rankA !== rankB
+
       ) {
 
-        return rankA - rankB;
+        return (
+          rankA -
+          rankB
+        );
 
       }
 
 
       if (
+
         rankA !== null &&
+
         rankB === null
+
       ) {
+
         return -1;
+
       }
 
 
       if (
+
         rankA === null &&
+
         rankB !== null
+
       ) {
+
         return 1;
+
       }
 
 
@@ -957,13 +1931,20 @@ function sortPlayersForMain(
         );
 
 
-      if (lastCompare !== 0) {
+      if (
+        lastCompare !==
+        0
+      ) {
+
         return lastCompare;
+
       }
 
 
-      return a.firstName.localeCompare(
-        b.firstName
+      return (
+        a.firstName.localeCompare(
+          b.firstName
+        )
       );
 
     }
@@ -972,9 +1953,6 @@ function sortPlayersForMain(
 }
 
 
-/* =========================================================
-   PLAYERS TABLE
-========================================================= */
 
 function renderPlayersTable() {
 
@@ -993,31 +1971,49 @@ function renderPlayersTable() {
 
 
   let filtered =
-    players.filter(player => {
-
-      const normal =
-        `${player.firstName} ${player.lastName}`
-          .toLowerCase();
-
-      const reverse =
-        `${player.lastName} ${player.firstName}`
-          .toLowerCase();
+    players.filter(
+      player => {
 
 
-      const matchesSearch =
-        !search ||
-        normal.includes(search) ||
-        reverse.includes(search);
+        const normal =
+          `${player.firstName} ${player.lastName}`
+            .toLowerCase();
 
 
-      const matchesAge =
-        ageFilter === "ALL" ||
-        player.ageGroup === ageFilter;
+        const reverse =
+          `${player.lastName} ${player.firstName}`
+            .toLowerCase();
 
 
-      return matchesSearch && matchesAge;
+        const matchesSearch =
 
-    });
+          !search ||
+
+          normal.includes(
+            search
+          ) ||
+
+          reverse.includes(
+            search
+          );
+
+
+        const matchesAge =
+
+          ageFilter ===
+            "ALL" ||
+
+          player.ageGroup ===
+            ageFilter;
+
+
+        return (
+          matchesSearch &&
+          matchesAge
+        );
+
+      }
+    );
 
 
   filtered =
@@ -1027,15 +2023,25 @@ function renderPlayersTable() {
     );
 
 
-  if (filtered.length === 0) {
+  if (
+    !filtered.length
+  ) {
 
     playersTableBody.innerHTML = `
+
       <tr>
-        <td colspan="6" class="empty-state">
+
+        <td
+          colspan="6"
+          class="empty-state"
+        >
           No players found.
         </td>
+
       </tr>
+
     `;
+
 
     return;
 
@@ -1043,66 +2049,95 @@ function renderPlayersTable() {
 
 
   playersTableBody.innerHTML =
-    filtered.map(player => {
+    filtered
 
-      const ranking =
-        rankings[player.id];
-
-
-      const rankDisplay =
-        ranking.overallRank !== null
-          ? `#${ranking.overallRank}`
-          : "—";
+      .map(
+        player => {
 
 
-      const scoreDisplay =
-        ranking.combineScore !== null
-          ? ranking.combineScore.toFixed(2)
-          : `INCOMPLETE (${ranking.completedEvents}/${TOTAL_RANKED_EVENTS})`;
+          const ranking =
+            rankings[
+              player.id
+            ];
 
 
-      return `
-        <tr>
+          const rankDisplay =
 
-          <td class="rank-cell">
-            ${rankDisplay}
-          </td>
+            ranking.overallRank !==
+            null
 
-          <td>
-            ${escapeHTML(player.firstName)}
-          </td>
+              ? `#${ranking.overallRank}`
 
-          <td>
-            ${escapeHTML(player.lastName)}
-          </td>
+              : "—";
 
-          <td>
-            ${escapeHTML(player.ageGroup)}
-          </td>
 
-          <td class="score-cell">
-            ${scoreDisplay}
-          </td>
+          const scoreDisplay =
 
-          <td>
-            <button
-              class="test-button"
-              data-player-id="${player.id}"
-            >
-              TEST
-            </button>
-          </td>
+            ranking.combineScore !==
+            null
 
-        </tr>
-      `;
+              ? ranking.combineScore
+                  .toFixed(2)
 
-    }).join("");
+              : `INCOMPLETE (${ranking.completedEvents}/${TOTAL_RANKED_EVENTS})`;
+
+
+          return `
+
+            <tr>
+
+              <td class="rank-cell">
+                ${rankDisplay}
+              </td>
+
+              <td>
+                ${escapeHTML(
+                  player.firstName
+                )}
+              </td>
+
+              <td>
+                ${escapeHTML(
+                  player.lastName
+                )}
+              </td>
+
+              <td>
+                ${escapeHTML(
+                  player.ageGroup
+                )}
+              </td>
+
+              <td class="score-cell">
+                ${scoreDisplay}
+              </td>
+
+              <td>
+
+                <button
+                  class="test-button"
+                  data-player-id="${player.id}"
+                >
+                  TEST
+                </button>
+
+              </td>
+
+            </tr>
+
+          `;
+
+        }
+      )
+
+      .join("");
 
 }
 
 
+
 /* =========================================================
-   RESULT SORT VALUES
+   RESULTS SORTING
 ========================================================= */
 
 function getResultsSortValue(
@@ -1112,59 +2147,114 @@ function getResultsSortValue(
 ) {
 
   const ranking =
-    rankings[player.id];
+    rankings[
+      player.id
+    ];
 
 
-  switch (sortKey) {
+  switch (
+    sortKey
+  ) {
+
 
     case "overallRank":
+
       return ranking.overallRank;
 
+
     case "lastName":
+
       return `${player.lastName} ${player.firstName}`;
 
+
     case "ageGroup":
-      return ageNumber(player.ageGroup);
+
+      return ageNumber(
+        player.ageGroup
+      );
+
 
     case "combineScore":
+
       return ranking.combineScore;
 
+
     case "pulldown":
-      return maxAttempt(player.results.pulldown);
+
+      return maxAttempt(
+        player.results.pulldown
+      );
+
 
     case "exitVelo":
-      return maxAttempt(player.results.exitVelo);
+
+      return maxAttempt(
+        player.results.exitVelo
+      );
+
 
     case "fiveTenFive":
-      return bestTime(player.results.fiveTenFive);
+
+      return bestTime(
+        player.results.fiveTenFive
+      );
+
 
     case "tenYard":
-      return bestTime(player.results.tenYard);
+
+      return bestTime(
+        player.results.tenYard
+      );
+
 
     case "squat":
-      return player.results.squat?.status || null;
+
+      return (
+        player.results
+          .squat
+          ?.status ||
+        null
+      );
+
 
     default:
-      return getEventValue(player, sortKey);
+
+      return getEventValue(
+        player,
+        sortKey
+      );
 
   }
 
 }
 
 
-/* =========================================================
-   RESULTS SORT
-========================================================= */
 
-function fallbackPlayerSort(a, b) {
+function fallbackPlayerSort(
+  a,
+  b
+) {
 
   const ageDifference =
-    ageNumber(a.ageGroup) -
-    ageNumber(b.ageGroup);
+
+    ageNumber(
+      a.ageGroup
+    )
+
+    -
+
+    ageNumber(
+      b.ageGroup
+    );
 
 
-  if (ageDifference !== 0) {
+  if (
+    ageDifference !==
+    0
+  ) {
+
     return ageDifference;
+
   }
 
 
@@ -1174,16 +2264,24 @@ function fallbackPlayerSort(a, b) {
     );
 
 
-  if (lastCompare !== 0) {
+  if (
+    lastCompare !==
+    0
+  ) {
+
     return lastCompare;
+
   }
 
 
-  return a.firstName.localeCompare(
-    b.firstName
+  return (
+    a.firstName.localeCompare(
+      b.firstName
+    )
   );
 
 }
+
 
 
 function sortResultsPlayers(
@@ -1192,11 +2290,16 @@ function sortResultsPlayers(
 ) {
 
   const config =
-    SORT_CONFIG[resultsSort.key];
+    SORT_CONFIG[
+      resultsSort.key
+    ];
 
 
-  return [...playerList].sort(
+  return [
+    ...playerList
+  ].sort(
     (a, b) => {
+
 
       const valueA =
         getResultsSortValue(
@@ -1215,80 +2318,144 @@ function sortResultsPlayers(
 
 
       const missingA =
+
         valueA === null ||
+
         valueA === undefined ||
+
         valueA === "";
 
 
       const missingB =
+
         valueB === null ||
+
         valueB === undefined ||
+
         valueB === "";
 
 
-      if (missingA && !missingB) {
+      if (
+        missingA &&
+        !missingB
+      ) {
+
         return 1;
+
       }
 
-      if (!missingA && missingB) {
+
+      if (
+        !missingA &&
+        missingB
+      ) {
+
         return -1;
-      }
 
-      if (missingA && missingB) {
-        return fallbackPlayerSort(a, b);
       }
 
 
-      let comparison = 0;
+      if (
+        missingA &&
+        missingB
+      ) {
+
+        return fallbackPlayerSort(
+          a,
+          b
+        );
+
+      }
 
 
-      if (config.type === "text") {
+      let comparison =
+        0;
+
+
+      if (
+        config.type ===
+        "text"
+      ) {
+
 
         comparison =
-          String(valueA).localeCompare(
-            String(valueB)
+          String(
+            valueA
+          ).localeCompare(
+            String(
+              valueB
+            )
           );
 
-      }
 
-      else if (config.type === "squat") {
+      } else if (
+        config.type ===
+        "squat"
+      ) {
+
 
         const order = {
-          PASS: 1,
-          FAIL: 2
+
+          PASS:
+            1,
+
+          FAIL:
+            2
+
         };
 
 
         comparison =
-          (order[valueA] || 999) -
-          (order[valueB] || 999);
 
-      }
+          (
+            order[valueA] ||
+            999
+          )
 
-      else {
+          -
+
+          (
+            order[valueB] ||
+            999
+          );
+
+
+      } else {
+
 
         comparison =
-          Number(valueA) -
+
+          Number(valueA)
+
+          -
+
           Number(valueB);
 
       }
 
 
       if (
-        resultsSort.direction === "desc"
+
+        resultsSort.direction ===
+        "desc"
+
       ) {
 
-        comparison *= -1;
+        comparison *=
+          -1;
 
       }
 
 
-      if (comparison === 0) {
-        return fallbackPlayerSort(a, b);
-      }
+      return comparison ===
+        0
 
+        ? fallbackPlayerSort(
+            a,
+            b
+          )
 
-      return comparison;
+        : comparison;
 
     }
   );
@@ -1296,57 +2463,65 @@ function sortResultsPlayers(
 }
 
 
-/* =========================================================
-   SORT HEADER DISPLAY
-========================================================= */
 
 function updateSortHeaders() {
 
   document
-    .querySelectorAll(".sort-header")
-    .forEach(button => {
-
-      const indicator =
-        button.querySelector(
-          ".sort-indicator"
-        );
+    .querySelectorAll(
+      ".sort-header"
+    )
+    .forEach(
+      button => {
 
 
-      button.classList.remove(
-        "active-sort"
-      );
+        const indicator =
+          button.querySelector(
+            ".sort-indicator"
+          );
 
 
-      if (
-        button.dataset.sort ===
-        resultsSort.key
-      ) {
-
-        button.classList.add(
+        button.classList.remove(
           "active-sort"
         );
 
 
-        indicator.textContent =
-          resultsSort.direction === "asc"
-            ? "↑"
-            : "↓";
+        if (
 
-      } else {
+          button.dataset.sort ===
+          resultsSort.key
 
-        indicator.textContent =
-          "↕";
+        ) {
+
+
+          button.classList.add(
+            "active-sort"
+          );
+
+
+          indicator.textContent =
+
+            resultsSort.direction ===
+            "asc"
+
+              ? "↑"
+
+              : "↓";
+
+
+        } else {
+
+
+          indicator.textContent =
+            "↕";
+
+        }
 
       }
-
-    });
+    );
 
 }
 
 
-/* =========================================================
-   RESULTS TABLE
-========================================================= */
 
 function renderResultsTable() {
 
@@ -1365,31 +2540,49 @@ function renderResultsTable() {
 
 
   let filtered =
-    players.filter(player => {
-
-      const normal =
-        `${player.firstName} ${player.lastName}`
-          .toLowerCase();
-
-      const reverse =
-        `${player.lastName} ${player.firstName}`
-          .toLowerCase();
+    players.filter(
+      player => {
 
 
-      const matchesSearch =
-        !search ||
-        normal.includes(search) ||
-        reverse.includes(search);
+        const normal =
+          `${player.firstName} ${player.lastName}`
+            .toLowerCase();
 
 
-      const matchesAge =
-        ageFilter === "ALL" ||
-        player.ageGroup === ageFilter;
+        const reverse =
+          `${player.lastName} ${player.firstName}`
+            .toLowerCase();
 
 
-      return matchesSearch && matchesAge;
+        const matchesSearch =
 
-    });
+          !search ||
+
+          normal.includes(
+            search
+          ) ||
+
+          reverse.includes(
+            search
+          );
+
+
+        const matchesAge =
+
+          ageFilter ===
+            "ALL" ||
+
+          player.ageGroup ===
+            ageFilter;
+
+
+        return (
+          matchesSearch &&
+          matchesAge
+        );
+
+      }
+    );
 
 
   filtered =
@@ -1402,15 +2595,25 @@ function renderResultsTable() {
   updateSortHeaders();
 
 
-  if (filtered.length === 0) {
+  if (
+    !filtered.length
+  ) {
 
     resultsTableBody.innerHTML = `
+
       <tr>
-        <td colspan="19" class="empty-state">
+
+        <td
+          colspan="19"
+          class="empty-state"
+        >
           No results found.
         </td>
+
       </tr>
+
     `;
+
 
     return;
 
@@ -1418,161 +2621,311 @@ function renderResultsTable() {
 
 
   resultsTableBody.innerHTML =
-    filtered.map(player => {
+    filtered
 
-      const r =
-        player.results;
-
-      const ranking =
-        rankings[player.id];
+      .map(
+        player => {
 
 
-      const rank =
-        ranking.overallRank !== null
-          ? `#${ranking.overallRank}`
-          : "—";
+          const r =
+            player.results;
 
 
-      const score =
-        ranking.combineScore !== null
-          ? ranking.combineScore.toFixed(2)
-          : "—";
+          const ranking =
+            rankings[
+              player.id
+            ];
 
 
-      const pulldown =
-        maxAttempt(r.pulldown);
+          const rank =
 
-      const exitVelo =
-        maxAttempt(r.exitVelo);
+            ranking.overallRank !==
+            null
 
-      const fiveTenFive =
-        bestTime(r.fiveTenFive);
+              ? `#${ranking.overallRank}`
 
-      const tenYard =
-        bestTime(r.tenYard);
-
-      const squat =
-        r.squat?.status || "—";
+              : "—";
 
 
-      return `
-        <tr>
+          const score =
 
-          <td class="rank-cell">
-            ${rank}
-          </td>
+            ranking.combineScore !==
+            null
 
-          <td>
-            ${escapeHTML(
-              `${player.lastName}, ${player.firstName}`
-            )}
-          </td>
+              ? ranking.combineScore
+                  .toFixed(2)
 
-          <td>
-            ${escapeHTML(player.ageGroup)}
-          </td>
+              : "—";
 
-          <td class="score-cell">
-            ${score}
-          </td>
 
-          <td>${formatValue(pulldown)}</td>
-          <td>${formatValue(exitVelo)}</td>
+          const pulldown =
+            maxAttempt(
+              r.pulldown
+            );
 
-          <td>${formatValue(r.internalRotation)}</td>
-          <td>${formatValue(r.externalRotation)}</td>
 
-          <td>${formatValue(r.dynoInternal)}</td>
-          <td>${formatValue(r.dynoExternal)}</td>
+          const exitVelo =
+            maxAttempt(
+              r.exitVelo
+            );
 
-          <td>${formatValue(r.gripLeft)}</td>
-          <td>${formatValue(r.gripRight)}</td>
 
-          <td>${formatValue(r.medBallLeft)}</td>
-          <td>${formatValue(r.medBallRight)}</td>
+          const fiveTenFive =
+            bestTime(
+              r.fiveTenFive
+            );
 
-          <td>
-            ${
-              fiveTenFive !== null
-                ? fiveTenFive.toFixed(2)
-                : "—"
-            }
-          </td>
 
-          <td>
-            ${
-              tenYard !== null
-                ? tenYard.toFixed(2)
-                : "—"
-            }
-          </td>
+          const tenYard =
+            bestTime(
+              r.tenYard
+            );
 
-          <td>${escapeHTML(squat)}</td>
 
-          <td>${formatValue(r.broadJump)}</td>
+          const squat =
+            r.squat?.status ||
+            "—";
 
-          <td>
-            <button
-              class="test-button"
-              data-player-id="${player.id}"
-            >
-              TEST
-            </button>
-          </td>
 
-        </tr>
-      `;
+          return `
 
-    }).join("");
+            <tr>
+
+              <td class="rank-cell">
+                ${rank}
+              </td>
+
+              <td>
+                ${escapeHTML(
+                  `${player.lastName}, ${player.firstName}`
+                )}
+              </td>
+
+              <td>
+                ${escapeHTML(
+                  player.ageGroup
+                )}
+              </td>
+
+              <td class="score-cell">
+                ${score}
+              </td>
+
+              <td>
+                ${formatValue(
+                  pulldown
+                )}
+              </td>
+
+              <td>
+                ${formatValue(
+                  exitVelo
+                )}
+              </td>
+
+              <td>
+                ${formatValue(
+                  r.internalRotation
+                )}
+              </td>
+
+              <td>
+                ${formatValue(
+                  r.externalRotation
+                )}
+              </td>
+
+              <td>
+                ${formatValue(
+                  r.dynoInternal
+                )}
+              </td>
+
+              <td>
+                ${formatValue(
+                  r.dynoExternal
+                )}
+              </td>
+
+              <td>
+                ${formatValue(
+                  r.gripLeft
+                )}
+              </td>
+
+              <td>
+                ${formatValue(
+                  r.gripRight
+                )}
+              </td>
+
+              <td>
+                ${formatValue(
+                  r.medBallLeft
+                )}
+              </td>
+
+              <td>
+                ${formatValue(
+                  r.medBallRight
+                )}
+              </td>
+
+              <td>
+
+                ${
+                  fiveTenFive !==
+                  null
+
+                    ? fiveTenFive
+                        .toFixed(2)
+
+                    : "—"
+                }
+
+              </td>
+
+              <td>
+
+                ${
+                  tenYard !==
+                  null
+
+                    ? tenYard
+                        .toFixed(2)
+
+                    : "—"
+                }
+
+              </td>
+
+              <td>
+                ${escapeHTML(
+                  squat
+                )}
+              </td>
+
+              <td>
+                ${formatValue(
+                  r.broadJump
+                )}
+              </td>
+
+              <td>
+
+                <button
+                  class="test-button"
+                  data-player-id="${player.id}"
+                >
+                  TEST
+                </button>
+
+              </td>
+
+            </tr>
+
+          `;
+
+        }
+      )
+
+      .join("");
 
 }
 
 
+
 /* =========================================================
-   NAVIGATION
+   VIEWS
 ========================================================= */
 
-function showView(viewName) {
+function showView(
+  viewName
+) {
 
-  if (viewName !== "test") {
+  if (
+    viewName !==
+    "test"
+  ) {
+
     cancelAllTimers();
+
   }
 
 
-  playersView.classList.remove("active-view");
-  resultsView.classList.remove("active-view");
-  testView.classList.remove("active-view");
+  playersView.classList.remove(
+    "active-view"
+  );
 
 
-  playersNavButton.classList.remove("active");
-  resultsNavButton.classList.remove("active");
+  resultsView.classList.remove(
+    "active-view"
+  );
 
 
-  if (viewName === "players") {
+  testView.classList.remove(
+    "active-view"
+  );
 
-    playersView.classList.add("active-view");
 
-    playersNavButton.classList.add("active");
+  playersNavButton.classList.remove(
+    "active"
+  );
+
+
+  resultsNavButton.classList.remove(
+    "active"
+  );
+
+
+  if (
+    viewName ===
+    "players"
+  ) {
+
+
+    playersView.classList.add(
+      "active-view"
+    );
+
+
+    playersNavButton.classList.add(
+      "active"
+    );
+
 
     renderPlayersTable();
 
-  }
+
+  } else if (
+    viewName ===
+    "results"
+  ) {
 
 
-  if (viewName === "results") {
+    resultsView.classList.add(
+      "active-view"
+    );
 
-    resultsView.classList.add("active-view");
 
-    resultsNavButton.classList.add("active");
+    resultsNavButton.classList.add(
+      "active"
+    );
+
 
     renderResultsTable();
 
-  }
+
+  } else if (
+    viewName ===
+    "test"
+  ) {
 
 
-  if (viewName === "test") {
+    testView.classList.add(
+      "active-view"
+    );
 
-    testView.classList.add("active-view");
 
     renderTestView();
 
@@ -1580,16 +2933,25 @@ function showView(viewName) {
 
 
   window.scrollTo({
-    top: 0,
-    behavior: "smooth"
+
+    top:
+      0,
+
+    behavior:
+      "smooth"
+
   });
 
 }
 
 
-function openPlayerTest(playerId) {
+
+function openPlayerTest(
+  playerId
+) {
 
   cancelAllTimers();
+
 
   currentPlayerId =
     playerId;
@@ -1600,19 +2962,28 @@ function openPlayerTest(playerId) {
 
 
   if (!player) {
+
     return;
+
   }
 
 
   selectedSquatStatus =
-    player.results.squat?.status || null;
+    player.results
+      .squat
+      ?.status ||
+    null;
 
 
   closePlayerDrawer();
 
-  showView("test");
+
+  showView(
+    "test"
+  );
 
 }
+
 
 
 /* =========================================================
@@ -1626,7 +2997,9 @@ function renderTestView() {
 
 
   if (!player) {
+
     return;
+
   }
 
 
@@ -1638,67 +3011,91 @@ function renderTestView() {
     player.ageGroup;
 
 
-  const singleValueFields = [
+  [
 
     "internalRotation",
+
     "externalRotation",
 
     "dynoInternal",
+
     "dynoExternal",
 
     "gripLeft",
+
     "gripRight",
 
     "medBallLeft",
+
     "medBallRight",
 
     "broadJump"
 
-  ];
+  ].forEach(
+    key => {
 
 
-  singleValueFields.forEach(key => {
-
-    const element =
-      document.getElementById(
-        `${key}Value`
-      );
-
-
-    if (element) {
-
-      element.textContent =
-        formatValue(
-          player.results[key]
+      const element =
+        document.getElementById(
+          `${key}Value`
         );
 
+
+      if (
+        element
+      ) {
+
+        element.textContent =
+          formatValue(
+            player.results[
+              key
+            ]
+          );
+
+      }
+
     }
-
-  });
-
-
-  renderVelocityAttempts(
-    "pulldown",
-    "pulldownMax",
-    "pulldownAverage",
-    "pulldownAttempts"
   );
 
 
   renderVelocityAttempts(
+
+    "pulldown",
+
+    "pulldownMax",
+
+    "pulldownAverage",
+
+    "pulldownAttempts"
+
+  );
+
+
+  renderVelocityAttempts(
+
     "exitVelo",
+
     "exitVeloMax",
+
     "exitVeloAverage",
+
     "exitVeloAttempts"
+
   );
 
 
   selectedSquatStatus =
-    player.results.squat?.status || null;
+    player.results
+      .squat
+      ?.status ||
+    null;
 
 
   squatNotes.value =
-    player.results.squat?.notes || "";
+    player.results
+      .squat
+      ?.notes ||
+    "";
 
 
   updateSquatButtons();
@@ -1709,90 +3106,215 @@ function renderTestView() {
 }
 
 
+
 /* =========================================================
    ADD PLAYER
 ========================================================= */
 
 function openAddPlayerModal() {
 
-  newPlayerFirstName.value = "";
-  newPlayerLastName.value = "";
-  newPlayerAgeGroup.value = "";
+  newPlayerFirstName.value =
+    "";
 
 
-  addPlayerModal.classList.add("show");
+  newPlayerLastName.value =
+    "";
+
+
+  newPlayerAgeGroup.value =
+    "";
+
+
+  addPlayerModal.classList.add(
+    "show"
+  );
 
 
   setTimeout(
-    () => newPlayerFirstName.focus(),
+
+    () =>
+      newPlayerFirstName.focus(),
+
     50
+
   );
 
 }
 
 
+
 function closeAddPlayerModal() {
 
-  addPlayerModal.classList.remove("show");
+  addPlayerModal.classList.remove(
+    "show"
+  );
 
 }
 
 
-function addPlayer() {
+
+async function addPlayer() {
 
   const firstName =
-    newPlayerFirstName.value.trim();
+    newPlayerFirstName.value
+      .trim();
+
 
   const lastName =
-    newPlayerLastName.value.trim();
+    newPlayerLastName.value
+      .trim();
+
 
   const ageGroup =
     newPlayerAgeGroup.value;
 
 
   if (
+
     !firstName ||
+
     !lastName ||
+
     !ageGroup
+
   ) {
+
 
     alert(
       "Enter first name, last name, and age group."
     );
+
 
     return;
 
   }
 
 
-  const player = {
-
-    id: generateId(),
-
-    firstName,
-    lastName,
-    ageGroup,
-
-    createdAt:
-      new Date().toISOString(),
-
-    results:
-      defaultResults()
-
-  };
+  savePlayerButton.disabled =
+    true;
 
 
-  players.push(player);
+  savePlayerButton.textContent =
+    "ADDING...";
 
-  savePlayers();
 
-  closeAddPlayerModal();
+  try {
 
-  renderEverything();
 
-  openPlayerTest(player.id);
+    const newRef =
+      doc(
+
+        collection(
+          db,
+          "players"
+        )
+
+      );
+
+
+    const newPlayer = {
+
+      firstName,
+
+      lastName,
+
+      ageGroup,
+
+
+      results:
+        defaultResults(),
+
+
+      createdAt:
+        serverTimestamp(),
+
+
+      createdBy:
+        auth.currentUser.uid,
+
+
+      updatedAt:
+        serverTimestamp(),
+
+
+      updatedBy:
+        auth.currentUser.uid
+
+    };
+
+
+    await setDoc(
+      newRef,
+      newPlayer
+    );
+
+
+    if (
+
+      !players.some(
+        player =>
+          player.id ===
+          newRef.id
+      )
+
+    ) {
+
+
+      players.push(
+
+        normalizePlayer({
+
+          id:
+            newRef.id,
+
+          ...newPlayer
+
+        })
+
+      );
+
+    }
+
+
+    closeAddPlayerModal();
+
+
+    renderEverything();
+
+
+    openPlayerTest(
+      newRef.id
+    );
+
+
+  } catch (error) {
+
+
+    console.error(
+      "Could not add player:",
+      error
+    );
+
+
+    alert(
+      "Player could not be added. Check your connection and Firebase permissions."
+    );
+
+
+  } finally {
+
+
+    savePlayerButton.disabled =
+      false;
+
+
+    savePlayerButton.textContent =
+      "ADD PLAYER";
+
+  }
 
 }
+
 
 
 /* =========================================================
@@ -1803,20 +3325,33 @@ function openPlayerDrawer() {
 
   renderPlayerDrawer();
 
-  playerDrawer.classList.add("open");
 
-  drawerBackdrop.classList.add("show");
+  playerDrawer.classList.add(
+    "open"
+  );
+
+
+  drawerBackdrop.classList.add(
+    "show"
+  );
 
 }
+
 
 
 function closePlayerDrawer() {
 
-  playerDrawer.classList.remove("open");
+  playerDrawer.classList.remove(
+    "open"
+  );
 
-  drawerBackdrop.classList.remove("show");
+
+  drawerBackdrop.classList.remove(
+    "show"
+  );
 
 }
+
 
 
 function renderPlayerDrawer() {
@@ -1827,103 +3362,166 @@ function renderPlayerDrawer() {
       .toLowerCase();
 
 
-  let filtered =
-    players.filter(player => {
+  const filtered =
+    players
 
-      const normal =
-        `${player.firstName} ${player.lastName}`
-          .toLowerCase();
-
-      const reverse =
-        `${player.lastName} ${player.firstName}`
-          .toLowerCase();
+      .filter(
+        player => {
 
 
-      return (
-        !search ||
-        normal.includes(search) ||
-        reverse.includes(search)
+          const normal =
+            `${player.firstName} ${player.lastName}`
+              .toLowerCase();
+
+
+          const reverse =
+            `${player.lastName} ${player.firstName}`
+              .toLowerCase();
+
+
+          return (
+
+            !search ||
+
+            normal.includes(
+              search
+            ) ||
+
+            reverse.includes(
+              search
+            )
+
+          );
+
+        }
+      )
+
+      .sort(
+        (a, b) => {
+
+
+          const ageDifference =
+
+            ageNumber(
+              a.ageGroup
+            )
+
+            -
+
+            ageNumber(
+              b.ageGroup
+            );
+
+
+          if (
+            ageDifference !==
+            0
+          ) {
+
+            return ageDifference;
+
+          }
+
+
+          const lastCompare =
+            a.lastName.localeCompare(
+              b.lastName
+            );
+
+
+          if (
+            lastCompare !==
+            0
+          ) {
+
+            return lastCompare;
+
+          }
+
+
+          return (
+            a.firstName.localeCompare(
+              b.firstName
+            )
+          );
+
+        }
       );
 
-    });
 
+  if (
+    !filtered.length
+  ) {
 
-  filtered.sort((a, b) => {
-
-    const ageDifference =
-      ageNumber(a.ageGroup) -
-      ageNumber(b.ageGroup);
-
-
-    if (ageDifference !== 0) {
-      return ageDifference;
-    }
-
-
-    const lastCompare =
-      a.lastName.localeCompare(
-        b.lastName
-      );
-
-
-    if (lastCompare !== 0) {
-      return lastCompare;
-    }
-
-
-    return a.firstName.localeCompare(
-      b.firstName
-    );
-
-  });
-
-
-  if (filtered.length === 0) {
 
     drawerPlayerList.innerHTML = `
+
       <div class="empty-state">
         No players found.
       </div>
+
     `;
+
 
     return;
 
   }
 
 
-  let html = "";
-  let currentAge = null;
+  let html =
+    "";
 
 
-  filtered.forEach(player => {
+  let currentAge =
+    null;
 
-    if (player.ageGroup !== currentAge) {
 
-      currentAge =
-        player.ageGroup;
+  filtered.forEach(
+    player => {
+
+
+      if (
+        player.ageGroup !==
+        currentAge
+      ) {
+
+
+        currentAge =
+          player.ageGroup;
+
+
+        html += `
+
+          <div class="drawer-age-heading">
+
+            ${escapeHTML(
+              currentAge
+            )}
+
+          </div>
+
+        `;
+
+      }
 
 
       html += `
-        <div class="drawer-age-heading">
-          ${escapeHTML(currentAge)}
-        </div>
+
+        <button
+          class="drawer-player-button"
+          data-player-id="${player.id}"
+        >
+
+          ${escapeHTML(
+            `${player.lastName}, ${player.firstName}`
+          )}
+
+        </button>
+
       `;
 
     }
-
-
-    html += `
-      <button
-        class="drawer-player-button"
-        data-player-id="${player.id}"
-      >
-        ${escapeHTML(
-          `${player.lastName}, ${player.firstName}`
-        )}
-      </button>
-    `;
-
-  });
+  );
 
 
   drawerPlayerList.innerHTML =
@@ -1932,18 +3530,23 @@ function renderPlayerDrawer() {
 }
 
 
+
 /* =========================================================
-   STANDARD CALCULATOR
+   CALCULATOR
 ========================================================= */
 
-function openCalculator(card) {
+function openCalculator(
+  card
+) {
 
   const player =
     getCurrentPlayer();
 
 
   if (!player) {
+
     return;
+
   }
 
 
@@ -1971,13 +3574,21 @@ function openCalculator(card) {
 
 
   calculatorInput =
-    isNumber(existing)
-      ? String(existing)
+
+    isNumber(
+      existing
+    )
+
+      ? String(
+          existing
+        )
+
       : "";
 
 
   calculatorLabel.textContent =
     activeCalculatorTest.label;
+
 
   calculatorUnit.textContent =
     activeCalculatorTest.unit;
@@ -1985,32 +3596,33 @@ function openCalculator(card) {
 
   updateCalculatorDisplay();
 
-  numberModal.classList.add("show");
+
+  numberModal.classList.add(
+    "show"
+  );
 
 }
 
 
-/* =========================================================
-   PULLDOWN / EXIT VELO CALCULATOR
 
-   Always starts blank.
-========================================================= */
+function openAttemptCalculator(
+  button
+) {
 
-function openAttemptCalculator(button) {
+  if (
+    !getCurrentPlayer()
+  ) {
 
-  const player =
-    getCurrentPlayer();
-
-
-  if (!player) {
     return;
+
   }
 
 
   activeCalculatorTest = {
 
     key:
-      button.dataset.attemptTest,
+      button.dataset
+        .attemptTest,
 
     label:
       button.dataset.label,
@@ -2024,11 +3636,13 @@ function openAttemptCalculator(button) {
   };
 
 
-  calculatorInput = "";
+  calculatorInput =
+    "";
 
 
   calculatorLabel.textContent =
     activeCalculatorTest.label;
+
 
   calculatorUnit.textContent =
     activeCalculatorTest.unit;
@@ -2036,20 +3650,31 @@ function openAttemptCalculator(button) {
 
   updateCalculatorDisplay();
 
-  numberModal.classList.add("show");
+
+  numberModal.classList.add(
+    "show"
+  );
 
 }
+
 
 
 function closeCalculator() {
 
-  numberModal.classList.remove("show");
+  numberModal.classList.remove(
+    "show"
+  );
 
-  activeCalculatorTest = null;
 
-  calculatorInput = "";
+  activeCalculatorTest =
+    null;
+
+
+  calculatorInput =
+    "";
 
 }
+
 
 
 function updateCalculatorDisplay() {
@@ -2060,56 +3685,85 @@ function updateCalculatorDisplay() {
 }
 
 
-function calculatorKeyPress(key) {
 
-  if (key === "backspace") {
+function calculatorKeyPress(
+  key
+) {
+
+  if (
+    key ===
+    "backspace"
+  ) {
+
 
     calculatorInput =
-      calculatorInput.slice(0, -1);
+      calculatorInput.slice(
+        0,
+        -1
+      );
+
 
     updateCalculatorDisplay();
+
 
     return;
 
   }
 
 
-  if (key === ".") {
+  if (
+    key === "."
+  ) {
 
-    if (calculatorInput.includes(".")) {
+
+    if (
+      calculatorInput.includes(
+        "."
+      )
+    ) {
+
       return;
+
     }
 
 
     calculatorInput =
-      calculatorInput === ""
+
+      calculatorInput ===
+      ""
+
         ? "0."
+
         : `${calculatorInput}.`;
 
 
     updateCalculatorDisplay();
 
+
     return;
 
   }
 
 
-  if (calculatorInput.length >= 8) {
+  if (
+    calculatorInput.length >=
+    8
+  ) {
+
     return;
-  }
-
-
-  if (calculatorInput === "0") {
-
-    calculatorInput =
-      key;
-
-  } else {
-
-    calculatorInput +=
-      key;
 
   }
+
+
+  calculatorInput =
+
+    calculatorInput ===
+    "0"
+
+      ? key
+
+      : calculatorInput +
+        key;
 
 
   updateCalculatorDisplay();
@@ -2117,27 +3771,48 @@ function calculatorKeyPress(key) {
 }
 
 
-function saveCalculatorResult() {
+
+/* =========================================================
+   SAVE RESULT
+========================================================= */
+
+async function saveCalculatorResult() {
 
   const player =
     getCurrentPlayer();
 
 
   if (
+
     !player ||
+
     !activeCalculatorTest
+
   ) {
+
     return;
+
   }
 
 
   if (
-    calculatorInput === "" ||
-    calculatorInput === "." ||
-    calculatorInput === "0."
+
+    calculatorInput ===
+      "" ||
+
+    calculatorInput ===
+      "." ||
+
+    calculatorInput ===
+      "0."
+
   ) {
 
-    alert("Enter a result before saving.");
+
+    alert(
+      "Enter a result before saving."
+    );
+
 
     return;
 
@@ -2145,53 +3820,151 @@ function saveCalculatorResult() {
 
 
   const value =
-    Number(calculatorInput);
+    Number(
+      calculatorInput
+    );
 
 
-  if (!Number.isFinite(value)) {
+  if (
+    !Number.isFinite(
+      value
+    )
+  ) {
 
-    alert("Enter a valid number.");
+
+    alert(
+      "Enter a valid number."
+    );
+
 
     return;
 
   }
 
 
-  if (activeCalculatorTest.isAttempt) {
+  calculatorSaveButton.disabled =
+    true;
+
+
+  calculatorSaveButton.textContent =
+    "SAVING...";
+
+
+  try {
+
 
     const key =
       activeCalculatorTest.key;
 
 
-    if (!Array.isArray(player.results[key])) {
-      player.results[key] = [];
+    if (
+      activeCalculatorTest
+        .isAttempt
+    ) {
+
+
+      const attempts =
+
+        Array.isArray(
+          player.results[
+            key
+          ]
+        )
+
+          ? [
+              ...player.results[
+                key
+              ]
+            ]
+
+          : [];
+
+
+      attempts.push(
+        value
+      );
+
+
+      await updatePlayerFields(
+
+        player.id,
+
+        {
+          [`results.${key}`]:
+            attempts
+        }
+
+      );
+
+
+      player.results[
+        key
+      ] = attempts;
+
+
+    } else {
+
+
+      await updatePlayerFields(
+
+        player.id,
+
+        {
+          [`results.${key}`]:
+            value
+        }
+
+      );
+
+
+      player.results[
+        key
+      ] = value;
+
     }
 
 
-    player.results[key].push(value);
+    closeCalculator();
 
-  } else {
 
-    player.results[
-      activeCalculatorTest.key
-    ] = value;
+    renderEverything();
+
+
+    renderTestView();
+
+
+  } catch (error) {
+
+
+    console.error(
+      "Could not save result:",
+      error
+    );
+
+
+    alert(
+      "Result could not be saved. Check your connection."
+    );
+
+
+  } finally {
+
+
+    calculatorSaveButton.disabled =
+      false;
+
+
+    calculatorSaveButton.textContent =
+      "SAVE RESULT";
 
   }
-
-
-  savePlayers();
-
-  closeCalculator();
-
-  renderEverything();
-
-  renderTestView();
 
 }
 
 
+
 /* =========================================================
-   VELOCITY DISPLAY
+   VELOCITY ATTEMPTS
 ========================================================= */
 
 function renderVelocityAttempts(
@@ -2206,38 +3979,58 @@ function renderVelocityAttempts(
 
 
   if (!player) {
+
     return;
+
   }
 
 
   const attempts =
+
     Array.isArray(
-      player.results[resultKey]
+      player.results[
+        resultKey
+      ]
     )
-      ? player.results[resultKey]
+
+      ? player.results[
+          resultKey
+        ]
+
       : [];
 
 
   const max =
-    maxAttempt(attempts);
+    maxAttempt(
+      attempts
+    );
+
 
   const average =
-    averageAttempt(attempts);
+    averageAttempt(
+      attempts
+    );
 
 
   document.getElementById(
     maxElementId
   ).textContent =
+
     max !== null
+
       ? max.toFixed(1)
+
       : "—";
 
 
   document.getElementById(
     averageElementId
   ).textContent =
+
     average !== null
+
       ? average.toFixed(1)
+
       : "—";
 
 
@@ -2247,13 +4040,23 @@ function renderVelocityAttempts(
     );
 
 
-  if (attempts.length === 0) {
+  if (
+    !attempts.length
+  ) {
+
 
     container.innerHTML = `
+
       <div class="attempt-row">
-        <span>No entries yet</span>
+
+        <span>
+          No entries yet
+        </span>
+
       </div>
+
     `;
+
 
     return;
 
@@ -2262,44 +4065,147 @@ function renderVelocityAttempts(
 
   const lastThree =
     attempts
-      .map((value, index) => ({
-        value,
-        originalIndex: index
-      }))
+
+      .map(
+        (value, index) => ({
+
+          value,
+
+          originalIndex:
+            index
+
+        })
+      )
+
       .slice(-3)
+
       .reverse();
 
 
   container.innerHTML =
-    lastThree.map(item => `
+    lastThree
 
-      <div class="attempt-row">
+      .map(
+        item => `
 
-        <span>
-          Attempt ${item.originalIndex + 1}
-        </span>
+          <div class="attempt-row">
 
-        <strong>
-          ${Number(item.value).toFixed(1)} MPH
-        </strong>
+            <span>
+              Attempt ${item.originalIndex + 1}
+            </span>
 
-        <button
-          class="delete-velocity-attempt"
-          data-test="${resultKey}"
-          data-index="${item.originalIndex}"
-        >
-          DELETE
-        </button>
+            <strong>
+              ${Number(item.value).toFixed(1)} MPH
+            </strong>
 
-      </div>
+            <button
+              class="delete-velocity-attempt"
+              data-test="${resultKey}"
+              data-index="${item.originalIndex}"
+            >
+              DELETE
+            </button>
 
-    `).join("");
+          </div>
+
+        `
+      )
+
+      .join("");
 
 }
 
 
+
+async function deleteVelocityAttempt(
+  resultKey,
+  index
+) {
+
+  const player =
+    getCurrentPlayer();
+
+
+  if (
+
+    !player ||
+
+    !Array.isArray(
+      player.results[
+        resultKey
+      ]
+    )
+
+  ) {
+
+    return;
+
+  }
+
+
+  const attempts =
+    [
+
+      ...player.results[
+        resultKey
+      ]
+
+    ];
+
+
+  attempts.splice(
+    index,
+    1
+  );
+
+
+  try {
+
+
+    await updatePlayerFields(
+
+      player.id,
+
+      {
+        [`results.${resultKey}`]:
+          attempts
+      }
+
+    );
+
+
+    player.results[
+      resultKey
+    ] = attempts;
+
+
+    renderEverything();
+
+
+    renderTestView();
+
+
+  } catch (error) {
+
+
+    console.error(
+      "Could not delete attempt:",
+      error
+    );
+
+
+    alert(
+      "Attempt could not be deleted."
+    );
+
+  }
+
+}
+
+
+
 /* =========================================================
-   SQUAT — AUTO SAVE
+   SQUAT
 ========================================================= */
 
 function updateSquatButtons() {
@@ -2308,12 +4214,16 @@ function updateSquatButtons() {
     "pass-selected"
   );
 
+
   squatFailButton.classList.remove(
     "fail-selected"
   );
 
 
-  if (selectedSquatStatus === "PASS") {
+  if (
+    selectedSquatStatus ===
+    "PASS"
+  ) {
 
     squatPassButton.classList.add(
       "pass-selected"
@@ -2322,7 +4232,10 @@ function updateSquatButtons() {
   }
 
 
-  if (selectedSquatStatus === "FAIL") {
+  if (
+    selectedSquatStatus ===
+    "FAIL"
+  ) {
 
     squatFailButton.classList.add(
       "fail-selected"
@@ -2333,91 +4246,212 @@ function updateSquatButtons() {
 }
 
 
-function saveSquatStatus(status) {
+
+async function saveSquatStatus(
+  status
+) {
 
   const player =
     getCurrentPlayer();
 
 
   if (!player) {
+
     return;
+
   }
 
 
-  selectedSquatStatus =
-    status;
+  try {
 
 
-  player.results.squat.status =
-    status;
+    await updatePlayerFields(
+
+      player.id,
+
+      {
+        "results.squat.status":
+          status
+      }
+
+    );
 
 
-  player.results.squat.notes =
-    squatNotes.value;
+    player.results
+      .squat
+      .status =
+        status;
 
 
-  savePlayers();
-
-  updateSquatButtons();
-
-  renderPlayersTable();
-
-  renderResultsTable();
-
-}
+    selectedSquatStatus =
+      status;
 
 
-function saveSquatNotes() {
-
-  const player =
-    getCurrentPlayer();
+    updateSquatButtons();
 
 
-  if (!player) {
-    return;
+    renderPlayersTable();
+
+
+    renderResultsTable();
+
+
+  } catch (error) {
+
+
+    console.error(
+      "Could not save squat status:",
+      error
+    );
+
+
+    alert(
+      "Squat status could not be saved."
+    );
+
   }
 
-
-  player.results.squat.notes =
-    squatNotes.value;
-
-
-  savePlayers();
-
 }
+
 
 
 /* =========================================================
-   TIMER SYSTEM
+   SQUAT NOTES AUTOSAVE
+========================================================= */
+
+function queueSquatNotesSave() {
+
+  const playerId =
+    currentPlayerId;
+
+
+  const notes =
+    squatNotes.value;
+
+
+  clearTimeout(
+    squatNotesSaveTimer
+  );
+
+
+  squatNotesSaveTimer =
+    setTimeout(
+
+      async () => {
+
+
+        if (!playerId) {
+
+          return;
+
+        }
+
+
+        try {
+
+
+          await updatePlayerFields(
+
+            playerId,
+
+            {
+              "results.squat.notes":
+                notes
+            }
+
+          );
+
+
+          const player =
+            players.find(
+              item =>
+                item.id ===
+                playerId
+            );
+
+
+          if (player) {
+
+            player.results
+              .squat
+              .notes =
+                notes;
+
+          }
+
+
+        } catch (error) {
+
+
+          console.error(
+            "Could not save squat notes:",
+            error
+          );
+
+        }
+
+      },
+
+      600
+
+    );
+
+}
+
+
+
+/* =========================================================
+   TIMERS
 ========================================================= */
 
 function createTimer({
+
   displayElement,
+
   buttonElement,
+
   attemptsElement,
+
   bestElement,
+
   resultKey
+
 }) {
 
-  let running = false;
 
-  let startTime = null;
+  let running =
+    false;
 
-  let animationFrame = null;
+
+  let startTime =
+    null;
+
+
+  let animationFrame =
+    null;
+
 
 
   function updateTimer() {
 
+
     if (!running) {
+
       return;
+
     }
 
 
     const elapsed =
+
       (
         performance.now() -
         startTime
-      ) / 1000;
+      )
+
+      /
+
+      1000;
 
 
     displayElement.textContent =
@@ -2432,20 +4466,13 @@ function createTimer({
   }
 
 
-  function toggleTimer() {
-
-    if (running) {
-      stopTimer();
-    } else {
-      startTimer();
-    }
-
-  }
-
 
   function startTimer() {
 
-    running = true;
+
+    running =
+      true;
+
 
     startTime =
       performance.now();
@@ -2472,22 +4499,27 @@ function createTimer({
   }
 
 
-  function stopTimer() {
+
+  async function stopTimer() {
+
 
     if (!running) {
+
       return;
+
     }
 
 
-    const player =
-      getCurrentPlayer();
-
-
     const elapsed =
+
       (
         performance.now() -
         startTime
-      ) / 1000;
+      )
+
+      /
+
+      1000;
 
 
     const finalTime =
@@ -2496,7 +4528,8 @@ function createTimer({
       );
 
 
-    running = false;
+    running =
+      false;
 
 
     cancelAnimationFrame(
@@ -2504,7 +4537,8 @@ function createTimer({
     );
 
 
-    animationFrame = null;
+    animationFrame =
+      null;
 
 
     buttonElement.textContent =
@@ -2520,47 +4554,118 @@ function createTimer({
       finalTime.toFixed(2);
 
 
+    const player =
+      getCurrentPlayer();
+
+
     if (!player) {
+
       return;
+
     }
 
 
-    if (
-      !Array.isArray(
-        player.results[resultKey]
+    const attempts =
+
+      Array.isArray(
+        player.results[
+          resultKey
+        ]
       )
-    ) {
 
-      player.results[resultKey] = [];
+        ? [
+            ...player.results[
+              resultKey
+            ]
+          ]
 
-    }
-
-
-    player.results[
-      resultKey
-    ].push(finalTime);
+        : [];
 
 
-    savePlayers();
-
-
-    renderTimerAttempts(
-      attemptsElement,
-      bestElement,
-      resultKey
+    attempts.push(
+      finalTime
     );
 
 
-    renderPlayersTable();
+    try {
 
-    renderResultsTable();
+
+      await updatePlayerFields(
+
+        player.id,
+
+        {
+          [`results.${resultKey}`]:
+            attempts
+        }
+
+      );
+
+
+      player.results[
+        resultKey
+      ] = attempts;
+
+
+      renderTimerAttempts(
+
+        attemptsElement,
+
+        bestElement,
+
+        resultKey
+
+      );
+
+
+      renderPlayersTable();
+
+
+      renderResultsTable();
+
+
+    } catch (error) {
+
+
+      console.error(
+        "Could not save timed attempt:",
+        error
+      );
+
+
+      alert(
+        "Timed attempt could not be saved."
+      );
+
+    }
 
   }
 
 
+
+  function toggleTimer() {
+
+
+    if (running) {
+
+      stopTimer();
+
+    } else {
+
+      startTimer();
+
+    }
+
+  }
+
+
+
   function cancel() {
 
-    if (animationFrame) {
+
+    if (
+      animationFrame
+    ) {
 
       cancelAnimationFrame(
         animationFrame
@@ -2569,11 +4674,16 @@ function createTimer({
     }
 
 
-    animationFrame = null;
+    animationFrame =
+      null;
 
-    running = false;
 
-    startTime = null;
+    running =
+      false;
+
+
+    startTime =
+      null;
 
 
     buttonElement.textContent =
@@ -2591,15 +4701,19 @@ function createTimer({
   }
 
 
+
   buttonElement.addEventListener(
     "click",
     toggleTimer
   );
 
 
+
   attemptsElement.addEventListener(
     "click",
-    event => {
+
+    async event => {
+
 
       const button =
         event.target.closest(
@@ -2608,7 +4722,9 @@ function createTimer({
 
 
       if (!button) {
+
         return;
+
       }
 
 
@@ -2617,7 +4733,9 @@ function createTimer({
 
 
       if (!player) {
+
         return;
+
       }
 
 
@@ -2627,34 +4745,87 @@ function createTimer({
         );
 
 
-      player.results[
-        resultKey
-      ].splice(index, 1);
+      const attempts =
+        [
+
+          ...player.results[
+            resultKey
+          ]
+
+        ];
 
 
-      savePlayers();
-
-
-      renderTimerAttempts(
-        attemptsElement,
-        bestElement,
-        resultKey
+      attempts.splice(
+        index,
+        1
       );
 
 
-      renderPlayersTable();
+      try {
 
-      renderResultsTable();
+
+        await updatePlayerFields(
+
+          player.id,
+
+          {
+            [`results.${resultKey}`]:
+              attempts
+          }
+
+        );
+
+
+        player.results[
+          resultKey
+        ] = attempts;
+
+
+        renderTimerAttempts(
+
+          attemptsElement,
+
+          bestElement,
+
+          resultKey
+
+        );
+
+
+        renderPlayersTable();
+
+
+        renderResultsTable();
+
+
+      } catch (error) {
+
+
+        console.error(
+          "Could not delete timed attempt:",
+          error
+        );
+
+
+        alert(
+          "Attempt could not be deleted."
+        );
+
+      }
 
     }
+
   );
 
 
   return {
+
     cancel
+
   };
 
 }
+
 
 
 /* =========================================================
@@ -2673,9 +4844,14 @@ function renderTimerAttempts(
 
   if (!player) {
 
-    container.innerHTML = "";
 
-    bestElement.textContent = "—";
+    container.innerHTML =
+      "";
+
+
+    bestElement.textContent =
+      "—";
+
 
     return;
 
@@ -2683,30 +4859,52 @@ function renderTimerAttempts(
 
 
   const attempts =
+
     Array.isArray(
-      player.results[resultKey]
+      player.results[
+        resultKey
+      ]
     )
-      ? player.results[resultKey]
+
+      ? player.results[
+          resultKey
+        ]
+
       : [];
 
 
   const best =
-    bestTime(attempts);
+    bestTime(
+      attempts
+    );
 
 
   bestElement.textContent =
+
     best !== null
+
       ? `${best.toFixed(2)}s`
+
       : "—";
 
 
-  if (attempts.length === 0) {
+  if (
+    !attempts.length
+  ) {
+
 
     container.innerHTML = `
+
       <div class="attempt-row">
-        <span>No attempts yet</span>
+
+        <span>
+          No attempts yet
+        </span>
+
       </div>
+
     `;
+
 
     return;
 
@@ -2714,44 +4912,62 @@ function renderTimerAttempts(
 
 
   container.innerHTML =
-    attempts.map(
-      (attempt, index) => {
+    attempts
 
-        const isBest =
-          best !== null &&
-          Number(attempt) === Number(best);
+      .map(
+        (attempt, index) => {
 
 
-        return `
-          <div class="attempt-row">
+          const isBest =
 
-            <span>
-              Attempt ${index + 1}
-              ${isBest ? " • BEST" : ""}
-            </span>
+            best !== null &&
 
-            <strong>
-              ${Number(attempt).toFixed(2)}s
-            </strong>
+            Number(attempt) ===
+            Number(best);
 
-            <button
-              class="delete-attempt"
-              data-index="${index}"
-            >
-              DELETE
-            </button>
 
-          </div>
-        `;
+          return `
 
-      }
-    ).join("");
+            <div class="attempt-row">
+
+              <span>
+
+                Attempt ${index + 1}
+
+                ${
+                  isBest
+                    ? " • BEST"
+                    : ""
+                }
+
+              </span>
+
+              <strong>
+                ${Number(attempt).toFixed(2)}s
+              </strong>
+
+              <button
+                class="delete-attempt"
+                data-index="${index}"
+              >
+                DELETE
+              </button>
+
+            </div>
+
+          `;
+
+        }
+      )
+
+      .join("");
 
 }
 
 
+
 /* =========================================================
-   TIMERS
+   CREATE TIMERS
 ========================================================= */
 
 const fiveTenFiveController =
@@ -2783,6 +4999,7 @@ const fiveTenFiveController =
   });
 
 
+
 const tenYardController =
   createTimer({
 
@@ -2812,19 +5029,26 @@ const tenYardController =
   });
 
 
+
 timerControllers = [
+
   fiveTenFiveController,
+
   tenYardController
+
 ];
+
 
 
 function cancelAllTimers() {
 
   timerControllers.forEach(
-    controller => controller.cancel()
+    controller =>
+      controller.cancel()
   );
 
 }
+
 
 
 function renderAllTimerAttempts() {
@@ -2861,32 +5085,53 @@ function renderAllTimerAttempts() {
 }
 
 
+
 /* =========================================================
-   NAV EVENTS
+   NAVIGATION EVENTS
 ========================================================= */
 
 playersNavButton.addEventListener(
   "click",
-  () => showView("players")
+
+  () =>
+    showView(
+      "players"
+    )
 );
+
 
 
 resultsNavButton.addEventListener(
   "click",
-  () => showView("results")
+
+  () =>
+    showView(
+      "results"
+    )
 );
+
 
 
 mainResultsButton.addEventListener(
   "click",
-  () => showView("results")
+
+  () =>
+    showView(
+      "results"
+    )
 );
+
 
 
 backToPlayersButton.addEventListener(
   "click",
-  () => showView("players")
+
+  () =>
+    showView(
+      "players"
+    )
 );
+
 
 
 /* =========================================================
@@ -2917,54 +5162,83 @@ resultsAgeFilter.addEventListener(
 );
 
 
+
 /* =========================================================
    RESULTS SORT
 ========================================================= */
 
 document
-  .querySelectorAll(".sort-header")
-  .forEach(button => {
-
-    button.addEventListener(
-      "click",
-      () => {
-
-        const sortKey =
-          button.dataset.sort;
+  .querySelectorAll(
+    ".sort-header"
+  )
+  .forEach(
+    button => {
 
 
-        if (!SORT_CONFIG[sortKey]) {
-          return;
-        }
+      button.addEventListener(
+        "click",
+
+        () => {
 
 
-        if (resultsSort.key === sortKey) {
-
-          resultsSort.direction =
-            resultsSort.direction === "asc"
-              ? "desc"
-              : "asc";
-
-        } else {
-
-          resultsSort.key =
-            sortKey;
+          const sortKey =
+            button.dataset.sort;
 
 
-          resultsSort.direction =
-            SORT_CONFIG[
+          if (
+            !SORT_CONFIG[
               sortKey
-            ].defaultDirection;
+            ]
+          ) {
+
+            return;
+
+          }
+
+
+          if (
+
+            resultsSort.key ===
+            sortKey
+
+          ) {
+
+
+            resultsSort.direction =
+
+              resultsSort.direction ===
+              "asc"
+
+                ? "desc"
+
+                : "asc";
+
+
+          } else {
+
+
+            resultsSort.key =
+              sortKey;
+
+
+            resultsSort.direction =
+              SORT_CONFIG[
+                sortKey
+              ].defaultDirection;
+
+          }
+
+
+          renderResultsTable();
 
         }
 
+      );
 
-        renderResultsTable();
+    }
 
-      }
-    );
+  );
 
-  });
 
 
 /* =========================================================
@@ -2973,7 +5247,9 @@ document
 
 playersTableBody.addEventListener(
   "click",
+
   event => {
+
 
     const button =
       event.target.closest(
@@ -2981,7 +5257,10 @@ playersTableBody.addEventListener(
       );
 
 
-    if (button) {
+    if (
+      button
+    ) {
+
 
       openPlayerTest(
         button.dataset.playerId
@@ -2990,12 +5269,16 @@ playersTableBody.addEventListener(
     }
 
   }
+
 );
+
 
 
 resultsTableBody.addEventListener(
   "click",
+
   event => {
+
 
     const button =
       event.target.closest(
@@ -3003,7 +5286,10 @@ resultsTableBody.addEventListener(
       );
 
 
-    if (button) {
+    if (
+      button
+    ) {
+
 
       openPlayerTest(
         button.dataset.playerId
@@ -3012,7 +5298,9 @@ resultsTableBody.addEventListener(
     }
 
   }
+
 );
+
 
 
 /* =========================================================
@@ -3039,14 +5327,24 @@ savePlayerButton.addEventListener(
 
 addPlayerModal.addEventListener(
   "click",
+
   event => {
 
-    if (event.target === addPlayerModal) {
+
+    if (
+      event.target ===
+      addPlayerModal
+    ) {
+
+
       closeAddPlayerModal();
+
     }
 
   }
+
 );
+
 
 
 /* =========================================================
@@ -3079,7 +5377,9 @@ drawerSearch.addEventListener(
 
 drawerPlayerList.addEventListener(
   "click",
+
   event => {
+
 
     const button =
       event.target.closest(
@@ -3087,7 +5387,10 @@ drawerPlayerList.addEventListener(
       );
 
 
-    if (button) {
+    if (
+      button
+    ) {
+
 
       openPlayerTest(
         button.dataset.playerId
@@ -3096,7 +5399,9 @@ drawerPlayerList.addEventListener(
     }
 
   }
+
 );
+
 
 
 /* =========================================================
@@ -3104,27 +5409,51 @@ drawerPlayerList.addEventListener(
 ========================================================= */
 
 document
-  .querySelectorAll(".number-test")
-  .forEach(card => {
+  .querySelectorAll(
+    ".number-test"
+  )
+  .forEach(
+    card => {
 
-    card.addEventListener(
-      "click",
-      () => openCalculator(card)
-    );
 
-  });
+      card.addEventListener(
+        "click",
+
+        () =>
+          openCalculator(
+            card
+          )
+
+      );
+
+    }
+
+  );
+
 
 
 document
-  .querySelectorAll(".add-attempt-button")
-  .forEach(button => {
+  .querySelectorAll(
+    ".add-attempt-button"
+  )
+  .forEach(
+    button => {
 
-    button.addEventListener(
-      "click",
-      () => openAttemptCalculator(button)
-    );
 
-  });
+      button.addEventListener(
+        "click",
+
+        () =>
+          openAttemptCalculator(
+            button
+          )
+
+      );
+
+    }
+
+  );
+
 
 
 /* =========================================================
@@ -3133,7 +5462,9 @@ document
 
 document.addEventListener(
   "click",
+
   event => {
+
 
     const button =
       event.target.closest(
@@ -3142,58 +5473,50 @@ document.addEventListener(
 
 
     if (!button) {
+
       return;
+
     }
 
 
-    const player =
-      getCurrentPlayer();
+    deleteVelocityAttempt(
 
+      button.dataset.test,
 
-    if (!player) {
-      return;
-    }
-
-
-    const resultKey =
-      button.dataset.test;
-
-
-    const index =
       Number(
         button.dataset.index
-      );
+      )
 
-
-    player.results[
-      resultKey
-    ].splice(index, 1);
-
-
-    savePlayers();
-
-    renderEverything();
-
-    renderTestView();
+    );
 
   }
+
 );
+
 
 
 /* =========================================================
    CALCULATOR EVENTS
 ========================================================= */
 
-calculatorButtons.forEach(button => {
+calculatorButtons.forEach(
+  button => {
 
-  button.addEventListener(
-    "click",
-    () => calculatorKeyPress(
-      button.dataset.key
-    )
-  );
 
-});
+    button.addEventListener(
+      "click",
+
+      () =>
+        calculatorKeyPress(
+          button.dataset.key
+        )
+
+    );
+
+  }
+
+);
+
 
 
 calculatorSaveButton.addEventListener(
@@ -3202,44 +5525,67 @@ calculatorSaveButton.addEventListener(
 );
 
 
+
 closeCalculatorButton.addEventListener(
   "click",
   closeCalculator
 );
 
 
+
 numberModal.addEventListener(
   "click",
+
   event => {
 
-    if (event.target === numberModal) {
+
+    if (
+      event.target ===
+      numberModal
+    ) {
+
+
       closeCalculator();
+
     }
 
   }
+
 );
 
 
+
 /* =========================================================
-   SQUAT AUTO SAVE
+   SQUAT EVENTS
 ========================================================= */
 
 squatPassButton.addEventListener(
   "click",
-  () => saveSquatStatus("PASS")
+
+  () =>
+    saveSquatStatus(
+      "PASS"
+    )
 );
+
 
 
 squatFailButton.addEventListener(
   "click",
-  () => saveSquatStatus("FAIL")
+
+  () =>
+    saveSquatStatus(
+      "FAIL"
+    )
 );
+
 
 
 squatNotes.addEventListener(
   "input",
-  saveSquatNotes
+  queueSquatNotesSave
 );
+
 
 
 /* =========================================================
@@ -3248,9 +5594,15 @@ squatNotes.addEventListener(
 
 document.addEventListener(
   "keydown",
+
   event => {
 
-    if (event.key === "Escape") {
+
+    if (
+      event.key ===
+      "Escape"
+    ) {
+
 
       closeCalculator();
 
@@ -3258,63 +5610,78 @@ document.addEventListener(
 
       closePlayerDrawer();
 
+
       return;
 
     }
 
 
     if (
-      !numberModal.classList.contains(
-        "show"
-      )
+
+      !numberModal
+        .classList
+        .contains(
+          "show"
+        )
+
     ) {
+
       return;
+
     }
 
 
-    if (/^[0-9]$/.test(event.key)) {
+    if (
+      /^[0-9]$/.test(
+        event.key
+      )
+    ) {
+
 
       calculatorKeyPress(
         event.key
       );
 
-      return;
 
-    }
-
-
-    if (event.key === ".") {
-
-      calculatorKeyPress(".");
-
-      return;
-
-    }
+    } else if (
+      event.key === "."
+    ) {
 
 
-    if (event.key === "Backspace") {
+      calculatorKeyPress(
+        "."
+      );
+
+
+    } else if (
+      event.key ===
+      "Backspace"
+    ) {
+
 
       calculatorKeyPress(
         "backspace"
       );
 
-      return;
 
-    }
+    } else if (
+      event.key ===
+      "Enter"
+    ) {
 
-
-    if (event.key === "Enter") {
 
       saveCalculatorResult();
 
     }
 
   }
+
 );
 
 
+
 /* =========================================================
-   RENDER EVERYTHING
+   RENDER
 ========================================================= */
 
 function renderEverything() {
@@ -3328,10 +5695,9 @@ function renderEverything() {
 }
 
 
+
 /* =========================================================
-   START APP
+   START
 ========================================================= */
 
-renderEverything();
-
-showView("players");
+showLogin();
