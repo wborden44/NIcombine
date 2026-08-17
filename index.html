@@ -1,73 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <title>Ninth Inning Combine</title>
 
-  <link
-    rel="stylesheet"
-    href="style.css"
-  >
+  <link rel="stylesheet" href="style.css">
 </head>
-
 
 <body>
 
-
-  <!-- =====================================================
-       TOP HEADER
-  ====================================================== -->
-
+  <!-- TOP HEADER -->
   <header class="topbar">
 
-    <button
-      id="indexButton"
-      class="index-button"
-    >
+    <button id="indexButton" class="index-button">
       ☰ INDEX
     </button>
 
-
     <div class="brand">
-
       <h1>NINTH INNING</h1>
-
-      <span>
-        COMBINE
-      </span>
-
+      <span>COMBINE</span>
     </div>
-
 
     <nav class="top-nav">
 
-      <button
-        id="playersNavButton"
-        class="nav-button active"
-      >
+      <button id="playersNavButton" class="nav-button active">
         PLAYERS
       </button>
 
-
-      <button
-        id="resultsNavButton"
-        class="nav-button"
-      >
+      <button id="resultsNavButton" class="nav-button">
         RESULTS
       </button>
 
-
-      <button
-        id="addPlayerButton"
-        class="nav-button add-player-button"
-      >
+      <button id="addPlayerButton" class="nav-button add-player-button">
         + ADD PLAYER
       </button>
 
@@ -76,32 +42,18 @@
   </header>
 
 
-
-  <!-- =====================================================
-       SIDE PLAYER INDEX
-  ====================================================== -->
-
-  <aside
-    id="playerDrawer"
-    class="player-drawer"
-  >
+  <!-- PLAYER INDEX DRAWER -->
+  <aside id="playerDrawer" class="player-drawer">
 
     <div class="drawer-header">
 
-      <h2>
-        PLAYER INDEX
-      </h2>
+      <h2>PLAYER INDEX</h2>
 
-
-      <button
-        id="closeDrawerButton"
-        class="close-button"
-      >
+      <button id="closeDrawerButton" class="close-button">
         ×
       </button>
 
     </div>
-
 
     <div class="drawer-search">
 
@@ -113,64 +65,32 @@
 
     </div>
 
-
-    <div
-      id="drawerPlayerList"
-      class="drawer-player-list"
-    >
-    </div>
+    <div id="drawerPlayerList" class="drawer-player-list"></div>
 
   </aside>
 
-
-  <div
-    id="drawerBackdrop"
-    class="drawer-backdrop"
-  ></div>
+  <div id="drawerBackdrop" class="drawer-backdrop"></div>
 
 
-
-  <!-- =====================================================
-       MAIN APP
-  ====================================================== -->
-
+  <!-- MAIN APPLICATION -->
   <main class="app-container">
 
 
-
-    <!-- ===================================================
-         PLAYERS VIEW
-    ==================================================== -->
-
-    <section
-      id="playersView"
-      class="view active-view"
-    >
+    <!-- PLAYERS VIEW -->
+    <section id="playersView" class="view active-view">
 
       <div class="page-heading">
 
         <div>
-
-          <p class="eyebrow">
-            ATHLETE DATABASE
-          </p>
-
-          <h2>
-            Players
-          </h2>
-
+          <p class="eyebrow">ATHLETE DATABASE</p>
+          <h2>Players</h2>
         </div>
 
-
-        <button
-          id="mainResultsButton"
-          class="primary-button"
-        >
+        <button id="mainResultsButton" class="primary-button">
           VIEW ALL RESULTS
         </button>
 
       </div>
-
 
 
       <div class="filter-bar">
@@ -185,13 +105,9 @@
 
         </div>
 
-
         <select id="playerAgeFilter">
 
-          <option value="ALL">
-            All Age Groups
-          </option>
-
+          <option value="ALL">All Age Groups</option>
           <option value="8U">8U</option>
           <option value="9U">9U</option>
           <option value="10U">10U</option>
@@ -207,45 +123,22 @@
       </div>
 
 
-
       <div class="table-wrapper">
 
         <table class="data-table">
 
           <thead>
-
             <tr>
-
-              <th>
-                RANK
-              </th>
-
-              <th>
-                FIRST NAME
-              </th>
-
-              <th>
-                LAST NAME
-              </th>
-
-              <th>
-                AGE
-              </th>
-
-              <th>
-                COMBINE SCORE
-              </th>
-
-              <th>
-              </th>
-
+              <th>RANK</th>
+              <th>FIRST NAME</th>
+              <th>LAST NAME</th>
+              <th>AGE</th>
+              <th>COMBINE SCORE</th>
+              <th></th>
             </tr>
-
           </thead>
 
-
-          <tbody id="playersTableBody">
-          </tbody>
+          <tbody id="playersTableBody"></tbody>
 
         </table>
 
@@ -254,36 +147,20 @@
     </section>
 
 
-
-    <!-- ===================================================
-         RESULTS VIEW
-    ==================================================== -->
-
-    <section
-      id="resultsView"
-      class="view"
-    >
+    <!-- RESULTS VIEW -->
+    <section id="resultsView" class="view">
 
       <div class="page-heading">
 
         <div>
-
-          <p class="eyebrow">
-            COMBINE DATABASE
-          </p>
-
-          <h2>
-            All Results
-          </h2>
-
+          <p class="eyebrow">COMBINE DATABASE</p>
+          <h2>All Results</h2>
           <p class="page-subtext">
             Tap any column heading to sort.
           </p>
-
         </div>
 
       </div>
-
 
 
       <div class="filter-bar">
@@ -294,13 +171,9 @@
           placeholder="Search player..."
         >
 
-
         <select id="resultsAgeFilter">
 
-          <option value="ALL">
-            All Age Groups
-          </option>
-
+          <option value="ALL">All Age Groups</option>
           <option value="8U">8U</option>
           <option value="9U">9U</option>
           <option value="10U">10U</option>
@@ -316,385 +189,127 @@
       </div>
 
 
-
       <div class="results-table-wrapper">
 
         <table class="data-table results-table">
 
           <thead>
-
             <tr>
 
-
-              <!-- RANK -->
-
               <th>
-
-                <button
-                  class="sort-header"
-                  data-sort="overallRank"
-                >
-                  RANK
-
-                  <span class="sort-indicator">
-                    ↕
-                  </span>
-
+                <button class="sort-header" data-sort="overallRank">
+                  RANK <span class="sort-indicator">↕</span>
                 </button>
-
               </th>
 
-
-
-              <!-- PLAYER -->
-
               <th>
-
-                <button
-                  class="sort-header"
-                  data-sort="lastName"
-                >
-                  PLAYER
-
-                  <span class="sort-indicator">
-                    ↕
-                  </span>
-
+                <button class="sort-header" data-sort="lastName">
+                  PLAYER <span class="sort-indicator">↕</span>
                 </button>
-
               </th>
 
-
-
-              <!-- AGE -->
-
               <th>
-
-                <button
-                  class="sort-header"
-                  data-sort="ageGroup"
-                >
-                  AGE
-
-                  <span class="sort-indicator">
-                    ↕
-                  </span>
-
+                <button class="sort-header" data-sort="ageGroup">
+                  AGE <span class="sort-indicator">↕</span>
                 </button>
-
               </th>
 
-
-
-              <!-- COMBINE SCORE -->
-
               <th>
-
-                <button
-                  class="sort-header"
-                  data-sort="combineScore"
-                >
-                  SCORE
-
-                  <span class="sort-indicator">
-                    ↕
-                  </span>
-
+                <button class="sort-header" data-sort="combineScore">
+                  SCORE <span class="sort-indicator">↕</span>
                 </button>
-
               </th>
 
-
-
-              <!-- PULLDOWN -->
-
               <th>
-
-                <button
-                  class="sort-header"
-                  data-sort="pulldown"
-                >
-                  PULLDOWN
-
-                  <span class="sort-indicator">
-                    ↕
-                  </span>
-
+                <button class="sort-header" data-sort="pulldown">
+                  PULLDOWN <span class="sort-indicator">↕</span>
                 </button>
-
               </th>
 
-
-
-              <!-- EXIT VELO -->
-
               <th>
-
-                <button
-                  class="sort-header"
-                  data-sort="exitVelo"
-                >
-                  EXIT VELO
-
-                  <span class="sort-indicator">
-                    ↕
-                  </span>
-
+                <button class="sort-header" data-sort="exitVelo">
+                  EXIT VELO <span class="sort-indicator">↕</span>
                 </button>
-
               </th>
 
-
-
-              <!-- SQUAT -->
-
               <th>
-
-                <button
-                  class="sort-header"
-                  data-sort="squat"
-                >
-                  SQUAT
-
-                  <span class="sort-indicator">
-                    ↕
-                  </span>
-
+                <button class="sort-header" data-sort="internalRotation">
+                  IR <span class="sort-indicator">↕</span>
                 </button>
-
               </th>
 
-
-
-              <!-- IR -->
-
               <th>
-
-                <button
-                  class="sort-header"
-                  data-sort="internalRotation"
-                >
-                  IR
-
-                  <span class="sort-indicator">
-                    ↕
-                  </span>
-
+                <button class="sort-header" data-sort="externalRotation">
+                  ER <span class="sort-indicator">↕</span>
                 </button>
-
               </th>
 
-
-
-              <!-- ER -->
-
               <th>
-
-                <button
-                  class="sort-header"
-                  data-sort="externalRotation"
-                >
-                  ER
-
-                  <span class="sort-indicator">
-                    ↕
-                  </span>
-
+                <button class="sort-header" data-sort="dynoInternal">
+                  DYNO IR <span class="sort-indicator">↕</span>
                 </button>
-
               </th>
 
-
-
-              <!-- DYNO IR -->
-
               <th>
-
-                <button
-                  class="sort-header"
-                  data-sort="dynoInternal"
-                >
-                  DYNO IR
-
-                  <span class="sort-indicator">
-                    ↕
-                  </span>
-
+                <button class="sort-header" data-sort="dynoExternal">
+                  DYNO ER <span class="sort-indicator">↕</span>
                 </button>
-
               </th>
 
-
-
-              <!-- DYNO ER -->
-
               <th>
-
-                <button
-                  class="sort-header"
-                  data-sort="dynoExternal"
-                >
-                  DYNO ER
-
-                  <span class="sort-indicator">
-                    ↕
-                  </span>
-
+                <button class="sort-header" data-sort="gripLeft">
+                  GRIP L <span class="sort-indicator">↕</span>
                 </button>
-
               </th>
 
-
-
-              <!-- GRIP LEFT -->
-
               <th>
-
-                <button
-                  class="sort-header"
-                  data-sort="gripLeft"
-                >
-                  GRIP L
-
-                  <span class="sort-indicator">
-                    ↕
-                  </span>
-
+                <button class="sort-header" data-sort="gripRight">
+                  GRIP R <span class="sort-indicator">↕</span>
                 </button>
-
               </th>
 
-
-
-              <!-- GRIP RIGHT -->
-
               <th>
-
-                <button
-                  class="sort-header"
-                  data-sort="gripRight"
-                >
-                  GRIP R
-
-                  <span class="sort-indicator">
-                    ↕
-                  </span>
-
+                <button class="sort-header" data-sort="medBallLeft">
+                  MED BALL L <span class="sort-indicator">↕</span>
                 </button>
-
               </th>
 
-
-
-              <!-- MED BALL LEFT -->
-
               <th>
-
-                <button
-                  class="sort-header"
-                  data-sort="medBallLeft"
-                >
-                  MED BALL L
-
-                  <span class="sort-indicator">
-                    ↕
-                  </span>
-
+                <button class="sort-header" data-sort="medBallRight">
+                  MED BALL R <span class="sort-indicator">↕</span>
                 </button>
-
               </th>
 
-
-
-              <!-- MED BALL RIGHT -->
-
               <th>
-
-                <button
-                  class="sort-header"
-                  data-sort="medBallRight"
-                >
-                  MED BALL R
-
-                  <span class="sort-indicator">
-                    ↕
-                  </span>
-
+                <button class="sort-header" data-sort="fiveTenFive">
+                  5-10-5 <span class="sort-indicator">↕</span>
                 </button>
-
               </th>
 
-
-
-              <!-- 5-10-5 -->
-
               <th>
-
-                <button
-                  class="sort-header"
-                  data-sort="fiveTenFive"
-                >
-                  5-10-5
-
-                  <span class="sort-indicator">
-                    ↕
-                  </span>
-
+                <button class="sort-header" data-sort="tenYard">
+                  10 YD <span class="sort-indicator">↕</span>
                 </button>
-
               </th>
 
-
-
-              <!-- 10 YARD -->
-
               <th>
-
-                <button
-                  class="sort-header"
-                  data-sort="tenYard"
-                >
-                  10 YD
-
-                  <span class="sort-indicator">
-                    ↕
-                  </span>
-
+                <button class="sort-header" data-sort="squat">
+                  SQUAT <span class="sort-indicator">↕</span>
                 </button>
-
               </th>
 
-
-
-              <!-- BROAD JUMP -->
-
               <th>
-
-                <button
-                  class="sort-header"
-                  data-sort="broadJump"
-                >
-                  BROAD
-
-                  <span class="sort-indicator">
-                    ↕
-                  </span>
-
+                <button class="sort-header" data-sort="broadJump">
+                  BROAD <span class="sort-indicator">↕</span>
                 </button>
-
               </th>
 
-
-              <th>
-              </th>
+              <th></th>
 
             </tr>
-
           </thead>
 
-
-          <tbody id="resultsTableBody">
-          </tbody>
+          <tbody id="resultsTableBody"></tbody>
 
         </table>
 
@@ -703,98 +318,55 @@
     </section>
 
 
-
-    <!-- ===================================================
-         TESTING VIEW
-    ==================================================== -->
-
-    <section
-      id="testView"
-      class="view"
-    >
-
+    <!-- TEST VIEW -->
+    <section id="testView" class="view">
 
       <div class="test-header">
 
-        <button
-          id="backToPlayersButton"
-          class="secondary-button"
-        >
+        <button id="backToPlayersButton" class="secondary-button">
           ← PLAYERS
         </button>
 
-
         <div class="test-player-heading">
 
-          <p class="eyebrow">
-            ATHLETE TESTING
-          </p>
+          <p class="eyebrow">ATHLETE TESTING</p>
 
           <h2 id="testPlayerName">
             Select Player
           </h2>
 
-          <span id="testPlayerAge">
-          </span>
+          <span id="testPlayerAge"></span>
 
         </div>
 
       </div>
 
 
-
       <div class="test-grid">
 
 
-
-        <!-- =================================================
-             PULLDOWN
-        ================================================== -->
-
+        <!-- PULLDOWN -->
         <div class="test-card attempt-test-card">
 
           <span class="test-label">
             PULLDOWN
           </span>
 
-
           <div class="attempt-stat-row">
 
             <div class="attempt-stat">
-
-              <small>
-                MAX
-              </small>
-
-              <strong id="pulldownMax">
-                —
-              </strong>
-
-              <span>
-                MPH
-              </span>
-
+              <small>MAX</small>
+              <strong id="pulldownMax">—</strong>
+              <span>MPH</span>
             </div>
 
-
             <div class="attempt-stat">
-
-              <small>
-                AVERAGE
-              </small>
-
-              <strong id="pulldownAverage">
-                —
-              </strong>
-
-              <span>
-                MPH
-              </span>
-
+              <small>AVERAGE</small>
+              <strong id="pulldownAverage">—</strong>
+              <span>MPH</span>
             </div>
 
           </div>
-
 
           <button
             class="primary-button add-attempt-button"
@@ -805,70 +377,37 @@
             + ENTER VELOCITY
           </button>
 
-
           <div class="attempt-heading">
             LAST 3 ENTRIES
           </div>
 
-
-          <div
-            id="pulldownAttempts"
-            class="attempt-list"
-          >
-          </div>
+          <div id="pulldownAttempts" class="attempt-list"></div>
 
         </div>
 
 
-
-        <!-- =================================================
-             EXIT VELO
-        ================================================== -->
-
+        <!-- EXIT VELO -->
         <div class="test-card attempt-test-card">
 
           <span class="test-label">
             EXIT VELO — TEE
           </span>
 
-
           <div class="attempt-stat-row">
 
             <div class="attempt-stat">
-
-              <small>
-                MAX
-              </small>
-
-              <strong id="exitVeloMax">
-                —
-              </strong>
-
-              <span>
-                MPH
-              </span>
-
+              <small>MAX</small>
+              <strong id="exitVeloMax">—</strong>
+              <span>MPH</span>
             </div>
 
-
             <div class="attempt-stat">
-
-              <small>
-                AVERAGE
-              </small>
-
-              <strong id="exitVeloAverage">
-                —
-              </strong>
-
-              <span>
-                MPH
-              </span>
-
+              <small>AVERAGE</small>
+              <strong id="exitVeloAverage">—</strong>
+              <span>MPH</span>
             </div>
 
           </div>
-
 
           <button
             class="primary-button add-attempt-button"
@@ -879,419 +418,218 @@
             + ENTER VELOCITY
           </button>
 
-
           <div class="attempt-heading">
             LAST 3 ENTRIES
           </div>
 
-
-          <div
-            id="exitVeloAttempts"
-            class="attempt-list"
-          >
-          </div>
+          <div id="exitVeloAttempts" class="attempt-list"></div>
 
         </div>
 
 
-
-        <!-- =================================================
-             INTERNAL ROTATION
-        ================================================== -->
-
+        <!-- INTERNAL ROTATION -->
         <button
           class="test-card number-test"
           data-test="internalRotation"
           data-label="Internal Rotation"
           data-unit="°"
         >
-
-          <span class="test-label">
-            INTERNAL ROTATION
-          </span>
-
-          <strong id="internalRotationValue">
-            —
-          </strong>
-
-          <span class="test-unit">
-            DEGREES
-          </span>
-
+          <span class="test-label">INTERNAL ROTATION</span>
+          <strong id="internalRotationValue">—</strong>
+          <span class="test-unit">DEGREES</span>
         </button>
 
 
-
-        <!-- =================================================
-             EXTERNAL ROTATION
-        ================================================== -->
-
+        <!-- EXTERNAL ROTATION -->
         <button
           class="test-card number-test"
           data-test="externalRotation"
           data-label="External Rotation"
           data-unit="°"
         >
-
-          <span class="test-label">
-            EXTERNAL ROTATION
-          </span>
-
-          <strong id="externalRotationValue">
-            —
-          </strong>
-
-          <span class="test-unit">
-            DEGREES
-          </span>
-
+          <span class="test-label">EXTERNAL ROTATION</span>
+          <strong id="externalRotationValue">—</strong>
+          <span class="test-unit">DEGREES</span>
         </button>
 
 
-
-        <!-- =================================================
-             DYNAMOMETER INTERNAL
-        ================================================== -->
-
+        <!-- DYNAMOMETER INTERNAL -->
         <button
           class="test-card number-test"
           data-test="dynoInternal"
           data-label="Dynamometer — Internal"
           data-unit="LB"
         >
-
-          <span class="test-label">
-            DYNAMOMETER — INTERNAL
-          </span>
-
-          <strong id="dynoInternalValue">
-            —
-          </strong>
-
-          <span class="test-unit">
-            LB
-          </span>
-
+          <span class="test-label">DYNAMOMETER — INTERNAL</span>
+          <strong id="dynoInternalValue">—</strong>
+          <span class="test-unit">LB</span>
         </button>
 
 
-
-        <!-- =================================================
-             DYNAMOMETER EXTERNAL
-        ================================================== -->
-
+        <!-- DYNAMOMETER EXTERNAL -->
         <button
           class="test-card number-test"
           data-test="dynoExternal"
           data-label="Dynamometer — External"
           data-unit="LB"
         >
-
-          <span class="test-label">
-            DYNAMOMETER — EXTERNAL
-          </span>
-
-          <strong id="dynoExternalValue">
-            —
-          </strong>
-
-          <span class="test-unit">
-            LB
-          </span>
-
+          <span class="test-label">DYNAMOMETER — EXTERNAL</span>
+          <strong id="dynoExternalValue">—</strong>
+          <span class="test-unit">LB</span>
         </button>
 
 
-
-        <!-- =================================================
-             GRIP LEFT
-        ================================================== -->
-
+        <!-- GRIP LEFT -->
         <button
           class="test-card number-test"
           data-test="gripLeft"
           data-label="Grip Strength — Left"
           data-unit="LB"
         >
-
-          <span class="test-label">
-            GRIP STRENGTH — LEFT
-          </span>
-
-          <strong id="gripLeftValue">
-            —
-          </strong>
-
-          <span class="test-unit">
-            LB
-          </span>
-
+          <span class="test-label">GRIP STRENGTH — LEFT</span>
+          <strong id="gripLeftValue">—</strong>
+          <span class="test-unit">LB</span>
         </button>
 
 
-
-        <!-- =================================================
-             GRIP RIGHT
-        ================================================== -->
-
+        <!-- GRIP RIGHT -->
         <button
           class="test-card number-test"
           data-test="gripRight"
           data-label="Grip Strength — Right"
           data-unit="LB"
         >
-
-          <span class="test-label">
-            GRIP STRENGTH — RIGHT
-          </span>
-
-          <strong id="gripRightValue">
-            —
-          </strong>
-
-          <span class="test-unit">
-            LB
-          </span>
-
+          <span class="test-label">GRIP STRENGTH — RIGHT</span>
+          <strong id="gripRightValue">—</strong>
+          <span class="test-unit">LB</span>
         </button>
 
 
-
-        <!-- =================================================
-             MED BALL LEFT
-        ================================================== -->
-
+        <!-- MED BALL LEFT -->
         <button
           class="test-card number-test"
           data-test="medBallLeft"
           data-label="Med Ball Rotation — Left"
           data-unit="IN"
         >
-
-          <span class="test-label">
-            MED BALL — LEFT
-          </span>
-
-          <strong id="medBallLeftValue">
-            —
-          </strong>
-
-          <span class="test-unit">
-            INCHES
-          </span>
-
+          <span class="test-label">MED BALL — LEFT</span>
+          <strong id="medBallLeftValue">—</strong>
+          <span class="test-unit">INCHES</span>
         </button>
 
 
-
-        <!-- =================================================
-             MED BALL RIGHT
-        ================================================== -->
-
+        <!-- MED BALL RIGHT -->
         <button
           class="test-card number-test"
           data-test="medBallRight"
           data-label="Med Ball Rotation — Right"
           data-unit="IN"
         >
-
-          <span class="test-label">
-            MED BALL — RIGHT
-          </span>
-
-          <strong id="medBallRightValue">
-            —
-          </strong>
-
-          <span class="test-unit">
-            INCHES
-          </span>
-
+          <span class="test-label">MED BALL — RIGHT</span>
+          <strong id="medBallRightValue">—</strong>
+          <span class="test-unit">INCHES</span>
         </button>
 
 
-
-        <!-- =================================================
-             SQUAT ASSESSMENT
-        ================================================== -->
-
-        <div class="test-card assessment-card">
-
-          <span class="test-label">
-            SQUAT ASSESSMENT
-          </span>
-
-
-          <div class="pass-fail-buttons">
-
-            <button
-              id="squatPassButton"
-              class="assessment-button"
-            >
-              PASS
-            </button>
-
-
-            <button
-              id="squatFailButton"
-              class="assessment-button"
-            >
-              FAIL
-            </button>
-
-          </div>
-
-
-          <textarea
-            id="squatNotes"
-            placeholder="Coach notes..."
-          ></textarea>
-
-
-          <button
-            id="saveSquatButton"
-            class="save-small-button"
-          >
-            SAVE ASSESSMENT
-          </button>
-
-        </div>
-
-
-
-        <!-- =================================================
-             5 / 10 / 5
-        ================================================== -->
-
+        <!-- 5 / 10 / 5 -->
         <div class="test-card timer-card">
 
           <span class="test-label">
             5 / 10 / 5 RUN
           </span>
 
-
-          <div
-            id="fiveTenFiveTimer"
-            class="timer-display"
-          >
+          <div id="fiveTenFiveTimer" class="timer-display">
             0.00
           </div>
 
-
-          <button
-            id="fiveTenFiveStartButton"
-            class="timer-button"
-          >
+          <button id="fiveTenFiveStartButton" class="timer-button">
             START
           </button>
 
-
           <div class="timer-stat-row">
-
-            <span>
-              BEST
-            </span>
-
-            <strong id="fiveTenFiveBest">
-              —
-            </strong>
-
+            <span>BEST</span>
+            <strong id="fiveTenFiveBest">—</strong>
           </div>
-
 
           <div class="attempt-heading">
             ATTEMPTS
           </div>
 
-
-          <div
-            id="fiveTenFiveAttempts"
-            class="attempt-list"
-          >
-          </div>
+          <div id="fiveTenFiveAttempts" class="attempt-list"></div>
 
         </div>
 
 
-
-        <!-- =================================================
-             10 YARD
-        ================================================== -->
-
+        <!-- 10 YARD SHUTTLE -->
         <div class="test-card timer-card">
 
           <span class="test-label">
             10-YARD SHUTTLE
           </span>
 
-
-          <div
-            id="tenYardTimer"
-            class="timer-display"
-          >
+          <div id="tenYardTimer" class="timer-display">
             0.00
           </div>
 
-
-          <button
-            id="tenYardStartButton"
-            class="timer-button"
-          >
+          <button id="tenYardStartButton" class="timer-button">
             START
           </button>
 
-
           <div class="timer-stat-row">
-
-            <span>
-              BEST
-            </span>
-
-            <strong id="tenYardBest">
-              —
-            </strong>
-
+            <span>BEST</span>
+            <strong id="tenYardBest">—</strong>
           </div>
-
 
           <div class="attempt-heading">
             ATTEMPTS
           </div>
 
+          <div id="tenYardAttempts" class="attempt-list"></div>
 
-          <div
-            id="tenYardAttempts"
-            class="attempt-list"
-          >
+        </div>
+
+
+        <!-- SQUAT -->
+        <div class="test-card assessment-card">
+
+          <span class="test-label">
+            SQUAT ASSESSMENT
+          </span>
+
+          <div class="pass-fail-buttons">
+
+            <button id="squatPassButton" class="assessment-button">
+              PASS
+            </button>
+
+            <button id="squatFailButton" class="assessment-button">
+              FAIL
+            </button>
+
+          </div>
+
+          <textarea
+            id="squatNotes"
+            placeholder="Coach notes..."
+          ></textarea>
+
+          <div class="autosave-text">
+            CHANGES SAVE AUTOMATICALLY
           </div>
 
         </div>
 
 
-
-        <!-- =================================================
-             BROAD JUMP — LAST / FULL WIDTH
-        ================================================== -->
-
+        <!-- BROAD JUMP -->
         <button
           class="test-card number-test broad-jump-card"
           data-test="broadJump"
           data-label="Broad Jump"
           data-unit="IN"
         >
-
-          <span class="test-label">
-            BROAD JUMP
-          </span>
-
-          <strong id="broadJumpValue">
-            —
-          </strong>
-
-          <span class="test-unit">
-            INCHES
-          </span>
-
+          <span class="test-label">BROAD JUMP</span>
+          <strong id="broadJumpValue">—</strong>
+          <span class="test-unit">INCHES</span>
         </button>
 
 
@@ -1302,106 +640,49 @@
   </main>
 
 
-
-  <!-- =====================================================
-       NUMBER CALCULATOR MODAL
-  ====================================================== -->
-
-  <div
-    id="numberModal"
-    class="modal"
-  >
+  <!-- NUMBER CALCULATOR -->
+  <div id="numberModal" class="modal">
 
     <div class="calculator">
 
-      <button
-        id="closeCalculatorButton"
-        class="calculator-close"
-      >
+      <button id="closeCalculatorButton" class="calculator-close">
         ×
       </button>
 
-
-      <p
-        id="calculatorLabel"
-        class="calculator-label"
-      >
+      <p id="calculatorLabel" class="calculator-label">
         TEST
       </p>
 
-
       <div class="calculator-display">
 
-        <span id="calculatorValue">
-        </span>
+        <span id="calculatorValue"></span>
 
-        <small id="calculatorUnit">
-        </small>
+        <small id="calculatorUnit"></small>
 
       </div>
-
 
 
       <div class="calculator-grid">
 
-        <button data-key="7">
-          7
-        </button>
+        <button data-key="7">7</button>
+        <button data-key="8">8</button>
+        <button data-key="9">9</button>
 
-        <button data-key="8">
-          8
-        </button>
+        <button data-key="4">4</button>
+        <button data-key="5">5</button>
+        <button data-key="6">6</button>
 
-        <button data-key="9">
-          9
-        </button>
+        <button data-key="1">1</button>
+        <button data-key="2">2</button>
+        <button data-key="3">3</button>
 
-
-        <button data-key="4">
-          4
-        </button>
-
-        <button data-key="5">
-          5
-        </button>
-
-        <button data-key="6">
-          6
-        </button>
-
-
-        <button data-key="1">
-          1
-        </button>
-
-        <button data-key="2">
-          2
-        </button>
-
-        <button data-key="3">
-          3
-        </button>
-
-
-        <button data-key=".">
-          .
-        </button>
-
-        <button data-key="0">
-          0
-        </button>
-
-        <button data-key="backspace">
-          ⌫
-        </button>
+        <button data-key=".">.</button>
+        <button data-key="0">0</button>
+        <button data-key="backspace">⌫</button>
 
       </div>
 
-
-      <button
-        id="calculatorSaveButton"
-        class="calculator-save"
-      >
+      <button id="calculatorSaveButton" class="calculator-save">
         SAVE RESULT
       </button>
 
@@ -1410,34 +691,20 @@
   </div>
 
 
-
-  <!-- =====================================================
-       ADD PLAYER MODAL
-  ====================================================== -->
-
-  <div
-    id="addPlayerModal"
-    class="modal"
-  >
+  <!-- ADD PLAYER MODAL -->
+  <div id="addPlayerModal" class="modal">
 
     <div class="form-modal">
 
-      <button
-        id="closeAddPlayerButton"
-        class="calculator-close"
-      >
+      <button id="closeAddPlayerButton" class="calculator-close">
         ×
       </button>
-
 
       <p class="eyebrow">
         ATHLETE DATABASE
       </p>
 
-
-      <h2>
-        Add Player
-      </h2>
+      <h2>Add Player</h2>
 
 
       <label>
@@ -1472,9 +739,7 @@
 
         <select id="newPlayerAgeGroup">
 
-          <option value="">
-            Select Age
-          </option>
+          <option value="">Select Age</option>
 
           <option value="8U">8U</option>
           <option value="9U">9U</option>
@@ -1491,10 +756,7 @@
       </label>
 
 
-      <button
-        id="savePlayerButton"
-        class="primary-button full-width"
-      >
+      <button id="savePlayerButton" class="primary-button full-width">
         ADD PLAYER
       </button>
 
@@ -1503,13 +765,7 @@
   </div>
 
 
-
-  <script
-    type="module"
-    src="script.js"
-  ></script>
-
+  <script type="module" src="script.js"></script>
 
 </body>
-
 </html>
