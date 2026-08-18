@@ -1,323 +1,328 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#081422" />
 
   <title>Ninth Inning Combine</title>
 
-  <link
-    rel="stylesheet"
-    href="style.css?v=6"
-  >
-</head>
+  <link rel="stylesheet" href="style.css" />
 
+  <!-- Excel / CSV reader -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+</head>
 
 <body>
 
+  <!-- =========================
+       LOGIN SCREEN
+  ========================== -->
 
-  <!-- =====================================================
-       LOGIN
-  ====================================================== -->
-
-  <section id="loginView" class="login-screen">
-
+  <section id="loginScreen" class="login-screen">
     <div class="login-card">
 
-      <div class="login-brand">
+      <div class="brand-small">NINTH INNING</div>
+      <h1>Combine Tracker</h1>
 
-        <h1>NINTH INNING</h1>
-
-        <span>COMBINE</span>
-
-      </div>
-
-
-      <p class="login-subtitle">
-        STAFF ACCESS
+      <p class="muted">
+        Sign in with your coach account.
       </p>
-
 
       <form id="loginForm">
 
-        <label>
+        <label for="loginEmail">Email</label>
+        <input
+          id="loginEmail"
+          type="email"
+          autocomplete="username"
+          required
+          placeholder="coach@ninthinningbaseball.com"
+        />
 
-          EMAIL
+        <label for="loginPassword">Password</label>
+        <input
+          id="loginPassword"
+          type="password"
+          autocomplete="current-password"
+          required
+          placeholder="Password"
+        />
 
-          <input
-            id="loginEmail"
-            type="email"
-            autocomplete="username"
-            required
-          >
-
-        </label>
-
-
-        <label>
-
-          PASSWORD
-
-          <input
-            id="loginPassword"
-            type="password"
-            autocomplete="current-password"
-            required
-          >
-
-        </label>
-
-
-        <button
-          id="loginButton"
-          class="primary-button full-width"
-          type="submit"
-        >
-          SIGN IN
+        <button type="submit" class="button full-button">
+          Sign In
         </button>
-
-
-        <p
-          id="loginError"
-          class="login-error"
-        ></p>
 
       </form>
 
-    </div>
+      <div id="loginMessage" class="message hidden"></div>
 
+    </div>
   </section>
 
 
+  <!-- =========================
+       APP
+  ========================== -->
 
-  <!-- =====================================================
-       APPLICATION
-  ====================================================== -->
-
-  <div id="appShell" class="hidden">
-
-
-    <!-- TOP BAR -->
+  <div id="app" class="hidden">
 
     <header class="topbar">
 
-      <button
-        id="indexButton"
-        class="index-button"
-      >
-        ☰ INDEX
-      </button>
-
-
-      <div class="brand">
-
-        <h1>NINTH INNING</h1>
-
-        <span>COMBINE</span>
-
+      <div>
+        <div class="brand-small">NINTH INNING</div>
+        <h1>Combine Tracker</h1>
       </div>
 
+      <div class="user-area">
 
-      <nav class="top-nav">
+        <div class="user-info">
+          <span id="loggedInEmail"></span>
+          <span id="adminBadge" class="admin-badge hidden">
+            ADMIN
+          </span>
+        </div>
 
-        <button
-          id="playersNavButton"
-          class="nav-button active"
-        >
-          PLAYERS
+        <button id="logoutButton" class="button button-secondary">
+          Sign Out
         </button>
 
-
-        <button
-          id="resultsNavButton"
-          class="nav-button"
-        >
-          RESULTS
-        </button>
-
-
-        <button
-          id="addPlayerButton"
-          class="nav-button add-player-button"
-        >
-          + ADD PLAYER
-        </button>
-
-
-        <span
-          id="signedInUser"
-          class="signed-in-user"
-        ></span>
-
-
-        <button
-          id="logoutButton"
-          class="nav-button logout-button"
-        >
-          LOG OUT
-        </button>
-
-      </nav>
+      </div>
 
     </header>
 
 
+    <!-- NAVIGATION -->
 
-    <!-- ===================================================
-         PLAYER INDEX DRAWER
-    ==================================================== -->
+    <nav class="nav-tabs">
 
-    <aside
-      id="playerDrawer"
-      class="player-drawer"
-    >
+      <button
+        class="nav-tab active"
+        data-view="testingView"
+      >
+        Testing
+      </button>
 
-      <div class="drawer-header">
+      <button
+        class="nav-tab"
+        data-view="athletesView"
+      >
+        Athletes
+      </button>
 
-        <h2>PLAYER INDEX</h2>
+      <button
+        class="nav-tab"
+        data-view="resultsView"
+      >
+        Results
+      </button>
 
-        <button
-          id="closeDrawerButton"
-          class="close-button"
-        >
-          ×
-        </button>
-
-      </div>
-
-
-      <div class="drawer-search">
-
-        <input
-          id="drawerSearch"
-          type="text"
-          placeholder="Search player..."
-        >
-
-      </div>
+    </nav>
 
 
-      <div
-        id="drawerPlayerList"
-        class="drawer-player-list"
-      ></div>
-
-    </aside>
+    <main class="app-shell">
 
 
-    <div
-      id="drawerBackdrop"
-      class="drawer-backdrop"
-    ></div>
-
-
-
-    <!-- ===================================================
-         MAIN
-    ==================================================== -->
-
-    <main class="app-container">
-
-
-      <!-- =================================================
-           PLAYERS
-      ================================================== -->
+      <!-- =========================
+           TESTING
+      ========================== -->
 
       <section
-        id="playersView"
-        class="view active-view"
+        id="testingView"
+        class="view active"
       >
 
-        <div class="page-heading">
+        <div class="section-heading">
 
           <div>
+            <div class="kicker">
+              TESTING FLOOR
+            </div>
 
-            <p class="eyebrow">
-              ATHLETE DATABASE
-            </p>
+            <h2>
+              Enter Results
+            </h2>
+          </div>
 
-            <h2>Players</h2>
+        </div>
+
+
+        <!-- ATHLETE SEARCH -->
+
+        <div
+          id="athleteSelectorPanel"
+          class="panel"
+        >
+
+          <label for="testingSearch">
+            Find Athlete
+          </label>
+
+          <div class="search-row">
+
+            <input
+              id="testingSearch"
+              type="search"
+              placeholder="Search player name..."
+            />
+
+            <select id="testingAgeFilter">
+              <option value="">
+                All Age Groups
+              </option>
+            </select>
 
           </div>
 
 
+          <div
+            id="testingAthleteList"
+            class="athlete-picker"
+          ></div>
+
+        </div>
+
+
+        <!-- SELECTED ATHLETE -->
+
+        <div
+          id="selectedAthletePanel"
+          class="selected-athlete hidden"
+        >
+
+          <div>
+
+            <div class="kicker">
+              SELECTED ATHLETE
+            </div>
+
+            <h2 id="selectedAthleteName">
+              Player Name
+            </h2>
+
+            <div
+              id="selectedAthleteAge"
+              class="muted"
+            ></div>
+
+          </div>
+
           <button
-            id="mainResultsButton"
-            class="primary-button"
+            id="changeAthleteButton"
+            class="button button-secondary"
           >
-            VIEW ALL RESULTS
+            Change Athlete
           </button>
 
         </div>
 
 
-        <div class="filter-bar">
+        <!-- TEST CARDS -->
 
-          <div class="search-wrapper">
+        <div
+          id="testGrid"
+          class="test-grid hidden"
+        ></div>
 
-            <input
-              id="playerSearch"
-              type="text"
-              placeholder="Search first or last name..."
-            >
+      </section>
+
+
+
+      <!-- =========================
+           ATHLETES
+      ========================== -->
+
+      <section
+        id="athletesView"
+        class="view"
+      >
+
+        <div class="section-heading">
+
+          <div>
+
+            <div class="kicker">
+              ROSTER
+            </div>
+
+            <h2>
+              Athletes
+            </h2>
 
           </div>
 
 
-          <select id="playerAgeFilter">
+          <!-- ONLY WES SEES THIS -->
 
-            <option value="ALL">
-              All Age Groups
-            </option>
-
-            <option value="8U">8U</option>
-            <option value="9U">9U</option>
-            <option value="10U">10U</option>
-            <option value="11U">11U</option>
-            <option value="12U">12U</option>
-            <option value="13U">13U</option>
-            <option value="14U">14U</option>
-            <option value="15U">15U</option>
-            <option value="16U">16U</option>
-
-          </select>
+          <button
+            id="uploadPlayersButton"
+            class="button hidden"
+          >
+            Upload Players
+          </button>
 
         </div>
 
 
-        <div class="table-wrapper">
+        <div class="panel">
 
-          <table class="data-table">
+          <div class="toolbar">
 
-            <thead>
+            <input
+              id="athleteSearch"
+              type="search"
+              placeholder="Search athletes..."
+            />
 
-              <tr>
+            <select id="athleteAgeFilter">
 
-                <th>RANK</th>
+              <option value="">
+                All Age Groups
+              </option>
 
-                <th>FIRST NAME</th>
+            </select>
 
-                <th>LAST NAME</th>
-
-                <th>AGE</th>
-
-                <th>COMBINE SCORE</th>
-
-                <th></th>
-
-              </tr>
-
-            </thead>
+          </div>
 
 
-            <tbody id="playersTableBody"></tbody>
+          <div class="table-wrap">
 
-          </table>
+            <table>
+
+              <thead>
+
+                <tr>
+
+                  <th data-athlete-sort="firstName">
+                    First Name
+                  </th>
+
+                  <th data-athlete-sort="lastName">
+                    Last Name
+                  </th>
+
+                  <th data-athlete-sort="ageGroup">
+                    Age Group
+                  </th>
+
+                </tr>
+
+              </thead>
+
+
+              <tbody id="athleteTableBody"></tbody>
+
+            </table>
+
+          </div>
+
+
+          <div
+            id="athleteEmpty"
+            class="empty-state hidden"
+          >
+            No athletes found.
+          </div>
 
         </div>
 
@@ -325,1214 +330,368 @@
 
 
 
-      <!-- =================================================
+      <!-- =========================
            RESULTS
-      ================================================== -->
+      ========================== -->
 
       <section
         id="resultsView"
         class="view"
       >
 
-        <div class="page-heading">
+        <div class="section-heading">
 
           <div>
 
-            <p class="eyebrow">
-              COMBINE DATABASE
-            </p>
+            <div class="kicker">
+              COMBINE DATA
+            </div>
 
-            <h2>All Results</h2>
-
-            <p class="page-subtext">
-              Tap any column heading to sort.
-              Best recorded measurement is displayed.
-            </p>
+            <h2>
+              Results
+            </h2>
 
           </div>
 
         </div>
 
 
-        <div class="filter-bar">
+        <div class="panel">
+
+
+          <div class="toolbar results-toolbar">
+
+            <input
+              id="resultsSearch"
+              type="search"
+              placeholder="Search athlete..."
+            />
+
+
+            <select id="resultsAgeFilter">
+
+              <option value="">
+                All Age Groups
+              </option>
+
+            </select>
+
+
+            <select id="resultsEventFilter">
+
+              <option value="">
+                All Events
+              </option>
+
+            </select>
+
+          </div>
+
+
+          <div class="small-note">
+            Every attempt is logged separately.
+            Highest score is highlighted for strength/power events.
+            Lowest score is highlighted for timed events.
+          </div>
+
+
+          <div class="table-wrap">
+
+            <table>
+
+              <thead>
+
+                <tr>
+
+                  <th data-result-sort="athlete">
+                    Athlete
+                  </th>
+
+                  <th data-result-sort="ageGroup">
+                    Age
+                  </th>
+
+                  <th data-result-sort="event">
+                    Event
+                  </th>
+
+                  <th data-result-sort="value">
+                    Result
+                  </th>
+
+                  <th data-result-sort="coach">
+                    Coach
+                  </th>
+
+                  <th data-result-sort="date">
+                    Entered
+                  </th>
+
+                </tr>
+
+              </thead>
+
+
+              <tbody id="resultsTableBody"></tbody>
+
+            </table>
+
+          </div>
+
+
+          <div
+            id="resultsEmpty"
+            class="empty-state hidden"
+          >
+            No results found.
+          </div>
+
+        </div>
+
+      </section>
+
+
+    </main>
+
+  </div>
+
+
+
+  <!-- =========================
+       UPLOAD PLAYERS MODAL
+  ========================== -->
+
+  <div
+    id="uploadModal"
+    class="modal-backdrop hidden"
+  >
+
+    <div class="modal-card">
+
+      <div class="modal-header">
+
+        <div>
+
+          <div class="kicker">
+            ADMIN
+          </div>
+
+          <h2>
+            Upload Players
+          </h2>
+
+        </div>
+
+        <button
+          id="closeUploadButton"
+          class="icon-button"
+        >
+          ×
+        </button>
+
+      </div>
+
+
+      <p class="muted">
+        Accepted files: CSV, XLS and XLSX.
+      </p>
+
+      <p class="muted">
+        Required columns:
+        <strong>First Name</strong>,
+        <strong>Last Name</strong>,
+        <strong>Age Group</strong>
+      </p>
+
+
+      <div class="upload-actions">
+
+        <button
+          id="downloadTemplateButton"
+          class="button button-secondary"
+        >
+          Download Template
+        </button>
+
+
+        <label class="button file-button">
+
+          Choose File
 
           <input
-            id="resultsSearch"
-            type="text"
-            placeholder="Search player..."
-          >
+            id="playerFileInput"
+            type="file"
+            accept=".csv,.xls,.xlsx"
+          />
+
+        </label>
+
+      </div>
 
 
-          <select id="resultsAgeFilter">
+      <div
+        id="selectedFileName"
+        class="file-name"
+      >
+        No file selected.
+      </div>
 
-            <option value="ALL">
-              All Age Groups
-            </option>
 
-            <option value="8U">8U</option>
-            <option value="9U">9U</option>
-            <option value="10U">10U</option>
-            <option value="11U">11U</option>
-            <option value="12U">12U</option>
-            <option value="13U">13U</option>
-            <option value="14U">14U</option>
-            <option value="15U">15U</option>
-            <option value="16U">16U</option>
+      <div
+        id="importMessage"
+        class="message hidden"
+      ></div>
 
-          </select>
+
+      <!-- SUMMARY -->
+
+      <div
+        id="importSummary"
+        class="summary-grid hidden"
+      >
+
+        <div class="summary-card">
+
+          <strong id="summaryTotal">
+            0
+          </strong>
+
+          <span>
+            Rows
+          </span>
 
         </div>
 
 
-        <div class="results-table-wrapper">
+        <div class="summary-card">
 
-          <table class="data-table results-table">
+          <strong id="summaryNew">
+            0
+          </strong>
+
+          <span>
+            New Players
+          </span>
+
+        </div>
+
+
+        <div class="summary-card">
+
+          <strong id="summaryDuplicate">
+            0
+          </strong>
+
+          <span>
+            Duplicates
+          </span>
+
+        </div>
+
+
+        <div class="summary-card">
+
+          <strong id="summaryInvalid">
+            0
+          </strong>
+
+          <span>
+            Invalid
+          </span>
+
+        </div>
+
+      </div>
+
+
+      <!-- PREVIEW -->
+
+      <div
+        id="previewSection"
+        class="hidden"
+      >
+
+        <h3>
+          Import Preview
+        </h3>
+
+        <div class="table-wrap preview-table">
+
+          <table>
 
             <thead>
 
               <tr>
 
                 <th>
-                  <button
-                    class="sort-header"
-                    data-sort="overallRank"
-                  >
-                    RANK
-                    <span class="sort-indicator">↕</span>
-                  </button>
+                  First Name
                 </th>
-
 
                 <th>
-                  <button
-                    class="sort-header"
-                    data-sort="lastName"
-                  >
-                    PLAYER
-                    <span class="sort-indicator">↕</span>
-                  </button>
+                  Last Name
                 </th>
-
 
                 <th>
-                  <button
-                    class="sort-header"
-                    data-sort="ageGroup"
-                  >
-                    AGE
-                    <span class="sort-indicator">↕</span>
-                  </button>
+                  Age Group
                 </th>
-
 
                 <th>
-                  <button
-                    class="sort-header"
-                    data-sort="combineScore"
-                  >
-                    SCORE
-                    <span class="sort-indicator">↕</span>
-                  </button>
+                  Status
                 </th>
-
-
-                <th>
-                  <button
-                    class="sort-header"
-                    data-sort="pulldown"
-                  >
-                    PULLDOWN
-                    <span class="sort-indicator">↕</span>
-                  </button>
-                </th>
-
-
-                <th>
-                  <button
-                    class="sort-header"
-                    data-sort="exitVelo"
-                  >
-                    EXIT VELO
-                    <span class="sort-indicator">↕</span>
-                  </button>
-                </th>
-
-
-                <th>
-                  <button
-                    class="sort-header"
-                    data-sort="internalRotation"
-                  >
-                    IR
-                    <span class="sort-indicator">↕</span>
-                  </button>
-                </th>
-
-
-                <th>
-                  <button
-                    class="sort-header"
-                    data-sort="externalRotation"
-                  >
-                    ER
-                    <span class="sort-indicator">↕</span>
-                  </button>
-                </th>
-
-
-                <th>
-                  <button
-                    class="sort-header"
-                    data-sort="dynoInternal"
-                  >
-                    DYNO IR
-                    <span class="sort-indicator">↕</span>
-                  </button>
-                </th>
-
-
-                <th>
-                  <button
-                    class="sort-header"
-                    data-sort="dynoExternal"
-                  >
-                    DYNO ER
-                    <span class="sort-indicator">↕</span>
-                  </button>
-                </th>
-
-
-                <th>
-                  <button
-                    class="sort-header"
-                    data-sort="gripLeft"
-                  >
-                    GRIP L
-                    <span class="sort-indicator">↕</span>
-                  </button>
-                </th>
-
-
-                <th>
-                  <button
-                    class="sort-header"
-                    data-sort="gripRight"
-                  >
-                    GRIP R
-                    <span class="sort-indicator">↕</span>
-                  </button>
-                </th>
-
-
-                <th>
-                  <button
-                    class="sort-header"
-                    data-sort="medBallLeft"
-                  >
-                    MED BALL L
-                    <span class="sort-indicator">↕</span>
-                  </button>
-                </th>
-
-
-                <th>
-                  <button
-                    class="sort-header"
-                    data-sort="medBallRight"
-                  >
-                    MED BALL R
-                    <span class="sort-indicator">↕</span>
-                  </button>
-                </th>
-
-
-                <th>
-                  <button
-                    class="sort-header"
-                    data-sort="fiveTenFive"
-                  >
-                    5-10-5
-                    <span class="sort-indicator">↕</span>
-                  </button>
-                </th>
-
-
-                <th>
-                  <button
-                    class="sort-header"
-                    data-sort="tenYard"
-                  >
-                    10 YD
-                    <span class="sort-indicator">↕</span>
-                  </button>
-                </th>
-
-
-                <th>
-                  <button
-                    class="sort-header"
-                    data-sort="squat"
-                  >
-                    SQUAT
-                    <span class="sort-indicator">↕</span>
-                  </button>
-                </th>
-
-
-                <th>
-                  <button
-                    class="sort-header"
-                    data-sort="broadJump"
-                  >
-                    BROAD
-                    <span class="sort-indicator">↕</span>
-                  </button>
-                </th>
-
-
-                <th></th>
 
               </tr>
 
             </thead>
 
 
-            <tbody id="resultsTableBody"></tbody>
+            <tbody id="previewBody"></tbody>
 
           </table>
 
         </div>
 
-      </section>
+      </div>
 
 
-
-      <!-- =================================================
-           TEST VIEW
-      ================================================== -->
-
-      <section
-        id="testView"
-        class="view"
-      >
-
-        <div class="test-header">
-
-          <button
-            id="backToPlayersButton"
-            class="secondary-button"
-          >
-            ← PLAYERS
-          </button>
-
-
-          <div class="test-player-heading">
-
-            <p class="eyebrow">
-              ATHLETE TESTING
-            </p>
-
-            <h2 id="testPlayerName">
-              Select Player
-            </h2>
-
-            <span id="testPlayerAge"></span>
-
-          </div>
-
-        </div>
-
-
-
-        <div class="test-grid">
-
-
-          <!-- =============================================
-               PULLDOWN
-          ============================================== -->
-
-          <div class="test-card attempt-test-card velocity-card">
-
-            <span class="test-label">
-              PULLDOWN
-            </span>
-
-
-            <div class="attempt-stat-row">
-
-              <div class="attempt-stat">
-
-                <small>BEST</small>
-
-                <strong id="pulldownBest">
-                  —
-                </strong>
-
-                <span>MPH</span>
-
-              </div>
-
-
-              <div class="attempt-stat">
-
-                <small>AVERAGE</small>
-
-                <strong id="pulldownAverage">
-                  —
-                </strong>
-
-                <span>MPH</span>
-
-              </div>
-
-            </div>
-
-
-            <button
-              class="primary-button add-attempt-button"
-              data-attempt-test="pulldown"
-              data-label="Pulldown"
-              data-unit="MPH"
-            >
-              + ENTER RESULT
-            </button>
-
-
-            <div class="attempt-heading">
-              ALL ENTRIES
-            </div>
-
-
-            <div
-              id="pulldownAttempts"
-              class="attempt-list"
-            ></div>
-
-          </div>
-
-
-
-          <!-- =============================================
-               EXIT VELO
-          ============================================== -->
-
-          <div class="test-card attempt-test-card velocity-card">
-
-            <span class="test-label">
-              EXIT VELO — TEE
-            </span>
-
-
-            <div class="attempt-stat-row">
-
-              <div class="attempt-stat">
-
-                <small>BEST</small>
-
-                <strong id="exitVeloBest">
-                  —
-                </strong>
-
-                <span>MPH</span>
-
-              </div>
-
-
-              <div class="attempt-stat">
-
-                <small>AVERAGE</small>
-
-                <strong id="exitVeloAverage">
-                  —
-                </strong>
-
-                <span>MPH</span>
-
-              </div>
-
-            </div>
-
-
-            <button
-              class="primary-button add-attempt-button"
-              data-attempt-test="exitVelo"
-              data-label="Exit Velo — Tee"
-              data-unit="MPH"
-            >
-              + ENTER RESULT
-            </button>
-
-
-            <div class="attempt-heading">
-              ALL ENTRIES
-            </div>
-
-
-            <div
-              id="exitVeloAttempts"
-              class="attempt-list"
-            ></div>
-
-          </div>
-
-
-
-          <!-- =============================================
-               INTERNAL ROTATION
-          ============================================== -->
-
-          <div class="test-card attempt-test-card">
-
-            <span class="test-label">
-              INTERNAL ROTATION
-            </span>
-
-
-            <div class="single-best-stat">
-
-              <small>BEST</small>
-
-              <strong id="internalRotationBest">
-                —
-              </strong>
-
-              <span>DEGREES</span>
-
-            </div>
-
-
-            <button
-              class="primary-button add-attempt-button"
-              data-attempt-test="internalRotation"
-              data-label="Internal Rotation"
-              data-unit="°"
-            >
-              + ENTER RESULT
-            </button>
-
-
-            <div class="attempt-heading">
-              ALL ENTRIES
-            </div>
-
-
-            <div
-              id="internalRotationAttempts"
-              class="attempt-list"
-            ></div>
-
-          </div>
-
-
-
-          <!-- =============================================
-               EXTERNAL ROTATION
-          ============================================== -->
-
-          <div class="test-card attempt-test-card">
-
-            <span class="test-label">
-              EXTERNAL ROTATION
-            </span>
-
-
-            <div class="single-best-stat">
-
-              <small>BEST</small>
-
-              <strong id="externalRotationBest">
-                —
-              </strong>
-
-              <span>DEGREES</span>
-
-            </div>
-
-
-            <button
-              class="primary-button add-attempt-button"
-              data-attempt-test="externalRotation"
-              data-label="External Rotation"
-              data-unit="°"
-            >
-              + ENTER RESULT
-            </button>
-
-
-            <div class="attempt-heading">
-              ALL ENTRIES
-            </div>
-
-
-            <div
-              id="externalRotationAttempts"
-              class="attempt-list"
-            ></div>
-
-          </div>
-
-
-
-          <!-- =============================================
-               DYNAMOMETER INTERNAL
-          ============================================== -->
-
-          <div class="test-card attempt-test-card">
-
-            <span class="test-label">
-              DYNAMOMETER — INTERNAL
-            </span>
-
-
-            <div class="single-best-stat">
-
-              <small>BEST</small>
-
-              <strong id="dynoInternalBest">
-                —
-              </strong>
-
-              <span>LB</span>
-
-            </div>
-
-
-            <button
-              class="primary-button add-attempt-button"
-              data-attempt-test="dynoInternal"
-              data-label="Dynamometer — Internal"
-              data-unit="LB"
-            >
-              + ENTER RESULT
-            </button>
-
-
-            <div class="attempt-heading">
-              ALL ENTRIES
-            </div>
-
-
-            <div
-              id="dynoInternalAttempts"
-              class="attempt-list"
-            ></div>
-
-          </div>
-
-
-
-          <!-- =============================================
-               DYNAMOMETER EXTERNAL
-          ============================================== -->
-
-          <div class="test-card attempt-test-card">
-
-            <span class="test-label">
-              DYNAMOMETER — EXTERNAL
-            </span>
-
-
-            <div class="single-best-stat">
-
-              <small>BEST</small>
-
-              <strong id="dynoExternalBest">
-                —
-              </strong>
-
-              <span>LB</span>
-
-            </div>
-
-
-            <button
-              class="primary-button add-attempt-button"
-              data-attempt-test="dynoExternal"
-              data-label="Dynamometer — External"
-              data-unit="LB"
-            >
-              + ENTER RESULT
-            </button>
-
-
-            <div class="attempt-heading">
-              ALL ENTRIES
-            </div>
-
-
-            <div
-              id="dynoExternalAttempts"
-              class="attempt-list"
-            ></div>
-
-          </div>
-
-
-
-          <!-- =============================================
-               GRIP LEFT
-          ============================================== -->
-
-          <div class="test-card attempt-test-card">
-
-            <span class="test-label">
-              GRIP STRENGTH — LEFT
-            </span>
-
-
-            <div class="single-best-stat">
-
-              <small>BEST</small>
-
-              <strong id="gripLeftBest">
-                —
-              </strong>
-
-              <span>LB</span>
-
-            </div>
-
-
-            <button
-              class="primary-button add-attempt-button"
-              data-attempt-test="gripLeft"
-              data-label="Grip Strength — Left"
-              data-unit="LB"
-            >
-              + ENTER RESULT
-            </button>
-
-
-            <div class="attempt-heading">
-              ALL ENTRIES
-            </div>
-
-
-            <div
-              id="gripLeftAttempts"
-              class="attempt-list"
-            ></div>
-
-          </div>
-
-
-
-          <!-- =============================================
-               GRIP RIGHT
-          ============================================== -->
-
-          <div class="test-card attempt-test-card">
-
-            <span class="test-label">
-              GRIP STRENGTH — RIGHT
-            </span>
-
-
-            <div class="single-best-stat">
-
-              <small>BEST</small>
-
-              <strong id="gripRightBest">
-                —
-              </strong>
-
-              <span>LB</span>
-
-            </div>
-
-
-            <button
-              class="primary-button add-attempt-button"
-              data-attempt-test="gripRight"
-              data-label="Grip Strength — Right"
-              data-unit="LB"
-            >
-              + ENTER RESULT
-            </button>
-
-
-            <div class="attempt-heading">
-              ALL ENTRIES
-            </div>
-
-
-            <div
-              id="gripRightAttempts"
-              class="attempt-list"
-            ></div>
-
-          </div>
-
-
-
-          <!-- =============================================
-               MED BALL LEFT
-          ============================================== -->
-
-          <div class="test-card attempt-test-card">
-
-            <span class="test-label">
-              MED BALL — LEFT
-            </span>
-
-
-            <div class="single-best-stat">
-
-              <small>BEST</small>
-
-              <strong id="medBallLeftBest">
-                —
-              </strong>
-
-              <span>INCHES</span>
-
-            </div>
-
-
-            <button
-              class="primary-button add-attempt-button"
-              data-attempt-test="medBallLeft"
-              data-label="Med Ball Rotation — Left"
-              data-unit="IN"
-            >
-              + ENTER RESULT
-            </button>
-
-
-            <div class="attempt-heading">
-              ALL ENTRIES
-            </div>
-
-
-            <div
-              id="medBallLeftAttempts"
-              class="attempt-list"
-            ></div>
-
-          </div>
-
-
-
-          <!-- =============================================
-               MED BALL RIGHT
-          ============================================== -->
-
-          <div class="test-card attempt-test-card">
-
-            <span class="test-label">
-              MED BALL — RIGHT
-            </span>
-
-
-            <div class="single-best-stat">
-
-              <small>BEST</small>
-
-              <strong id="medBallRightBest">
-                —
-              </strong>
-
-              <span>INCHES</span>
-
-            </div>
-
-
-            <button
-              class="primary-button add-attempt-button"
-              data-attempt-test="medBallRight"
-              data-label="Med Ball Rotation — Right"
-              data-unit="IN"
-            >
-              + ENTER RESULT
-            </button>
-
-
-            <div class="attempt-heading">
-              ALL ENTRIES
-            </div>
-
-
-            <div
-              id="medBallRightAttempts"
-              class="attempt-list"
-            ></div>
-
-          </div>
-
-
-
-          <!-- =============================================
-               5 / 10 / 5
-          ============================================== -->
-
-          <div class="test-card timer-card">
-
-            <span class="test-label">
-              5 / 10 / 5 RUN
-            </span>
-
-
-            <div
-              id="fiveTenFiveTimer"
-              class="timer-display"
-            >
-              0.00
-            </div>
-
-
-            <button
-              id="fiveTenFiveStartButton"
-              class="timer-button"
-            >
-              START
-            </button>
-
-
-            <div class="timer-stat-row">
-
-              <span>BEST / LOWEST</span>
-
-              <strong id="fiveTenFiveBest">
-                —
-              </strong>
-
-            </div>
-
-
-            <div class="attempt-heading">
-              ALL ENTRIES
-            </div>
-
-
-            <div
-              id="fiveTenFiveAttempts"
-              class="attempt-list"
-            ></div>
-
-          </div>
-
-
-
-          <!-- =============================================
-               10 YARD
-          ============================================== -->
-
-          <div class="test-card timer-card">
-
-            <span class="test-label">
-              10-YARD SHUTTLE
-            </span>
-
-
-            <div
-              id="tenYardTimer"
-              class="timer-display"
-            >
-              0.00
-            </div>
-
-
-            <button
-              id="tenYardStartButton"
-              class="timer-button"
-            >
-              START
-            </button>
-
-
-            <div class="timer-stat-row">
-
-              <span>BEST / LOWEST</span>
-
-              <strong id="tenYardBest">
-                —
-              </strong>
-
-            </div>
-
-
-            <div class="attempt-heading">
-              ALL ENTRIES
-            </div>
-
-
-            <div
-              id="tenYardAttempts"
-              class="attempt-list"
-            ></div>
-
-          </div>
-
-
-
-          <!-- =============================================
-               SQUAT
-          ============================================== -->
-
-          <div class="test-card assessment-card">
-
-            <span class="test-label">
-              SQUAT ASSESSMENT
-            </span>
-
-
-            <div class="pass-fail-buttons">
-
-              <button
-                id="squatPassButton"
-                class="assessment-button"
-              >
-                PASS
-              </button>
-
-
-              <button
-                id="squatFailButton"
-                class="assessment-button"
-              >
-                FAIL
-              </button>
-
-            </div>
-
-
-            <textarea
-              id="squatNotes"
-              placeholder="Coach notes..."
-            ></textarea>
-
-
-            <div class="autosave-text">
-              CHANGES SAVE AUTOMATICALLY
-            </div>
-
-          </div>
-
-
-
-          <!-- =============================================
-               BROAD JUMP
-          ============================================== -->
-
-          <div class="test-card attempt-test-card broad-jump-card">
-
-            <span class="test-label">
-              BROAD JUMP
-            </span>
-
-
-            <div class="single-best-stat">
-
-              <small>BEST</small>
-
-              <strong id="broadJumpBest">
-                —
-              </strong>
-
-              <span>INCHES</span>
-
-            </div>
-
-
-            <button
-              class="primary-button add-attempt-button"
-              data-attempt-test="broadJump"
-              data-label="Broad Jump"
-              data-unit="IN"
-            >
-              + ENTER RESULT
-            </button>
-
-
-            <div class="attempt-heading">
-              ALL ENTRIES
-            </div>
-
-
-            <div
-              id="broadJumpAttempts"
-              class="attempt-list"
-            ></div>
-
-          </div>
-
-
-        </div>
-
-      </section>
-
-    </main>
-
-
-
-    <!-- ===================================================
-         CALCULATOR
-    ==================================================== -->
-
-    <div
-      id="numberModal"
-      class="modal"
-    >
-
-      <div class="calculator">
+      <div class="modal-actions">
 
         <button
-          id="closeCalculatorButton"
-          class="calculator-close"
+          id="cancelImportButton"
+          class="button button-secondary"
         >
-          ×
+          Cancel
         </button>
 
-
-        <p
-          id="calculatorLabel"
-          class="calculator-label"
-        >
-          TEST
-        </p>
-
-
-        <div class="calculator-display">
-
-          <span id="calculatorValue"></span>
-
-          <small id="calculatorUnit"></small>
-
-        </div>
-
-
-        <div class="calculator-grid">
-
-          <button data-key="7">7</button>
-          <button data-key="8">8</button>
-          <button data-key="9">9</button>
-
-          <button data-key="4">4</button>
-          <button data-key="5">5</button>
-          <button data-key="6">6</button>
-
-          <button data-key="1">1</button>
-          <button data-key="2">2</button>
-          <button data-key="3">3</button>
-
-          <button data-key=".">.</button>
-          <button data-key="0">0</button>
-          <button data-key="backspace">⌫</button>
-
-        </div>
-
-
         <button
-          id="calculatorSaveButton"
-          class="calculator-save"
+          id="importPlayersConfirmButton"
+          class="button"
+          disabled
         >
-          SAVE ENTRY
+          Import Players
         </button>
 
       </div>
 
     </div>
-
-
-
-    <!-- ===================================================
-         ADD PLAYER
-    ==================================================== -->
-
-    <div
-      id="addPlayerModal"
-      class="modal"
-    >
-
-      <div class="form-modal">
-
-        <button
-          id="closeAddPlayerButton"
-          class="calculator-close"
-        >
-          ×
-        </button>
-
-
-        <p class="eyebrow">
-          ATHLETE DATABASE
-        </p>
-
-
-        <h2>Add Player</h2>
-
-
-        <label>
-
-          First Name
-
-          <input
-            id="newPlayerFirstName"
-            type="text"
-            autocomplete="off"
-          >
-
-        </label>
-
-
-        <label>
-
-          Last Name
-
-          <input
-            id="newPlayerLastName"
-            type="text"
-            autocomplete="off"
-          >
-
-        </label>
-
-
-        <label>
-
-          Age Group
-
-          <select id="newPlayerAgeGroup">
-
-            <option value="">
-              Select Age
-            </option>
-
-            <option value="8U">8U</option>
-            <option value="9U">9U</option>
-            <option value="10U">10U</option>
-            <option value="11U">11U</option>
-            <option value="12U">12U</option>
-            <option value="13U">13U</option>
-            <option value="14U">14U</option>
-            <option value="15U">15U</option>
-            <option value="16U">16U</option>
-
-          </select>
-
-        </label>
-
-
-        <button
-          id="savePlayerButton"
-          class="primary-button full-width"
-        >
-          ADD PLAYER
-        </button>
-
-      </div>
-
-    </div>
-
 
   </div>
 
 
+
+  <!-- TOAST -->
+
+  <div
+    id="toast"
+    class="toast hidden"
+  ></div>
+
+
+  <!-- MAIN JAVASCRIPT -->
+
   <script
     type="module"
-    src="script.js?v=6"
+    src="script.js"
   ></script>
 
 </body>
-
 </html>
