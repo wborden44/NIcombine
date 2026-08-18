@@ -1,12 +1,6 @@
-/* ============================================================
-   NINTH INNING COMBINE TRACKER
-   COMPLETE STYLE.CSS
-============================================================ */
-
-
-/* ============================================================
-   RESET / VARIABLES
-============================================================ */
+/* =========================================================
+   RESET
+========================================================= */
 
 * {
   box-sizing: border-box;
@@ -14,6 +8,7 @@
 
 
 :root {
+
   --bg: #06111f;
   --bg-deep: #040c17;
 
@@ -21,8 +16,8 @@
   --panel-light: #122a44;
   --panel-lighter: #17334f;
 
-  --border: rgba(255, 255, 255, 0.10);
-  --border-strong: rgba(255, 255, 255, 0.16);
+  --border: rgba(255,255,255,.10);
+  --border-strong: rgba(255,255,255,.16);
 
   --text: #f5f8fc;
   --muted: #94a4b9;
@@ -35,28 +30,37 @@
   --yellow: #f5c84c;
 
   --shadow:
-    0 20px 50px rgba(0, 0, 0, 0.28);
+    0 20px 50px
+    rgba(0,0,0,.28);
+
 }
 
 
 html {
+
   margin: 0;
+
   min-height: 100%;
-  background: var(--bg);
+
+  background:
+    var(--bg);
+
 }
 
 
 body {
+
   margin: 0;
 
   min-height: 100vh;
 
-  color: var(--text);
+  color:
+    var(--text);
 
   background:
     radial-gradient(
       circle at top left,
-      rgba(38, 170, 255, 0.10),
+      rgba(38,170,255,.10),
       transparent 32rem
     ),
     var(--bg);
@@ -71,7 +75,9 @@ body {
     sans-serif;
 
   font-size: 16px;
+
   line-height: 1.45;
+
 }
 
 
@@ -79,121 +85,196 @@ button,
 input,
 select,
 textarea {
-  font: inherit;
+
+  font:
+    inherit;
+
 }
 
 
 button {
-  cursor: pointer;
+
+  cursor:
+    pointer;
+
 }
 
 
 button:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
+
+  opacity:
+    .45;
+
+  cursor:
+    not-allowed;
+
 }
 
 
 .hidden {
-  display: none !important;
+
+  display:
+    none !important;
+
 }
 
 
 body.modal-open {
-  overflow: hidden;
+
+  overflow:
+    hidden;
+
 }
 
 
 .muted {
-  color: var(--muted);
+
+  color:
+    var(--muted);
+
 }
 
 
 
-/* ============================================================
+/* =========================================================
    TYPOGRAPHY
-============================================================ */
+========================================================= */
 
 h1,
 h2,
 h3,
 p {
-  margin-top: 0;
+
+  margin-top:
+    0;
+
 }
 
 
 h1 {
-  margin-bottom: 0;
 
-  font-size: clamp(2rem, 4vw, 3rem);
-  line-height: 1;
+  margin-bottom:
+    0;
 
-  letter-spacing: -0.045em;
+  font-size:
+    clamp(
+      2rem,
+      4vw,
+      3rem
+    );
+
+  line-height:
+    1;
+
+  letter-spacing:
+    -.045em;
+
 }
 
 
 h2 {
-  margin-bottom: 0;
 
-  font-size: clamp(1.7rem, 3vw, 2.3rem);
-  line-height: 1.05;
+  margin-bottom:
+    0;
 
-  letter-spacing: -0.04em;
+  font-size:
+    clamp(
+      1.7rem,
+      3vw,
+      2.3rem
+    );
+
+  line-height:
+    1.05;
+
+  letter-spacing:
+    -.04em;
+
 }
 
 
 h3 {
-  margin-bottom: 0;
 
-  font-size: 1.15rem;
+  margin-bottom:
+    0;
+
+  font-size:
+    1.15rem;
+
 }
 
 
 .eyebrow,
 .kicker {
-  margin: 0 0 0.45rem;
 
-  color: var(--blue);
+  margin:
+    0 0 .45rem;
 
-  font-size: 0.7rem;
-  font-weight: 900;
+  color:
+    var(--blue);
 
-  letter-spacing: 0.18em;
+  font-size:
+    .7rem;
 
-  text-transform: uppercase;
+  font-weight:
+    900;
+
+  letter-spacing:
+    .18em;
+
+  text-transform:
+    uppercase;
+
 }
 
 
 
-/* ============================================================
-   LOGIN SCREEN
-============================================================ */
+/* =========================================================
+   LOGIN
+========================================================= */
 
 .login-screen {
-  min-height: 100vh;
 
-  display: grid;
-  place-items: center;
+  min-height:
+    100vh;
 
-  padding: 1.25rem;
+  display:
+    grid;
+
+  place-items:
+    center;
+
+  padding:
+    1.25rem;
 
   background:
     radial-gradient(
       circle at 50% 35%,
-      rgba(38, 170, 255, 0.08),
+      rgba(38,170,255,.08),
       transparent 25rem
     ),
     var(--bg-deep);
+
 }
 
 
 .login-card {
-  width: min(100%, 460px);
 
-  padding: 2rem;
+  width:
+    min(
+      100%,
+      460px
+    );
 
-  border: 1px solid var(--border-strong);
-  border-radius: 1.25rem;
+  padding:
+    2rem;
+
+  border:
+    1px solid
+    var(--border-strong);
+
+  border-radius:
+    1.25rem;
 
   background:
     linear-gradient(
@@ -202,226 +283,330 @@ h3 {
       #0d2137
     );
 
-  box-shadow: var(--shadow);
+  box-shadow:
+    var(--shadow);
+
 }
 
 
 .login-card h1 {
-  margin-bottom: 0.65rem;
 
-  font-size: 2.15rem;
+  margin-bottom:
+    .65rem;
+
+  font-size:
+    2.15rem;
+
 }
 
 
 .login-card p {
-  margin-bottom: 1.5rem;
+
+  margin-bottom:
+    1.5rem;
+
 }
 
 
 .login-card label {
-  margin-top: 0.9rem;
+
+  margin-top:
+    .9rem;
+
 }
 
 
 #loginButton {
-  width: 100%;
 
-  min-height: 52px;
+  width:
+    100%;
 
-  margin-top: 1.1rem;
+  min-height:
+    52px;
 
-  font-size: 1rem;
+  margin-top:
+    1.1rem;
+
 }
 
 
 
-/* ============================================================
+/* =========================================================
    HEADER
-============================================================ */
+========================================================= */
 
 .topbar {
-  display: flex;
 
-  align-items: center;
-  justify-content: space-between;
+  display:
+    flex;
 
-  gap: 1rem;
+  align-items:
+    center;
 
-  padding: 1.1rem 2rem;
+  justify-content:
+    space-between;
 
-  border-bottom: 1px solid var(--border);
+  gap:
+    1rem;
 
-  background: rgba(6, 17, 31, 0.97);
+  padding:
+    1.1rem 2rem;
+
+  border-bottom:
+    1px solid
+    var(--border);
+
+  background:
+    rgba(6,17,31,.97);
+
 }
 
 
 .topbar h1 {
-  font-size: 1.75rem;
+
+  font-size:
+    1.75rem;
+
 }
 
 
 .user-area {
-  display: flex;
 
-  align-items: center;
+  display:
+    flex;
 
-  gap: 0.85rem;
+  align-items:
+    center;
+
+  gap:
+    .85rem;
+
 }
 
 
 .user-info {
-  color: var(--muted);
 
-  font-size: 0.78rem;
+  color:
+    var(--muted);
 
-  text-align: right;
+  font-size:
+    .78rem;
+
+  text-align:
+    right;
+
 }
 
 
 .admin-badge {
-  display: inline-flex;
 
-  align-items: center;
+  display:
+    inline-flex;
 
-  margin-left: 0.4rem;
+  align-items:
+    center;
 
-  padding: 0.22rem 0.45rem;
+  margin-left:
+    .4rem;
 
-  border-radius: 999px;
+  padding:
+    .22rem .45rem;
 
-  color: var(--green);
+  border-radius:
+    999px;
+
+  color:
+    var(--green);
 
   background:
-    rgba(43, 217, 149, 0.10);
+    rgba(43,217,149,.10);
 
-  font-size: 0.62rem;
-  font-weight: 900;
+  font-size:
+    .62rem;
+
+  font-weight:
+    900;
+
 }
 
 
 
-/* ============================================================
+/* =========================================================
    NAVIGATION
-============================================================ */
+========================================================= */
 
 .nav-tabs {
-  position: sticky;
 
-  top: 0;
+  position:
+    sticky;
 
-  z-index: 30;
+  top:
+    0;
 
-  display: flex;
+  z-index:
+    30;
 
-  gap: 0.4rem;
+  display:
+    flex;
 
-  padding: 0.65rem 2rem;
+  gap:
+    .4rem;
 
-  border-bottom: 1px solid var(--border);
+  padding:
+    .65rem 2rem;
+
+  border-bottom:
+    1px solid
+    var(--border);
 
   background:
-    rgba(7, 18, 32, 0.94);
+    rgba(7,18,32,.94);
 
-  backdrop-filter: blur(12px);
+  backdrop-filter:
+    blur(12px);
+
 }
 
 
 .nav-tab {
-  min-height: 42px;
 
-  padding: 0.65rem 1rem;
+  min-height:
+    42px;
 
-  border: 1px solid transparent;
-  border-radius: 0.7rem;
+  padding:
+    .65rem 1rem;
 
-  color: var(--muted);
+  border:
+    1px solid transparent;
 
-  background: transparent;
+  border-radius:
+    .7rem;
 
-  font-weight: 850;
+  color:
+    var(--muted);
+
+  background:
+    transparent;
+
+  font-weight:
+    850;
+
 }
 
 
 .nav-tab:hover {
-  color: #ffffff;
+
+  color:
+    #fff;
 
   background:
-    rgba(255, 255, 255, 0.04);
+    rgba(255,255,255,.04);
+
 }
 
 
 .nav-tab.active {
-  color: #ffffff;
+
+  color:
+    #fff;
 
   border-color:
-    rgba(38, 170, 255, 0.18);
+    rgba(38,170,255,.18);
 
-  background: var(--panel-light);
+  background:
+    var(--panel-light);
+
 }
 
 
 
-/* ============================================================
+/* =========================================================
    VIEWS
-
-   THIS IS WHAT PREVENTS TESTING AND RESULTS FROM SHOWING
-   UNDER THE ATHLETES PAGE.
-============================================================ */
+========================================================= */
 
 .view {
-  display: none !important;
+
+  display:
+    none !important;
+
 }
 
 
 .view.active {
-  display: block !important;
+
+  display:
+    block !important;
+
 }
 
 
 
-/* ============================================================
+/* =========================================================
    MAIN LAYOUT
-============================================================ */
+========================================================= */
 
 .app-shell {
+
   width:
     min(
       1280px,
       calc(100% - 2rem)
     );
 
-  margin: 0 auto;
+  margin:
+    0 auto;
 
-  padding: 2rem 0 5rem;
+  padding:
+    2rem 0 5rem;
+
 }
 
 
 .section-heading {
-  display: flex;
 
-  align-items: flex-end;
-  justify-content: space-between;
+  display:
+    flex;
 
-  gap: 1rem;
+  align-items:
+    flex-end;
 
-  margin-bottom: 1.15rem;
+  justify-content:
+    space-between;
+
+  gap:
+    1rem;
+
+  margin-bottom:
+    1.15rem;
+
 }
 
 
 .heading-actions {
-  display: flex;
 
-  align-items: center;
+  display:
+    flex;
 
-  gap: 0.65rem;
+  align-items:
+    center;
+
+  gap:
+    .65rem;
+
 }
 
 
 .panel {
-  padding: 1rem;
 
-  border: 1px solid var(--border);
-  border-radius: 1rem;
+  padding:
+    1rem;
+
+  border:
+    1px solid
+    var(--border);
+
+  border-radius:
+    1rem;
 
   background:
     linear-gradient(
@@ -430,29 +615,42 @@ h3 {
       #0c1e31
     );
 
-  box-shadow: var(--shadow);
+  box-shadow:
+    var(--shadow);
+
 }
 
 
 
-/* ============================================================
+/* =========================================================
    BUTTONS
-============================================================ */
+========================================================= */
 
 .button {
-  display: inline-flex;
 
-  align-items: center;
-  justify-content: center;
+  display:
+    inline-flex;
 
-  min-height: 44px;
+  align-items:
+    center;
 
-  padding: 0.7rem 1rem;
+  justify-content:
+    center;
 
-  border: 0;
-  border-radius: 0.7rem;
+  min-height:
+    44px;
 
-  color: #ffffff;
+  padding:
+    .7rem 1rem;
+
+  border:
+    0;
+
+  border-radius:
+    .7rem;
+
+  color:
+    #fff;
 
   background:
     linear-gradient(
@@ -463,399 +661,620 @@ h3 {
 
   box-shadow:
     0 8px 20px
-    rgba(8, 127, 206, 0.16);
+    rgba(8,127,206,.16);
 
-  font-weight: 900;
+  font-weight:
+    900;
 
-  text-decoration: none;
+  text-decoration:
+    none;
 
-  white-space: nowrap;
+  white-space:
+    nowrap;
 
   transition:
-    filter 0.15s ease,
-    transform 0.08s ease,
-    background 0.15s ease;
+    filter .15s ease,
+    transform .08s ease,
+    background .15s ease;
+
 }
 
 
 .button:hover {
-  filter: brightness(1.08);
+
+  filter:
+    brightness(1.08);
+
 }
 
 
 .button:active {
-  transform: translateY(1px);
+
+  transform:
+    translateY(1px);
+
 }
 
 
 .button-secondary {
-  color: var(--text);
 
-  border: 1px solid var(--border);
+  color:
+    var(--text);
 
-  background: var(--panel-light);
+  border:
+    1px solid
+    var(--border);
 
-  box-shadow: none;
+  background:
+    var(--panel-light);
+
+  box-shadow:
+    none;
+
 }
 
 
 .button-secondary:hover {
-  background: var(--panel-lighter);
+
+  background:
+    var(--panel-lighter);
+
 }
 
 
 .full-button {
-  width: 100%;
+
+  width:
+    100%;
+
 }
 
 
 
-/* ============================================================
-   FORM ELEMENTS
-============================================================ */
+/* DELETE PLAYER */
+
+.delete-player-button {
+
+  background:
+    linear-gradient(
+      180deg,
+      #ff6e80,
+      #c92f45
+    );
+
+  box-shadow:
+    0 8px 20px
+    rgba(201,47,69,.22);
+
+}
+
+
+
+/* =========================================================
+   FORMS
+========================================================= */
 
 label {
-  display: block;
 
-  margin-bottom: 0.4rem;
+  display:
+    block;
 
-  color: var(--muted);
+  margin-bottom:
+    .4rem;
 
-  font-size: 0.8rem;
-  font-weight: 800;
+  color:
+    var(--muted);
+
+  font-size:
+    .8rem;
+
+  font-weight:
+    800;
+
 }
 
 
 input,
 select,
 textarea {
-  width: 100%;
 
-  min-height: 48px;
+  width:
+    100%;
 
-  padding: 0.75rem 0.85rem;
+  min-height:
+    48px;
 
-  border: 1px solid var(--border-strong);
-  border-radius: 0.75rem;
+  padding:
+    .75rem .85rem;
 
-  outline: none;
+  border:
+    1px solid
+    var(--border-strong);
 
-  color: #ffffff;
+  border-radius:
+    .75rem;
+
+  outline:
+    none;
+
+  color:
+    #fff;
 
   background:
-    rgba(2, 10, 18, 0.48);
+    rgba(2,10,18,.48);
+
 }
 
 
 input::placeholder,
 textarea::placeholder {
-  color: #748397;
+
+  color:
+    #748397;
+
 }
 
 
 input:focus,
 select:focus,
 textarea:focus {
-  border-color: var(--blue);
+
+  border-color:
+    var(--blue);
 
   box-shadow:
     0 0 0 3px
-    rgba(38, 170, 255, 0.10);
+    rgba(38,170,255,.10);
+
 }
 
 
 select option {
-  color: #ffffff;
 
-  background: var(--panel);
+  color:
+    #fff;
+
+  background:
+    var(--panel);
+
 }
 
 
 textarea {
-  resize: vertical;
+
+  resize:
+    vertical;
+
 }
 
 
 
-/* ============================================================
+/* =========================================================
    TOOLBARS
-============================================================ */
+========================================================= */
 
 .toolbar {
-  display: flex;
 
-  align-items: center;
+  display:
+    flex;
 
-  gap: 0.75rem;
+  align-items:
+    center;
 
-  margin-bottom: 1rem;
+  gap:
+    .75rem;
+
+  margin-bottom:
+    1rem;
+
 }
 
 
 .toolbar input {
-  flex: 1;
+
+  flex:
+    1;
+
 }
 
 
 .toolbar select {
-  width: 190px;
+
+  width:
+    190px;
+
 }
 
 
 .upload-actions {
-  display: flex;
 
-  align-items: center;
+  display:
+    flex;
 
-  gap: 0.7rem;
+  align-items:
+    center;
 
-  flex-wrap: wrap;
+  gap:
+    .7rem;
 
-  margin: 1rem 0;
+  flex-wrap:
+    wrap;
+
+  margin:
+    1rem 0;
+
 }
 
 
 .small-note {
-  margin: 0 0 1rem;
 
-  color: var(--muted);
+  margin:
+    0 0 1rem;
 
-  font-size: 0.82rem;
+  color:
+    var(--muted);
+
+  font-size:
+    .82rem;
+
 }
 
 
 
-/* ============================================================
-   ATHLETES TABLE
-============================================================ */
+/* =========================================================
+   TABLES
+========================================================= */
 
 .table-wrap {
-  width: 100%;
 
-  overflow: auto;
+  width:
+    100%;
 
-  border: 1px solid var(--border);
-  border-radius: 0.85rem;
+  overflow:
+    auto;
 
-  -webkit-overflow-scrolling: touch;
+  border:
+    1px solid
+    var(--border);
+
+  border-radius:
+    .85rem;
+
+  -webkit-overflow-scrolling:
+    touch;
+
 }
 
 
 table {
-  width: 100%;
 
-  border-collapse: collapse;
+  width:
+    100%;
+
+  border-collapse:
+    collapse;
+
 }
 
 
 .athletes-table {
-  min-width: 520px;
+
+  min-width:
+    520px;
+
 }
 
 
 thead {
+
   background:
-    rgba(20, 45, 71, 0.85);
+    rgba(20,45,71,.85);
+
 }
 
 
 th {
-  padding: 0.9rem 1rem;
 
-  border-bottom: 1px solid var(--border-strong);
+  padding:
+    .9rem 1rem;
 
-  color: #98a9bd;
+  border-bottom:
+    1px solid
+    var(--border-strong);
 
-  font-size: 0.7rem;
-  font-weight: 900;
+  color:
+    #98a9bd;
 
-  letter-spacing: 0.08em;
+  font-size:
+    .7rem;
 
-  text-align: left;
+  font-weight:
+    900;
 
-  text-transform: uppercase;
+  letter-spacing:
+    .08em;
 
-  white-space: nowrap;
+  text-align:
+    left;
 
-  user-select: none;
+  text-transform:
+    uppercase;
+
+  white-space:
+    nowrap;
+
+  user-select:
+    none;
+
 }
 
 
 th[data-athlete-sort],
 th.sortable {
-  cursor: pointer;
+
+  cursor:
+    pointer;
+
 }
 
 
 td {
-  padding: 1rem;
 
-  border-bottom: 1px solid var(--border);
+  padding:
+    1rem;
 
-  color: #f7f9fc;
+  border-bottom:
+    1px solid
+    var(--border);
 
-  vertical-align: middle;
+  color:
+    #f7f9fc;
+
+  vertical-align:
+    middle;
+
 }
 
 
 tbody tr:last-child td {
-  border-bottom: 0;
+
+  border-bottom:
+    0;
+
 }
 
 
 
-/* ============================================================
-   CLICKABLE ATHLETE ROW
-
-   ENTIRE BAR IS CLICKABLE.
-============================================================ */
+/* =========================================================
+   ATHLETE ROW
+========================================================= */
 
 .athlete-row {
-  cursor: pointer;
+
+  cursor:
+    pointer;
 
   transition:
-    background 0.15s ease;
+    background .15s ease;
+
 }
 
 
 .athlete-row:hover {
+
   background:
-    rgba(38, 170, 255, 0.07);
+    rgba(38,170,255,.07);
+
 }
 
 
 .athlete-row:active {
+
   background:
-    rgba(38, 170, 255, 0.14);
+    rgba(38,170,255,.14);
+
 }
 
 
 .athlete-row td {
-  cursor: pointer;
+
+  cursor:
+    pointer;
+
 }
 
 
 .athlete-row strong {
-  color: #ffffff;
 
-  font-weight: 850;
+  color:
+    #fff;
+
+  font-weight:
+    850;
+
 }
 
 
 .age-pill {
-  display: inline-flex;
 
-  align-items: center;
-  justify-content: center;
+  display:
+    inline-flex;
 
-  min-width: 48px;
+  align-items:
+    center;
 
-  padding: 0.28rem 0.55rem;
+  justify-content:
+    center;
+
+  min-width:
+    48px;
+
+  padding:
+    .28rem .55rem;
 
   border:
     1px solid
-    rgba(38, 170, 255, 0.18);
+    rgba(38,170,255,.18);
 
-  border-radius: 999px;
+  border-radius:
+    999px;
 
-  color: #5bc7ff;
+  color:
+    #5bc7ff;
 
   background:
-    rgba(38, 170, 255, 0.09);
+    rgba(38,170,255,.09);
 
-  font-size: 0.75rem;
-  font-weight: 900;
+  font-size:
+    .75rem;
+
+  font-weight:
+    900;
+
 }
 
 
 .empty-state {
-  padding: 2rem;
 
-  color: var(--muted);
+  padding:
+    2rem;
 
-  text-align: center;
+  color:
+    var(--muted);
+
+  text-align:
+    center;
+
 }
 
 
 
-/* ============================================================
+/* =========================================================
    TESTING HEADER
-============================================================ */
+========================================================= */
 
 .testing-topbar {
-  position: sticky;
 
-  top: 62px;
+  position:
+    sticky;
 
-  z-index: 20;
+  top:
+    62px;
 
-  display: grid;
+  z-index:
+    20;
+
+  display:
+    grid;
 
   grid-template-columns:
-    auto
-    1fr
-    auto;
+    auto 1fr auto;
 
-  align-items: center;
+  align-items:
+    center;
 
-  gap: 1rem;
+  gap:
+    1rem;
 
-  margin-bottom: 1rem;
+  margin-bottom:
+    1rem;
 
-  padding: 0.85rem 1rem;
+  padding:
+    .85rem 1rem;
 
-  border: 1px solid var(--border);
-  border-radius: 1rem;
+  border:
+    1px solid
+    var(--border);
+
+  border-radius:
+    1rem;
 
   background:
-    rgba(13, 32, 53, 0.95);
+    rgba(13,32,53,.95);
 
-  box-shadow: var(--shadow);
+  box-shadow:
+    var(--shadow);
 
-  backdrop-filter: blur(10px);
+  backdrop-filter:
+    blur(10px);
+
 }
 
 
 .testing-player-title {
-  text-align: center;
+
+  text-align:
+    center;
+
 }
 
 
 .testing-player-title .kicker {
-  margin-bottom: 0.3rem;
+
+  margin-bottom:
+    .3rem;
+
 }
 
 
 .testing-player-title .age-pill {
-  margin-top: 0.4rem;
+
+  margin-top:
+    .4rem;
+
+}
+
+
+.testing-header-actions {
+
+  display:
+    flex;
+
+  align-items:
+    center;
+
+  gap:
+    .5rem;
+
 }
 
 
 
-/* ============================================================
+/* =========================================================
    TEST GRID
-============================================================ */
+========================================================= */
 
 .test-grid {
-  display: grid;
+
+  display:
+    grid;
 
   grid-template-columns:
     repeat(
       2,
-      minmax(0, 1fr)
+      minmax(0,1fr)
     );
 
-  gap: 1rem;
+  gap:
+    1rem;
+
 }
 
 
 .test-card {
-  min-width: 0;
 
-  padding: 1.05rem;
+  min-width:
+    0;
 
-  border: 1px solid var(--border);
-  border-radius: 1rem;
+  padding:
+    1.05rem;
+
+  border:
+    1px solid
+    var(--border);
+
+  border-radius:
+    1rem;
 
   background:
     linear-gradient(
@@ -866,169 +1285,230 @@ tbody tr:last-child td {
 
   box-shadow:
     0 12px 30px
-    rgba(0, 0, 0, 0.16);
-}
+    rgba(0,0,0,.16);
 
-
-.wide-test-card {
-  grid-column: 1 / -1;
 }
 
 
 .test-card-header {
-  display: flex;
 
-  align-items: flex-start;
-  justify-content: space-between;
+  display:
+    flex;
 
-  gap: 0.75rem;
+  align-items:
+    flex-start;
 
-  margin-bottom: 1rem;
+  justify-content:
+    space-between;
+
+  gap:
+    .75rem;
+
+  margin-bottom:
+    1rem;
+
 }
 
 
 .test-card-header h3 {
-  margin: 0;
 
-  color: #ffffff;
+  margin:
+    0;
 
-  font-size: 1.15rem;
+  color:
+    #fff;
+
+  font-size:
+    1.15rem;
+
 }
 
 
 .best-chip {
-  flex: 0 0 auto;
 
-  display: inline-flex;
+  flex:
+    0 0 auto;
 
-  align-items: center;
+  display:
+    inline-flex;
 
-  padding: 0.38rem 0.6rem;
+  align-items:
+    center;
+
+  padding:
+    .38rem .6rem;
 
   border:
     1px solid
-    rgba(43, 217, 149, 0.25);
+    rgba(43,217,149,.25);
 
-  border-radius: 999px;
+  border-radius:
+    999px;
 
-  color: var(--green);
+  color:
+    var(--green);
 
   background:
-    rgba(43, 217, 149, 0.09);
+    rgba(43,217,149,.09);
 
-  font-size: 0.72rem;
-  font-weight: 900;
+  font-size:
+    .72rem;
+
+  font-weight:
+    900;
+
 }
 
 
 .fail-chip {
-  color: var(--red);
+
+  color:
+    var(--red);
 
   border-color:
-    rgba(255, 98, 119, 0.28);
+    rgba(255,98,119,.28);
 
   background:
-    rgba(255, 98, 119, 0.08);
+    rgba(255,98,119,.08);
+
 }
 
 
 
-/* ============================================================
-   MAX / AVERAGE
-============================================================ */
+/* =========================================================
+   MAX / AVG
+========================================================= */
 
 .dual-stat {
-  display: grid;
+
+  display:
+    grid;
 
   grid-template-columns:
     1fr 1fr;
 
-  gap: 0.65rem;
+  gap:
+    .65rem;
 
-  margin-bottom: 0.8rem;
+  margin-bottom:
+    .8rem;
+
 }
 
 
 .dual-stat > div {
-  padding: 0.75rem;
 
-  border: 1px solid var(--border);
-  border-radius: 0.75rem;
+  padding:
+    .75rem;
+
+  border:
+    1px solid
+    var(--border);
+
+  border-radius:
+    .75rem;
 
   background:
-    rgba(0, 0, 0, 0.12);
+    rgba(0,0,0,.12);
+
 }
 
 
 .dual-stat span {
-  display: block;
 
-  color: var(--muted);
+  display:
+    block;
 
-  font-size: 0.65rem;
-  font-weight: 900;
+  color:
+    var(--muted);
 
-  letter-spacing: 0.08em;
+  font-size:
+    .65rem;
+
+  font-weight:
+    900;
+
+  letter-spacing:
+    .08em;
+
 }
 
 
 .dual-stat strong {
-  display: block;
 
-  margin-top: 0.25rem;
+  display:
+    block;
 
-  color: #ffffff;
+  margin-top:
+    .25rem;
 
-  font-size: 1.05rem;
+  color:
+    #fff;
+
+  font-size:
+    1.05rem;
+
 }
 
 
 
-/* ============================================================
-   NUMBER ENTRY BUTTON
-============================================================ */
+/* =========================================================
+   NUMBER ENTRY
+========================================================= */
 
 .number-entry-button {
-  width: 100%;
 
-  min-height: 58px;
+  width:
+    100%;
 
-  padding: 0.8rem;
+  min-height:
+    58px;
+
+  padding:
+    .8rem;
 
   border:
     1px solid
-    rgba(38, 170, 255, 0.32);
+    rgba(38,170,255,.32);
 
-  border-radius: 0.85rem;
+  border-radius:
+    .85rem;
 
-  color: #ffffff;
+  color:
+    #fff;
 
   background:
-    rgba(38, 170, 255, 0.11);
+    rgba(38,170,255,.11);
 
-  font-weight: 950;
+  font-weight:
+    950;
 
-  letter-spacing: 0.04em;
+  letter-spacing:
+    .04em;
+
 }
 
 
 .number-entry-button:hover {
+
   background:
-    rgba(38, 170, 255, 0.18);
+    rgba(38,170,255,.18);
+
 }
 
 
 
-/* ============================================================
+/* =========================================================
    TIMER
-============================================================ */
+========================================================= */
 
 .timer-display {
-  margin:
-    0.3rem 0
-    1rem;
 
-  color: #ffffff;
+  margin:
+    .3rem 0 1rem;
+
+  color:
+    #fff;
 
   font-size:
     clamp(
@@ -1037,35 +1517,40 @@ tbody tr:last-child td {
       5.5rem
     );
 
-  font-weight: 950;
+  font-weight:
+    950;
 
   font-variant-numeric:
     tabular-nums;
 
-  line-height: 1;
+  line-height:
+    1;
 
-  letter-spacing: -0.055em;
+  letter-spacing:
+    -.055em;
 
-  text-align: center;
+  text-align:
+    center;
+
 }
 
 
-/*
-ONE LARGE BUTTON.
-
-BLUE WHEN START.
-RED WHEN RUNNING/STOP.
-*/
-
 .timer-toggle-button {
-  width: 100%;
 
-  min-height: 100px;
+  width:
+    100%;
 
-  border: 0;
-  border-radius: 1rem;
+  min-height:
+    100px;
 
-  color: #ffffff;
+  border:
+    0;
+
+  border-radius:
+    1rem;
+
+  color:
+    #fff;
 
   background:
     linear-gradient(
@@ -1076,31 +1561,22 @@ RED WHEN RUNNING/STOP.
 
   box-shadow:
     0 10px 28px
-    rgba(8, 127, 206, 0.26);
+    rgba(8,127,206,.26);
 
-  font-size: 1.65rem;
-  font-weight: 950;
+  font-size:
+    1.65rem;
 
-  letter-spacing: 0.08em;
+  font-weight:
+    950;
 
-  transition:
-    transform 0.08s ease,
-    filter 0.15s ease,
-    background 0.15s ease;
-}
+  letter-spacing:
+    .08em;
 
-
-.timer-toggle-button:hover {
-  filter: brightness(1.07);
-}
-
-
-.timer-toggle-button:active {
-  transform: scale(0.995);
 }
 
 
 .timer-toggle-button.running {
+
   background:
     linear-gradient(
       180deg,
@@ -1110,309 +1586,457 @@ RED WHEN RUNNING/STOP.
 
   box-shadow:
     0 10px 28px
-    rgba(213, 57, 80, 0.28);
+    rgba(213,57,80,.28);
+
+}
+
+
+.timer-toggle-button:active {
+
+  transform:
+    scale(.995);
+
 }
 
 
 .timer-reset-button {
-  width: 100%;
 
-  min-height: 42px;
+  width:
+    100%;
 
-  margin-top: 0.6rem;
+  min-height:
+    42px;
 
-  border: 1px solid var(--border);
-  border-radius: 0.7rem;
+  margin-top:
+    .6rem;
 
-  color: var(--muted);
+  border:
+    1px solid
+    var(--border);
+
+  border-radius:
+    .7rem;
+
+  color:
+    var(--muted);
 
   background:
-    rgba(0, 0, 0, 0.12);
+    rgba(0,0,0,.12);
 
-  font-weight: 850;
+  font-weight:
+    850;
+
 }
 
 
 .timer-help {
+
   margin:
-    0.7rem 0
-    0;
+    .7rem 0 0;
 
-  color: var(--muted);
+  color:
+    var(--muted);
 
-  font-size: 0.75rem;
+  font-size:
+    .75rem;
 
-  text-align: center;
+  text-align:
+    center;
+
 }
 
 
 
-/* ============================================================
-   PASS / FAIL
-============================================================ */
+/* =========================================================
+   PASS FAIL
+========================================================= */
 
 .notes-input {
-  min-height: 85px;
+
+  min-height:
+    85px;
+
 }
 
 
 .pass-fail-grid {
-  display: grid;
+
+  display:
+    grid;
 
   grid-template-columns:
     1fr 1fr;
 
-  gap: 0.7rem;
+  gap:
+    .7rem;
 
-  margin-top: 0.75rem;
+  margin-top:
+    .75rem;
+
 }
 
 
 .assessment-button {
-  min-height: 58px;
 
-  border-radius: 0.8rem;
+  min-height:
+    58px;
 
-  color: #ffffff;
+  border-radius:
+    .8rem;
 
-  font-weight: 950;
+  color:
+    #fff;
+
+  font-weight:
+    950;
+
 }
 
 
 .assessment-button.pass {
+
   border:
     1px solid
-    rgba(43, 217, 149, 0.34);
+    rgba(43,217,149,.34);
 
   background:
-    rgba(43, 217, 149, 0.12);
+    rgba(43,217,149,.12);
+
 }
 
 
 .assessment-button.fail {
+
   border:
     1px solid
-    rgba(255, 98, 119, 0.34);
+    rgba(255,98,119,.34);
 
   background:
-    rgba(255, 98, 119, 0.12);
+    rgba(255,98,119,.12);
+
 }
 
 
 
-/* ============================================================
+/* =========================================================
    ATTEMPTS
-============================================================ */
+========================================================= */
 
 .attempts {
-  margin-top: 1rem;
 
-  padding-top: 0.8rem;
+  margin-top:
+    1rem;
 
-  border-top: 1px solid var(--border);
+  padding-top:
+    .8rem;
+
+  border-top:
+    1px solid
+    var(--border);
+
 }
 
 
 .attempts-title {
-  margin-bottom: 0.4rem;
 
-  color: var(--muted);
+  margin-bottom:
+    .4rem;
 
-  font-size: 0.66rem;
-  font-weight: 900;
+  color:
+    var(--muted);
 
-  letter-spacing: 0.11em;
+  font-size:
+    .66rem;
+
+  font-weight:
+    900;
+
+  letter-spacing:
+    .11em;
+
 }
 
 
 .attempt-row {
-  display: flex;
 
-  align-items: center;
-  justify-content: space-between;
+  display:
+    flex;
 
-  gap: 0.7rem;
+  align-items:
+    center;
 
-  padding: 0.5rem;
+  justify-content:
+    space-between;
 
-  border-radius: 0.55rem;
+  gap:
+    .7rem;
+
+  padding:
+    .5rem;
+
+  border-radius:
+    .55rem;
+
 }
 
 
 .attempt-row strong {
-  display: block;
 
-  color: inherit;
+  display:
+    block;
 
-  font-size: 0.85rem;
+  font-size:
+    .85rem;
+
 }
 
 
 .attempt-row small {
-  display: block;
 
-  margin-top: 0.1rem;
+  display:
+    block;
 
-  color: var(--muted);
+  margin-top:
+    .1rem;
 
-  font-size: 0.68rem;
+  color:
+    var(--muted);
+
+  font-size:
+    .68rem;
+
 }
 
 
 .best-attempt {
-  color: var(--green);
+
+  color:
+    var(--green);
 
   background:
-    rgba(43, 217, 149, 0.06);
+    rgba(43,217,149,.06);
+
 }
 
 
 .attempt-empty {
-  margin-top: 0.8rem;
 
-  color: var(--muted);
+  margin-top:
+    .8rem;
 
-  font-size: 0.8rem;
+  color:
+    var(--muted);
+
+  font-size:
+    .8rem;
+
 }
 
 
 .delete-attempt {
-  flex: 0 0 auto;
 
-  width: 30px;
-  height: 30px;
+  flex:
+    0 0 auto;
 
-  padding: 0;
+  width:
+    30px;
+
+  height:
+    30px;
+
+  padding:
+    0;
 
   border:
     1px solid
-    rgba(255, 98, 119, 0.24);
+    rgba(255,98,119,.24);
 
-  border-radius: 999px;
+  border-radius:
+    999px;
 
-  color: var(--red);
+  color:
+    var(--red);
 
   background:
-    rgba(255, 98, 119, 0.07);
+    rgba(255,98,119,.07);
 
-  font-weight: 900;
+  font-weight:
+    900;
+
 }
 
 
 
-/* ============================================================
-   RESULTS MATRIX
-============================================================ */
+/* =========================================================
+   RESULTS
+========================================================= */
 
 .results-matrix-wrap {
-  max-height: 72vh;
+
+  max-height:
+    72vh;
+
 }
 
 
 .results-matrix {
-  min-width: 1750px;
+
+  min-width:
+    1750px;
+
 }
 
 
 .results-matrix thead th {
-  position: sticky;
 
-  top: 0;
+  position:
+    sticky;
 
-  z-index: 4;
+  top:
+    0;
 
-  background: #11263d;
+  z-index:
+    4;
+
+  background:
+    #11263d;
+
 }
 
 
 .results-matrix .sticky-athlete {
-  position: sticky;
 
-  left: 0;
+  position:
+    sticky;
 
-  z-index: 3;
+  left:
+    0;
 
-  min-width: 190px;
+  z-index:
+    3;
 
-  background: #0e2238;
+  min-width:
+    190px;
+
+  background:
+    #0e2238;
+
 }
 
 
 .results-matrix thead .sticky-athlete {
-  z-index: 6;
 
-  background: #11263d;
+  z-index:
+    6;
+
+  background:
+    #11263d;
+
 }
 
 
 .event-heading:hover,
 .sortable:hover {
-  color: #ffffff;
 
-  background: #17314d;
+  color:
+    #fff;
+
+  background:
+    #17314d;
+
 }
 
 
 .matrix-player-link {
-  border: 0;
 
-  padding: 0;
+  border:
+    0;
 
-  color: #ffffff;
+  padding:
+    0;
 
-  background: transparent;
+  color:
+    #fff;
 
-  font-weight: 850;
+  background:
+    transparent;
 
-  text-align: left;
+  font-weight:
+    850;
 
-  text-decoration: underline;
+  text-align:
+    left;
+
+  text-decoration:
+    underline;
 
   text-decoration-color:
-    rgba(38, 170, 255, 0.35);
+    rgba(38,170,255,.35);
 
-  text-underline-offset: 3px;
+  text-underline-offset:
+    3px;
+
 }
 
 
 .matrix-sub {
-  display: block;
 
-  margin-top: 0.12rem;
+  display:
+    block;
 
-  color: var(--muted);
+  margin-top:
+    .12rem;
 
-  font-size: 0.66rem;
+  color:
+    var(--muted);
 
-  font-weight: 500;
+  font-size:
+    .66rem;
+
+  font-weight:
+    500;
+
 }
 
 
 
-/* ============================================================
-   PLAYER INDEX DRAWER
-============================================================ */
+/* =========================================================
+   PLAYER INDEX
+========================================================= */
 
 .drawer-backdrop {
-  position: fixed;
 
-  inset: 0;
+  position:
+    fixed;
 
-  z-index: 90;
+  inset:
+    0;
+
+  z-index:
+    90;
 
   background:
-    rgba(0, 0, 0, 0.62);
+    rgba(0,0,0,.62);
+
 }
 
 
 .player-index-drawer {
-  position: fixed;
 
-  top: 0;
-  left: 0;
-  bottom: 0;
+  position:
+    fixed;
 
-  z-index: 100;
+  top:
+    0;
+
+  left:
+    0;
+
+  bottom:
+    0;
+
+  z-index:
+    100;
 
   width:
     min(
@@ -1420,123 +2044,179 @@ RED WHEN RUNNING/STOP.
       92vw
     );
 
-  overflow-y: auto;
+  overflow-y:
+    auto;
 
-  padding: 1rem;
+  padding:
+    1rem;
 
-  border-right: 1px solid var(--border);
+  border-right:
+    1px solid
+    var(--border);
 
-  background: #081827;
+  background:
+    #081827;
 
   box-shadow:
     20px 0 60px
-    rgba(0, 0, 0, 0.45);
+    rgba(0,0,0,.45);
+
 }
 
 
 .drawer-header {
-  display: flex;
 
-  align-items: flex-start;
-  justify-content: space-between;
+  display:
+    flex;
 
-  gap: 1rem;
+  align-items:
+    flex-start;
 
-  margin-bottom: 1rem;
+  justify-content:
+    space-between;
+
+  gap:
+    1rem;
+
+  margin-bottom:
+    1rem;
+
 }
 
 
 .drawer-header h2 {
-  margin: 0;
+
+  margin:
+    0;
+
 }
 
 
 .index-player-list {
-  margin-top: 0.8rem;
+
+  margin-top:
+    .8rem;
+
 }
 
 
 .index-group {
-  margin-bottom: 1rem;
+
+  margin-bottom:
+    1rem;
+
 }
 
 
 .index-group h3 {
+
   margin:
-    0.6rem 0
-    0.4rem;
+    .6rem 0 .4rem;
 
-  color: var(--blue);
+  color:
+    var(--blue);
 
-  font-size: 0.78rem;
+  font-size:
+    .78rem;
 
-  letter-spacing: 0.08em;
+  letter-spacing:
+    .08em;
+
 }
 
 
 .index-player {
-  width: 100%;
 
-  display: flex;
+  width:
+    100%;
 
-  justify-content: space-between;
+  display:
+    flex;
 
-  gap: 1rem;
+  justify-content:
+    space-between;
 
-  padding: 0.8rem;
+  gap:
+    1rem;
 
-  border: 0;
-  border-bottom: 1px solid var(--border);
+  padding:
+    .8rem;
 
-  color: #ffffff;
+  border:
+    0;
 
-  background: transparent;
+  border-bottom:
+    1px solid
+    var(--border);
 
-  text-align: left;
+  color:
+    #fff;
+
+  background:
+    transparent;
+
+  text-align:
+    left;
+
 }
 
 
 .index-player:hover {
+
   background:
-    rgba(38, 170, 255, 0.06);
+    rgba(38,170,255,.06);
+
 }
 
 
 .index-player.active {
-  color: var(--green);
+
+  color:
+    var(--green);
 
   background:
-    rgba(43, 217, 149, 0.06);
+    rgba(43,217,149,.06);
+
 }
 
 
 
-/* ============================================================
+/* =========================================================
    MODALS
-============================================================ */
+========================================================= */
 
 .modal-backdrop {
-  position: fixed;
 
-  inset: 0;
+  position:
+    fixed;
 
-  z-index: 120;
+  inset:
+    0;
 
-  display: grid;
+  z-index:
+    120;
 
-  place-items: center;
+  display:
+    grid;
 
-  padding: 1rem;
+  place-items:
+    center;
+
+  padding:
+    1rem;
 
   background:
-    rgba(0, 0, 0, 0.78);
+    rgba(0,0,0,.78);
 
-  backdrop-filter: blur(5px);
+  backdrop-filter:
+    blur(5px);
+
 }
 
 
 .modal-card,
 .number-pad-card {
+
   width:
     min(
       900px,
@@ -1548,12 +2228,18 @@ RED WHEN RUNNING/STOP.
       100vh - 2rem
     );
 
-  overflow-y: auto;
+  overflow-y:
+    auto;
 
-  padding: 1.2rem;
+  padding:
+    1.2rem;
 
-  border: 1px solid var(--border-strong);
-  border-radius: 1rem;
+  border:
+    1px solid
+    var(--border-strong);
+
+  border-radius:
+    1rem;
 
   background:
     linear-gradient(
@@ -1562,112 +2248,169 @@ RED WHEN RUNNING/STOP.
       #0c1e31
     );
 
-  box-shadow: var(--shadow);
+  box-shadow:
+    var(--shadow);
+
 }
 
 
 .modal-small {
+
   width:
     min(
       600px,
       100%
     );
+
 }
 
 
 .modal-header {
-  display: flex;
 
-  align-items: flex-start;
-  justify-content: space-between;
+  display:
+    flex;
 
-  gap: 1rem;
+  align-items:
+    flex-start;
 
-  margin-bottom: 1rem;
+  justify-content:
+    space-between;
+
+  gap:
+    1rem;
+
+  margin-bottom:
+    1rem;
+
 }
 
 
 .modal-header h2 {
-  margin: 0;
+
+  margin:
+    0;
+
 }
 
 
 .icon-button {
-  flex: 0 0 auto;
 
-  display: inline-flex;
+  flex:
+    0 0 auto;
 
-  align-items: center;
-  justify-content: center;
+  display:
+    inline-flex;
 
-  width: 42px;
-  height: 42px;
+  align-items:
+    center;
 
-  padding: 0;
+  justify-content:
+    center;
 
-  border: 1px solid var(--border);
-  border-radius: 999px;
+  width:
+    42px;
 
-  color: #ffffff;
+  height:
+    42px;
 
-  background: var(--panel-light);
+  padding:
+    0;
 
-  font-size: 1.35rem;
+  border:
+    1px solid
+    var(--border);
+
+  border-radius:
+    999px;
+
+  color:
+    #fff;
+
+  background:
+    var(--panel-light);
+
+  font-size:
+    1.35rem;
+
 }
 
 
 .form-grid {
-  display: grid;
+
+  display:
+    grid;
 
   grid-template-columns:
-    1fr
-    1fr
-    0.75fr;
+    1fr 1fr .75fr;
 
-  gap: 0.8rem;
+  gap:
+    .8rem;
+
 }
 
 
 .modal-actions {
-  display: flex;
 
-  justify-content: flex-end;
+  display:
+    flex;
 
-  gap: 0.7rem;
+  justify-content:
+    flex-end;
 
-  margin-top: 1rem;
+  gap:
+    .7rem;
+
+  margin-top:
+    1rem;
+
 }
 
 
 
-/* ============================================================
+/* =========================================================
    UPLOAD
-============================================================ */
+========================================================= */
 
 .file-button {
-  display: inline-flex;
 
-  align-items: center;
-  justify-content: center;
+  display:
+    inline-flex;
+
+  align-items:
+    center;
+
+  justify-content:
+    center;
+
 }
 
 
 .file-button input {
-  display: none;
+
+  display:
+    none;
+
 }
 
 
 .file-name {
-  margin: 0.8rem 0;
 
-  color: var(--muted);
+  margin:
+    .8rem 0;
 
-  font-size: 0.84rem;
+  color:
+    var(--muted);
+
+  font-size:
+    .84rem;
+
 }
 
 
 .summary-grid {
-  display: grid;
+
+  display:
+    grid;
 
   grid-template-columns:
     repeat(
@@ -1675,138 +2418,206 @@ RED WHEN RUNNING/STOP.
       1fr
     );
 
-  gap: 0.7rem;
+  gap:
+    .7rem;
 
-  margin: 1rem 0;
+  margin:
+    1rem 0;
+
 }
 
 
 .summary-card {
-  padding: 0.85rem;
 
-  border: 1px solid var(--border);
-  border-radius: 0.75rem;
+  padding:
+    .85rem;
+
+  border:
+    1px solid
+    var(--border);
+
+  border-radius:
+    .75rem;
 
   background:
-    rgba(0, 0, 0, 0.12);
+    rgba(0,0,0,.12);
+
 }
 
 
 .summary-card strong {
-  display: block;
 
-  color: #ffffff;
+  display:
+    block;
 
-  font-size: 1.45rem;
+  color:
+    #fff;
+
+  font-size:
+    1.45rem;
+
 }
 
 
 .summary-card span {
-  color: var(--muted);
 
-  font-size: 0.74rem;
+  color:
+    var(--muted);
+
+  font-size:
+    .74rem;
+
 }
 
 
 .preview-table {
-  max-height: 360px;
+
+  max-height:
+    360px;
+
 }
 
 
 .status-pill {
-  display: inline-block;
 
-  padding: 0.3rem 0.5rem;
+  display:
+    inline-block;
 
-  border-radius: 999px;
+  padding:
+    .3rem .5rem;
 
-  font-size: 0.67rem;
-  font-weight: 850;
+  border-radius:
+    999px;
+
+  font-size:
+    .67rem;
+
+  font-weight:
+    850;
+
 }
 
 
 .status-new {
-  color: var(--green);
+
+  color:
+    var(--green);
 
   background:
-    rgba(43, 217, 149, 0.10);
+    rgba(43,217,149,.10);
+
 }
 
 
 .status-duplicate {
-  color: var(--yellow);
+
+  color:
+    var(--yellow);
 
   background:
-    rgba(245, 200, 76, 0.10);
+    rgba(245,200,76,.10);
+
 }
 
 
 .status-invalid {
-  color: var(--red);
+
+  color:
+    var(--red);
 
   background:
-    rgba(255, 98, 119, 0.10);
+    rgba(255,98,119,.10);
+
 }
 
 
 
-/* ============================================================
-   NUMBER KEYPAD
-============================================================ */
+/* =========================================================
+   NUMBER PAD
+========================================================= */
 
 .number-pad-card {
+
   width:
     min(
       430px,
       100%
     );
+
 }
 
 
 .number-display-wrap {
-  display: flex;
 
-  align-items: flex-end;
-  justify-content: center;
+  display:
+    flex;
 
-  gap: 0.45rem;
+  align-items:
+    flex-end;
 
-  min-height: 110px;
+  justify-content:
+    center;
 
-  margin-bottom: 0.8rem;
+  gap:
+    .45rem;
 
-  padding: 0.7rem;
+  min-height:
+    110px;
 
-  border: 1px solid var(--border);
-  border-radius: 0.85rem;
+  margin-bottom:
+    .8rem;
+
+  padding:
+    .7rem;
+
+  border:
+    1px solid
+    var(--border);
+
+  border-radius:
+    .85rem;
 
   background:
-    rgba(0, 0, 0, 0.17);
+    rgba(0,0,0,.17);
+
 }
 
 
 .number-display {
-  color: #ffffff;
 
-  font-size: 3.1rem;
-  font-weight: 950;
+  color:
+    #fff;
+
+  font-size:
+    3.1rem;
+
+  font-weight:
+    950;
 
   font-variant-numeric:
     tabular-nums;
 
-  line-height: 1;
+  line-height:
+    1;
+
 }
 
 
 .number-unit {
-  color: var(--muted);
 
-  font-weight: 800;
+  color:
+    var(--muted);
+
+  font-weight:
+    800;
+
 }
 
 
 .number-pad-grid {
-  display: grid;
+
+  display:
+    grid;
 
   grid-template-columns:
     repeat(
@@ -1814,92 +2625,133 @@ RED WHEN RUNNING/STOP.
       1fr
     );
 
-  gap: 0.55rem;
+  gap:
+    .55rem;
+
 }
 
 
 .number-pad-grid button {
-  min-height: 68px;
 
-  border: 1px solid var(--border);
-  border-radius: 0.8rem;
+  min-height:
+    68px;
 
-  color: #ffffff;
+  border:
+    1px solid
+    var(--border);
 
-  background: var(--panel-light);
+  border-radius:
+    .8rem;
 
-  font-size: 1.35rem;
-  font-weight: 900;
+  color:
+    #fff;
+
+  background:
+    var(--panel-light);
+
+  font-size:
+    1.35rem;
+
+  font-weight:
+    900;
+
 }
 
 
 .number-pad-grid button:hover {
-  background: var(--panel-lighter);
+
+  background:
+    var(--panel-lighter);
+
 }
 
 
 
-/* ============================================================
+/* =========================================================
    MESSAGES
-============================================================ */
+========================================================= */
 
 .message {
-  margin: 0.8rem 0;
 
-  padding: 0.75rem 0.85rem;
+  margin:
+    .8rem 0;
 
-  border: 1px solid var(--border);
-  border-radius: 0.7rem;
+  padding:
+    .75rem .85rem;
 
-  font-size: 0.83rem;
+  border:
+    1px solid
+    var(--border);
+
+  border-radius:
+    .7rem;
+
+  font-size:
+    .83rem;
+
 }
 
 
 .message-success {
-  color: var(--green);
+
+  color:
+    var(--green);
 
   border-color:
-    rgba(43, 217, 149, 0.2);
+    rgba(43,217,149,.2);
 
   background:
-    rgba(43, 217, 149, 0.07);
+    rgba(43,217,149,.07);
+
 }
 
 
 .message-warning {
-  color: var(--yellow);
+
+  color:
+    var(--yellow);
 
   border-color:
-    rgba(245, 200, 76, 0.2);
+    rgba(245,200,76,.2);
 
   background:
-    rgba(245, 200, 76, 0.07);
+    rgba(245,200,76,.07);
+
 }
 
 
 .message-error {
-  color: var(--red);
+
+  color:
+    var(--red);
 
   border-color:
-    rgba(255, 98, 119, 0.2);
+    rgba(255,98,119,.2);
 
   background:
-    rgba(255, 98, 119, 0.07);
+    rgba(255,98,119,.07);
+
 }
 
 
 
-/* ============================================================
+/* =========================================================
    TOAST
-============================================================ */
+========================================================= */
 
 .toast {
-  position: fixed;
 
-  left: 50%;
-  bottom: 1.25rem;
+  position:
+    fixed;
 
-  z-index: 200;
+  left:
+    50%;
+
+  bottom:
+    1.25rem;
+
+  z-index:
+    200;
 
   width:
     min(
@@ -1910,315 +2762,469 @@ RED WHEN RUNNING/STOP.
   transform:
     translateX(-50%);
 
-  padding: 0.85rem 1rem;
+  padding:
+    .85rem 1rem;
 
-  border-radius: 0.8rem;
+  border-radius:
+    .8rem;
 
-  color: #07111f;
+  color:
+    #07111f;
 
-  background: #ffffff;
+  background:
+    #fff;
 
-  box-shadow: var(--shadow);
+  box-shadow:
+    var(--shadow);
 
-  text-align: center;
+  text-align:
+    center;
 
-  font-weight: 850;
+  font-weight:
+    850;
+
 }
 
 
 .toast-error {
-  color: #781627;
 
-  background: #ffe3e7;
+  color:
+    #781627;
+
+  background:
+    #ffe3e7;
+
 }
 
 
 
-/* ============================================================
-   TABLET / PHONE
-============================================================ */
+/* =========================================================
+   MOBILE
+========================================================= */
 
-@media (max-width: 760px) {
+@media (
+  max-width: 760px
+) {
 
   .topbar {
-    padding: 0.9rem;
 
-    align-items: flex-start;
+    padding:
+      .9rem;
+
+    align-items:
+      flex-start;
+
   }
 
 
   .topbar h1 {
-    font-size: 1.35rem;
+
+    font-size:
+      1.35rem;
+
   }
 
 
   .user-area {
-    flex-direction: column;
 
-    align-items: flex-end;
+    flex-direction:
+      column;
 
-    gap: 0.4rem;
+    align-items:
+      flex-end;
+
+    gap:
+      .4rem;
+
   }
 
 
   .user-info {
-    max-width: 170px;
 
-    overflow-wrap: anywhere;
+    max-width:
+      170px;
+
+    overflow-wrap:
+      anywhere;
+
   }
 
 
   .nav-tabs {
-    padding: 0.5rem;
+
+    padding:
+      .5rem;
+
   }
 
 
   .nav-tab {
-    flex: 1;
 
-    text-align: center;
+    flex:
+      1;
+
+    text-align:
+      center;
+
   }
 
 
   .app-shell {
-    width:
-      calc(100% - 0.8rem);
 
-    padding-top: 1rem;
+    width:
+      calc(
+        100% - .8rem
+      );
+
+    padding-top:
+      1rem;
+
   }
 
 
   .section-heading {
-    align-items: stretch;
 
-    flex-direction: column;
+    align-items:
+      stretch;
+
+    flex-direction:
+      column;
+
   }
 
 
   .heading-actions {
-    display: grid;
+
+    display:
+      grid;
 
     grid-template-columns:
       1fr 1fr;
 
-    width: 100%;
+    width:
+      100%;
+
   }
 
 
   .heading-actions .button {
-    width: 100%;
+
+    width:
+      100%;
+
   }
 
 
   .toolbar,
   .upload-actions {
-    flex-direction: column;
 
-    align-items: stretch;
+    flex-direction:
+      column;
+
+    align-items:
+      stretch;
+
   }
 
 
   .toolbar select {
-    width: 100%;
+
+    width:
+      100%;
+
   }
 
 
-  /*
-  ATHLETE TABLE ON PHONE:
-  FIRST / LAST / AGE ONLY
-  */
-
   .athletes-table {
-    min-width: 0;
+
+    min-width:
+      0;
+
   }
 
 
   .athletes-table th,
   .athletes-table td {
+
     padding:
-      0.95rem
-      0.65rem;
+      .95rem .65rem;
+
   }
 
 
   .athletes-table th {
-    font-size: 0.62rem;
+
+    font-size:
+      .62rem;
+
   }
 
 
   .athlete-row td {
-    padding-top: 1.1rem;
-    padding-bottom: 1.1rem;
+
+    padding-top:
+      1.1rem;
+
+    padding-bottom:
+      1.1rem;
+
   }
 
-
-  /*
-  TESTS STACK ON PHONE
-  */
 
   .test-grid {
-    grid-template-columns: 1fr;
-  }
 
+    grid-template-columns:
+      1fr;
 
-  .wide-test-card {
-    grid-column: auto;
   }
 
 
   .testing-topbar {
-    top: 54px;
+
+    top:
+      54px;
 
     grid-template-columns:
-      auto
-      1fr
-      auto;
+      auto 1fr auto;
 
-    gap: 0.4rem;
+    gap:
+      .4rem;
 
-    padding: 0.65rem;
+    padding:
+      .65rem;
+
   }
 
 
   .testing-topbar .button {
-    min-height: 38px;
+
+    min-height:
+      38px;
 
     padding:
-      0.5rem
-      0.6rem;
+      .5rem .6rem;
 
-    font-size: 0.73rem;
+    font-size:
+      .73rem;
+
   }
 
 
   .testing-player-title h2 {
-    font-size: 1.05rem;
+
+    font-size:
+      1.05rem;
+
   }
 
 
-  /*
-  EXTRA LARGE START / STOP FOR PHONE
-  */
+  .testing-header-actions {
+
+    flex-direction:
+      column;
+
+    gap:
+      .3rem;
+
+  }
+
+
+  .testing-header-actions .button {
+
+    width:
+      100%;
+
+  }
+
 
   .timer-toggle-button {
-    min-height: 116px;
 
-    font-size: 1.85rem;
+    min-height:
+      116px;
+
+    font-size:
+      1.85rem;
+
   }
 
 
   .timer-display {
-    font-size: 4.2rem;
+
+    font-size:
+      4.2rem;
+
   }
 
 
   .form-grid {
-    grid-template-columns: 1fr;
+
+    grid-template-columns:
+      1fr;
+
   }
 
 
   .summary-grid {
+
     grid-template-columns:
       repeat(
         2,
         1fr
       );
+
   }
 
 
   .modal-actions {
-    display: grid;
+
+    display:
+      grid;
 
     grid-template-columns:
       1fr 1fr;
+
   }
 
 
   .modal-actions .button {
-    width: 100%;
+
+    width:
+      100%;
+
   }
 
 
   .number-pad-grid button {
-    min-height: 64px;
+
+    min-height:
+      64px;
+
   }
 
 }
 
 
 
-/* ============================================================
+/* =========================================================
    SMALL PHONES
-============================================================ */
+========================================================= */
 
-@media (max-width: 430px) {
+@media (
+  max-width: 430px
+) {
 
   .login-card {
-    padding: 1.4rem;
+
+    padding:
+      1.4rem;
+
   }
 
 
   .login-card h1 {
-    font-size: 1.8rem;
+
+    font-size:
+      1.8rem;
+
   }
 
 
   .heading-actions {
-    grid-template-columns: 1fr;
+
+    grid-template-columns:
+      1fr;
+
   }
 
 
   .athletes-table th,
   .athletes-table td {
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
+
+    padding-left:
+      .5rem;
+
+    padding-right:
+      .5rem;
+
   }
 
 
   .age-pill {
-    min-width: 43px;
 
-    font-size: 0.69rem;
+    min-width:
+      43px;
+
+    font-size:
+      .69rem;
+
   }
 
 
-  .testing-topbar .button {
-    padding:
-      0.45rem
-      0.5rem;
+  .testing-topbar {
+
+    grid-template-columns:
+      auto 1fr;
+
+  }
+
+
+  .testing-header-actions {
+
+    grid-column:
+      1 / -1;
+
+    display:
+      grid;
+
+    grid-template-columns:
+      1fr 1fr;
+
+    width:
+      100%;
+
   }
 
 }
 
 
 
-/* ============================================================
+/* =========================================================
    ACCESSIBILITY
-============================================================ */
+========================================================= */
 
 button:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible,
 .athlete-row:focus-visible {
+
   outline:
     2px solid
     var(--blue);
 
-  outline-offset: 2px;
+  outline-offset:
+    2px;
+
 }
 
 
-@media (hover: none) {
+@media (
+  hover: none
+) {
 
   .athlete-row:hover {
-    background: transparent;
+
+    background:
+      transparent;
+
   }
 
 
   .athlete-row:active {
+
     background:
-      rgba(38, 170, 255, 0.14);
+      rgba(38,170,255,.14);
+
   }
 
 }
