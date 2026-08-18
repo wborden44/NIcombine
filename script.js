@@ -86,6 +86,10 @@ const RESULTS_COLLECTION =
 
 /* =========================================================
    EVENTS
+
+   FINAL FOUR:
+   Broad Jump | Squat Assessment
+   5/10/5     | 10-Yard Shuttle
 ========================================================= */
 
 const EVENTS = [
@@ -176,15 +180,21 @@ const EVENTS = [
     direction: "high"
   },
 
-  /* BROAD JUMP BEFORE TIMERS */
-
   {
     key: "broadJump",
     label: "Broad Jump",
     unit: "in",
     type: "number",
-    direction: "high",
-    wide: true
+    direction: "high"
+  },
+
+  {
+    key: "squatAssessment",
+    label: "Squat Assessment",
+    shortLabel: "Squat",
+    unit: "",
+    type: "passfail",
+    direction: "passfail"
   },
 
   {
@@ -203,15 +213,6 @@ const EVENTS = [
     unit: "sec",
     type: "timer",
     direction: "low"
-  },
-
-  {
-    key: "squatAssessment",
-    label: "Squat Assessment",
-    shortLabel: "Squat",
-    unit: "",
-    type: "passfail",
-    direction: "passfail"
   }
 
 ];
@@ -390,13 +391,9 @@ function bindLogin() {
       try {
 
         await signInWithEmailAndPassword(
-
           auth,
-
           email,
-
           password
-
         );
 
       }
@@ -404,13 +401,9 @@ function bindLogin() {
       catch (error) {
 
         console.error(
-
           "LOGIN ERROR",
-
           error.code,
-
           error.message
-
         );
 
 
@@ -419,17 +412,13 @@ function bindLogin() {
 
 
         if (
-
           [
             "auth/invalid-credential",
             "auth/wrong-password",
             "auth/user-not-found"
-          ]
-
-            .includes(
-              error.code
-            )
-
+          ].includes(
+            error.code
+          )
         ) {
 
           text =
@@ -438,10 +427,8 @@ function bindLogin() {
         }
 
         else if (
-
           error.code ===
           "auth/too-many-requests"
-
         ) {
 
           text =
@@ -451,13 +438,9 @@ function bindLogin() {
 
 
         showMessage(
-
           message,
-
           text,
-
           "error"
-
         );
 
       }
@@ -483,7 +466,8 @@ function bindLogin() {
     )
     .addEventListener(
       "click",
-      () => signOut(auth)
+      () =>
+        signOut(auth)
     );
 
 }
@@ -524,9 +508,13 @@ onAuthStateChanged(
         );
 
 
-      athletes = [];
+      athletes =
+        [];
 
-      results = [];
+
+      results =
+        [];
+
 
       selectedAthlete =
         null;
@@ -597,19 +585,13 @@ onAuthStateChanged(
 function isAdmin() {
 
   return (
-
     (
       currentUser?.email || ""
     )
-
       .trim()
-
       .toLowerCase()
-
     ===
-
     ADMIN_EMAIL.toLowerCase()
-
   );
 
 }
@@ -644,15 +626,12 @@ async function refreshData() {
   ) {
 
     selectedAthlete =
-
       athletes.find(
         athlete =>
           athlete.id ===
           selectedAthlete.id
       )
-
       ||
-
       selectedAthlete;
 
 
@@ -670,12 +649,10 @@ async function loadAthletes() {
 
     const snapshot =
       await getDocs(
-
         collection(
           db,
           PLAYERS_COLLECTION
         )
-
       );
 
 
@@ -705,11 +682,8 @@ async function loadAthletes() {
 
 
     showToast(
-
       `Could not load players: ${error.message}`,
-
       true
-
     );
 
   }
@@ -729,21 +703,16 @@ async function loadResults() {
 
       snapshot =
         await getDocs(
-
           query(
-
             collection(
               db,
               RESULTS_COLLECTION
             ),
-
             orderBy(
               "createdAt",
               "desc"
             )
-
           )
-
         );
 
     }
@@ -752,12 +721,10 @@ async function loadResults() {
 
       snapshot =
         await getDocs(
-
           collection(
             db,
             RESULTS_COLLECTION
           )
-
         );
 
     }
@@ -791,11 +758,8 @@ async function loadResults() {
 
 
     showToast(
-
       `Could not load results: ${error.message}`,
-
       true
-
     );
 
   }
@@ -818,47 +782,30 @@ function normalizePlayer(
 
     firstName:
       cleanText(
-
         data.firstName ??
-
         data.first_name ??
-
         data.firstname ??
-
         data.first ??
-
         ""
-
       ),
 
 
     lastName:
       cleanText(
-
         data.lastName ??
-
         data.last_name ??
-
         data.lastname ??
-
         data.last ??
-
         ""
-
       ),
 
 
     ageGroup:
       normalizeAgeGroup(
-
         data.ageGroup ??
-
         data.age_group ??
-
         data.age ??
-
         ""
-
       )
 
   };
@@ -880,85 +827,56 @@ function normalizeResult(
 
 
     athleteId:
-
       data.athleteId ??
-
       data.playerId ??
-
       data.athlete_id ??
-
       data.player_id ??
-
       "",
 
 
     event:
       normalizeEventKey(
-
         data.event ??
-
         data.eventKey ??
-
         data.test ??
-
         data.metric ??
-
         ""
-
       ),
 
 
     value:
-
       data.value ??
-
       data.score ??
-
       data.result ??
-
       null,
 
 
     assessment:
-
       data.assessment ??
-
       data.status ??
-
       null,
 
 
     notes:
-
       data.notes ??
-
       "",
 
 
     enteredByUid:
-
       data.enteredByUid ??
-
       data.entered_by_uid ??
-
       "",
 
 
     enteredByEmail:
-
       data.enteredByEmail ??
-
       data.entered_by_email ??
-
       "",
 
 
     createdAt:
-
       data.createdAt ??
-
       data.created_at ??
-
       null
 
   };
@@ -973,108 +891,54 @@ function normalizeEventKey(
 
   const aliases = {
 
-    pulldown:
-      "pulldown",
+    pulldown: "pulldown",
 
+    exitVelo: "exitVelo",
+    exit_velo: "exitVelo",
+    exitVelocity: "exitVelo",
 
-    exitVelo:
-      "exitVelo",
+    internalRotation: "internalRotation",
+    internal_rotation: "internalRotation",
 
-    exit_velo:
-      "exitVelo",
+    externalRotation: "externalRotation",
+    external_rotation: "externalRotation",
 
-    exitVelocity:
-      "exitVelo",
+    dynoInternal: "dynoInternal",
+    dyno_internal: "dynoInternal",
 
+    dynoExternal: "dynoExternal",
+    dyno_external: "dynoExternal",
 
-    internalRotation:
-      "internalRotation",
+    gripLeft: "gripLeft",
+    grip_left: "gripLeft",
 
-    internal_rotation:
-      "internalRotation",
+    gripRight: "gripRight",
+    grip_right: "gripRight",
 
+    medBallLeft: "medBallLeft",
+    med_ball_left: "medBallLeft",
 
-    externalRotation:
-      "externalRotation",
+    medBallRight: "medBallRight",
+    med_ball_right: "medBallRight",
 
-    external_rotation:
-      "externalRotation",
+    broadJump: "broadJump",
+    broad_jump: "broadJump",
 
+    squatAssessment: "squatAssessment",
+    squat_assessment: "squatAssessment",
 
-    dynoInternal:
-      "dynoInternal",
+    fiveTenFive: "fiveTenFive",
+    five_ten_five: "fiveTenFive",
 
-    dyno_internal:
-      "dynoInternal",
-
-
-    dynoExternal:
-      "dynoExternal",
-
-    dyno_external:
-      "dynoExternal",
-
-
-    gripLeft:
-      "gripLeft",
-
-    grip_left:
-      "gripLeft",
-
-
-    gripRight:
-      "gripRight",
-
-    grip_right:
-      "gripRight",
-
-
-    medBallLeft:
-      "medBallLeft",
-
-    med_ball_left:
-      "medBallLeft",
-
-
-    medBallRight:
-      "medBallRight",
-
-    med_ball_right:
-      "medBallRight",
-
-
-    broadJump:
-      "broadJump",
-
-    broad_jump:
-      "broadJump",
-
-
-    fiveTenFive:
-      "fiveTenFive",
-
-    five_ten_five:
-      "fiveTenFive",
-
-
-    tenYardShuttle:
-      "tenYardShuttle",
-
-    ten_yard_shuttle:
-      "tenYardShuttle",
-
-
-    squatAssessment:
-      "squatAssessment",
-
-    squat_assessment:
-      "squatAssessment"
+    tenYardShuttle: "tenYardShuttle",
+    ten_yard_shuttle: "tenYardShuttle"
 
   };
 
 
   return (
-    aliases[key] ||
+    aliases[key]
+    ||
     key
   );
 
@@ -1231,12 +1095,10 @@ function bindAthletePage() {
 
 
         hideMessage(
-
           document
             .getElementById(
               "addPlayerMessage"
             )
-
         );
 
 
@@ -1270,23 +1132,17 @@ function bindAthletePage() {
           () => {
 
             const key =
-              header.dataset
-                .athleteSort;
+              header.dataset.athleteSort;
 
 
             athleteSort =
-
               athleteSort.key === key
-
               ?
-
               {
                 key,
                 asc: !athleteSort.asc
               }
-
               :
-
               {
                 key,
                 asc: true
@@ -1315,25 +1171,21 @@ function renderAthleteTable() {
 
   const search =
     normalizeText(
-
       document
         .getElementById(
           "athleteSearch"
         )
         .value
-
     );
 
 
   const age =
     normalizeAgeGroup(
-
       document
         .getElementById(
           "athleteAgeFilter"
         )
         .value
-
     );
 
 
@@ -1343,26 +1195,20 @@ function renderAthleteTable() {
 
         const text =
           normalizeText(
-
             `${athlete.firstName} ${athlete.lastName} ${athlete.ageGroup}`
-
           );
 
 
         return (
-
           (
             !search ||
             text.includes(search)
           )
-
           &&
-
           (
             !age ||
             athlete.ageGroup === age
           )
-
         );
 
       }
@@ -1406,7 +1252,8 @@ function renderAthleteTable() {
   );
 
 
-  body.innerHTML = "";
+  body.innerHTML =
+    "";
 
 
   for (
@@ -1534,37 +1381,31 @@ async function addPlayer(
 
   const firstName =
     cleanText(
-
       document
         .getElementById(
           "newFirstName"
         )
         .value
-
     );
 
 
   const lastName =
     cleanText(
-
       document
         .getElementById(
           "newLastName"
         )
         .value
-
     );
 
 
   const ageGroup =
     normalizeAgeGroup(
-
       document
         .getElementById(
           "newAgeGroup"
         )
         .value
-
     );
 
 
@@ -1575,13 +1416,9 @@ async function addPlayer(
   ) {
 
     showMessage(
-
       message,
-
       "First name, last name and age group are required.",
-
       "error"
-
     );
 
 
@@ -1591,23 +1428,17 @@ async function addPlayer(
 
 
   if (
-
     findExistingPlayer(
       firstName,
       lastName,
       ageGroup
     )
-
   ) {
 
     showMessage(
-
       message,
-
       `${firstName} ${lastName} (${ageGroup}) already exists. Nothing was changed.`,
-
       "warning"
-
     );
 
 
@@ -1618,17 +1449,13 @@ async function addPlayer(
 
   const ref =
     doc(
-
       db,
-
       PLAYERS_COLLECTION,
-
       playerDocumentId(
         firstName,
         lastName,
         ageGroup
       )
-
     );
 
 
@@ -1645,13 +1472,9 @@ async function addPlayer(
     ) {
 
       showMessage(
-
         message,
-
         "That player already exists. Nothing was changed.",
-
         "warning"
-
       );
 
 
@@ -1661,9 +1484,7 @@ async function addPlayer(
 
 
     await setDoc(
-
       ref,
-
       {
 
         firstName,
@@ -1672,38 +1493,31 @@ async function addPlayer(
 
         ageGroup,
 
-
         normalizedFirstName:
           normalizeText(
             firstName
           ),
-
 
         normalizedLastName:
           normalizeText(
             lastName
           ),
 
-
         normalizedAgeGroup:
           normalizeText(
             ageGroup
           ),
 
-
         createdByUid:
           currentUser.uid,
 
-
         createdByEmail:
           currentUser.email || "",
-
 
         createdAt:
           serverTimestamp()
 
       }
-
     );
 
 
@@ -1716,9 +1530,7 @@ async function addPlayer(
 
 
     showToast(
-
       `${firstName} ${lastName} added.`
-
     );
 
   }
@@ -1732,13 +1544,9 @@ async function addPlayer(
 
 
     showMessage(
-
       message,
-
       `Could not add player: ${error.message}`,
-
       "error"
-
     );
 
   }
@@ -1860,7 +1668,6 @@ function renderTestingPage() {
       "testingPlayerName"
     )
     .textContent =
-
     `${selectedAthlete.firstName} ${selectedAthlete.lastName}`;
 
 
@@ -1890,7 +1697,8 @@ function renderTestCards() {
     );
 
 
-  grid.innerHTML = "";
+  grid.innerHTML =
+    "";
 
 
   if (
@@ -1915,13 +1723,7 @@ function renderTestCards() {
 
 
     card.className =
-      `test-card${
-        event.wide
-        ?
-        " wide-test-card"
-        :
-        ""
-      }`;
+      "test-card";
 
 
     const stats =
@@ -2155,11 +1957,8 @@ function renderTestCards() {
     else {
 
       const summary =
-
         event.maxAvg
-
         ?
-
         `
 
           <div class="dual-stat">
@@ -2212,13 +2011,9 @@ function renderTestCards() {
           </div>
 
         `
-
         :
-
         stats.best
-
         ?
-
         `
 
           <span class="best-chip">
@@ -2234,9 +2029,7 @@ function renderTestCards() {
           </span>
 
         `
-
         :
-
         "";
 
 
@@ -2248,7 +2041,6 @@ function renderTestCards() {
             <div>
 
               <p class="kicker">
-
                 ${
                   event.direction ===
                   "low"
@@ -2257,7 +2049,6 @@ function renderTestCards() {
                   :
                   "HIGHEST IS BEST"
                 }
-
               </p>
 
               <h3>
@@ -2428,16 +2219,11 @@ function renderAttempts(
 
 
   const best =
-
     event.type ===
     "passfail"
-
     ?
-
     attempts[0]
-
     :
-
     getBestAttempt(
       attempts,
       event.direction
@@ -2461,34 +2247,25 @@ function renderAttempts(
       </div>
 
       ${
-
         attempts
-
           .slice(
             0,
             limit
           )
-
           .map(
             attempt => {
 
               const canDelete =
-
                 isAdmin()
-
                 ||
-
                 attempt.enteredByUid ===
                 currentUser?.uid;
 
 
               const valueText =
-
                 event.type ===
                 "passfail"
-
                 ?
-
                 `${
                   attempt.assessment ||
                   "—"
@@ -2499,9 +2276,7 @@ function renderAttempts(
                   :
                   ""
                 }`
-
                 :
-
                 `${formatNumber(
                   attempt.value
                 )} ${event.unit}`;
@@ -2513,12 +2288,9 @@ function renderAttempts(
                   class="attempt-row${
                     best?.id ===
                     attempt.id
-
                     &&
-
                     event.type !==
                     "passfail"
-
                     ?
                     " best-attempt"
                     :
@@ -2583,9 +2355,7 @@ function renderAttempts(
 
             }
           )
-
           .join("")
-
       }
 
     </div>
@@ -2650,15 +2420,10 @@ function bindNumberPad() {
           ) {
 
             numberPadBuffer +=
-
               numberPadBuffer
-
               ?
-
               "."
-
               :
-
               "0.";
 
           }
@@ -2697,16 +2462,12 @@ function bindNumberPad() {
 
 
         if (
-
           !Number.isFinite(
             value
           )
-
           ||
-
           numberPadBuffer ===
           ""
-
         ) {
 
           showToast(
@@ -2774,7 +2535,6 @@ function openNumberPad(
       "numberPadPlayer"
     )
     .textContent =
-
     `${selectedAthlete.firstName} ${selectedAthlete.lastName}`;
 
 
@@ -2812,9 +2572,8 @@ function updateNumberPadDisplay() {
       "numberPadDisplay"
     )
     .textContent =
-
-    numberPadBuffer ||
-
+    numberPadBuffer
+    ||
     "—";
 
 }
@@ -2843,63 +2602,49 @@ async function saveNumericResult(
   try {
 
     await addDoc(
-
       collection(
         db,
         RESULTS_COLLECTION
       ),
-
       {
 
         athleteId:
           selectedAthlete.id,
 
-
         playerId:
           selectedAthlete.id,
-
 
         athleteFirstName:
           selectedAthlete.firstName,
 
-
         athleteLastName:
           selectedAthlete.lastName,
-
 
         ageGroup:
           selectedAthlete.ageGroup,
 
-
         event:
           eventKey,
 
-
         value,
-
 
         assessment:
           null,
 
-
         notes:
           "",
 
-
         enteredByUid:
           currentUser.uid,
-
 
         enteredByEmail:
           currentUser.email ||
           "",
 
-
         createdAt:
           serverTimestamp()
 
       }
-
     );
 
 
@@ -2918,11 +2663,9 @@ async function saveNumericResult(
 
 
     showToast(
-
       `${event.label}: ${formatNumber(
         value
       )} ${event.unit} saved.`
-
     );
 
   }
@@ -2936,11 +2679,8 @@ async function saveNumericResult(
 
 
     showToast(
-
       `Could not save result: ${error.message}`,
-
       true
-
     );
 
   }
@@ -2969,79 +2709,61 @@ async function saveAssessment(
 
   const notes =
     cleanText(
-
       document
         .getElementById(
           "squatNotes"
         )
         ?.value
-
       ||
-
       ""
-
     );
 
 
   try {
 
     await addDoc(
-
       collection(
         db,
         RESULTS_COLLECTION
       ),
-
       {
 
         athleteId:
           selectedAthlete.id,
 
-
         playerId:
           selectedAthlete.id,
-
 
         athleteFirstName:
           selectedAthlete.firstName,
 
-
         athleteLastName:
           selectedAthlete.lastName,
-
 
         ageGroup:
           selectedAthlete.ageGroup,
 
-
         event:
           "squatAssessment",
-
 
         value:
           null,
 
-
         assessment,
-
 
         notes,
 
-
         enteredByUid:
           currentUser.uid,
-
 
         enteredByEmail:
           currentUser.email ||
           "",
 
-
         createdAt:
           serverTimestamp()
 
       }
-
     );
 
 
@@ -3054,9 +2776,7 @@ async function saveAssessment(
 
 
     showToast(
-
       `Squat Assessment: ${assessment}`
-
     );
 
   }
@@ -3070,11 +2790,8 @@ async function saveAssessment(
 
 
     showToast(
-
       `Could not save assessment: ${error.message}`,
-
       true
-
     );
 
   }
@@ -3105,22 +2822,15 @@ async function deleteAttempt(
 
 
   if (
-
     !isAdmin()
-
     &&
-
     attempt.enteredByUid !==
     currentUser?.uid
-
   ) {
 
     showToast(
-
       "You can only delete an entry you recorded.",
-
       true
-
     );
 
 
@@ -3132,13 +2842,11 @@ async function deleteAttempt(
   try {
 
     await deleteDoc(
-
       doc(
         db,
         RESULTS_COLLECTION,
         resultId
       )
-
     );
 
 
@@ -3165,11 +2873,8 @@ async function deleteAttempt(
 
 
     showToast(
-
       `Could not delete entry: ${error.message}`,
-
       true
-
     );
 
   }
@@ -3264,19 +2969,14 @@ function startTimer(
       () => {
 
         state.elapsedMs =
-
           performance.now()
-
           -
-
           state.startedAt;
 
 
         const display =
           document.getElementById(
-
             `timer-${eventKey}`
-
           );
 
 
@@ -3320,11 +3020,8 @@ async function stopTimer(
 
 
   state.elapsedMs =
-
     performance.now()
-
     -
-
     state.startedAt;
 
 
@@ -3342,22 +3039,15 @@ async function stopTimer(
 
 
   const seconds =
-
     Math.round(
-
       (
         state.elapsedMs /
         1000
       )
-
       *
-
       100
-
     )
-
     /
-
     100;
 
 
@@ -3547,32 +3237,23 @@ function renderIndexDrawer() {
 
   const search =
     normalizeText(
-
       document
         .getElementById(
           "indexSearch"
         )
         ?.value
-
       ||
-
       ""
-
     );
 
 
   const filtered =
     athletes.filter(
       athlete =>
-
         !search
-
         ||
-
         normalizeText(
-
           `${athlete.firstName} ${athlete.lastName} ${athlete.ageGroup}`
-
         )
           .includes(
             search
@@ -3613,16 +3294,13 @@ function renderIndexDrawer() {
 
 
   container.innerHTML =
-
     Object
       .keys(
         groups
       )
-
       .sort(
         naturalSort
       )
-
       .map(
         age => {
 
@@ -3644,7 +3322,6 @@ function renderIndexDrawer() {
               </h3>
 
               ${
-
                 players.map(
                   player =>
                     `
@@ -3682,7 +3359,6 @@ function renderIndexDrawer() {
                     `
                 )
                   .join("")
-
               }
 
             </div>
@@ -3691,7 +3367,6 @@ function renderIndexDrawer() {
 
         }
       )
-
       .join("");
 
 
@@ -3707,7 +3382,6 @@ function renderIndexDrawer() {
           () => {
 
             selectedAthlete =
-
               athletes.find(
                 athlete =>
                   athlete.id ===
@@ -3818,7 +3492,6 @@ function renderResultsMatrix() {
         </th>
 
         ${
-
           EVENTS.map(
             event =>
               `
@@ -3842,7 +3515,6 @@ function renderResultsMatrix() {
               `
           )
             .join("")
-
         }
 
       </tr>
@@ -3856,7 +3528,6 @@ function renderResultsMatrix() {
     )
     .forEach(
       header =>
-
         header.addEventListener(
           "click",
           () =>
@@ -3864,60 +3535,46 @@ function renderResultsMatrix() {
               header.dataset.sortKey
             )
         )
-
     );
 
 
   const search =
     normalizeText(
-
       document
         .getElementById(
           "resultsSearch"
         )
         .value
-
     );
 
 
   const age =
     normalizeAgeGroup(
-
       document
         .getElementById(
           "resultsAgeFilter"
         )
         .value
-
     );
 
 
   let rows =
     athletes.filter(
       athlete =>
-
         (
           !search
-
           ||
-
           normalizeText(
-
             `${athlete.firstName} ${athlete.lastName}`
-
           )
             .includes(
               search
             )
         )
-
         &&
-
         (
           !age
-
           ||
-
           athlete.ageGroup ===
           age
         )
@@ -3940,7 +3597,6 @@ function renderResultsMatrix() {
   ) {
 
     const cells =
-
       EVENTS.map(
         event => {
 
@@ -4104,7 +3760,6 @@ function renderResultsMatrix() {
     )
     .forEach(
       button =>
-
         button.addEventListener(
           "click",
           () =>
@@ -4112,7 +3767,6 @@ function renderResultsMatrix() {
               button.dataset.playerId
             )
         )
-
     );
 
 
@@ -4288,29 +3942,19 @@ function compareMatrixPlayers(
 
 
     if (
-
       typeof av ===
       "number"
-
       &&
-
       typeof bv ===
       "number"
-
     ) {
 
       return (
-
         matrixSort.asc
-
         ?
-
         av - bv
-
         :
-
         bv - av
-
       );
 
     }
@@ -4377,37 +4021,25 @@ function getSortValue(
 
 
     return (
-
       stats.latest.assessment ===
       "Pass"
-
       ?
-
       1
-
       :
-
       2
-
     );
 
   }
 
 
   return (
-
     stats.best
-
     ?
-
     Number(
       stats.best.value
     )
-
     :
-
     null
-
   );
 
 }
@@ -4456,22 +4088,17 @@ function getEventStats(
         result =>
           result.athleteId ===
           playerId
-
           &&
-
           result.event ===
           event.key
       )
 
       .sort(
         (a, b) =>
-
           getTimestampValue(
             b.createdAt
           )
-
           -
-
           getTimestampValue(
             a.createdAt
           )
@@ -4522,12 +4149,10 @@ function getEventStats(
 
   const last3 =
     numeric
-
       .slice(
         0,
         3
       )
-
       .map(
         result =>
           Number(
@@ -4537,23 +4162,16 @@ function getEventStats(
 
 
   const avgLast3 =
-
     last3.length
-
     ?
-
     last3.reduce(
       (sum, number) =>
         sum + number,
       0
     )
-
     /
-
     last3.length
-
     :
-
     null;
 
 
@@ -4609,12 +4227,9 @@ function getBestAttempt(
 
 
       return (
-
         direction ===
         "low"
-
         ?
-
         (
           currentValue <
           bestValue
@@ -4623,9 +4238,7 @@ function getBestAttempt(
           :
           best
         )
-
         :
-
         (
           currentValue >
           bestValue
@@ -4634,7 +4247,6 @@ function getBestAttempt(
           :
           best
         )
-
       );
 
     }
@@ -4814,17 +4426,13 @@ async function handleFileUpload(
 
 
     showMessage(
-
       document
         .getElementById(
           "importMessage"
         ),
-
       error.message ||
       "Could not read file.",
-
       "error"
-
     );
 
   }
@@ -4852,43 +4460,28 @@ function buildImportRows(
 
       const firstName =
         cleanText(
-
           row["first name"] ??
-
           row.firstname ??
-
           row.first ??
-
           ""
-
         );
 
 
       const lastName =
         cleanText(
-
           row["last name"] ??
-
           row.lastname ??
-
           row.last ??
-
           ""
-
         );
 
 
       const ageGroup =
         normalizeAgeGroup(
-
           row["age group"] ??
-
           row.agegroup ??
-
           row.age ??
-
           ""
-
         );
 
 
@@ -4965,13 +4558,11 @@ function buildImportRows(
 
 
       if (
-
         findExistingPlayer(
           firstName,
           lastName,
           ageGroup
         )
-
       ) {
 
         return {
@@ -5081,7 +4672,6 @@ function renderImportPreview() {
       "previewBody"
     )
     .innerHTML =
-
     importRows.map(
       row =>
         `
@@ -5139,20 +4729,16 @@ function renderImportPreview() {
 
 
   showMessage(
-
     document
       .getElementById(
         "importMessage"
       ),
-
     `${newRows.length} new player${newRows.length === 1 ? "" : "s"} ready. Existing players will not be changed.`,
-
     newRows.length
     ?
     "success"
     :
     "warning"
-
   );
 
 }
@@ -5205,13 +4791,11 @@ async function importPlayers() {
   ) {
 
     if (
-
       findExistingPlayer(
         player.firstName,
         player.lastName,
         player.ageGroup
       )
-
     ) {
 
       skipped++;
@@ -5223,17 +4807,13 @@ async function importPlayers() {
 
     const ref =
       doc(
-
         db,
-
         PLAYERS_COLLECTION,
-
         playerDocumentId(
           player.firstName,
           player.lastName,
           player.ageGroup
         )
-
       );
 
 
@@ -5257,54 +4837,43 @@ async function importPlayers() {
 
 
       await setDoc(
-
         ref,
-
         {
 
           firstName:
             player.firstName,
 
-
           lastName:
             player.lastName,
 
-
           ageGroup:
             player.ageGroup,
-
 
           normalizedFirstName:
             normalizeText(
               player.firstName
             ),
 
-
           normalizedLastName:
             normalizeText(
               player.lastName
             ),
-
 
           normalizedAgeGroup:
             normalizeText(
               player.ageGroup
             ),
 
-
           createdByUid:
             currentUser.uid,
 
-
           createdByEmail:
             currentUser.email || "",
-
 
           createdAt:
             serverTimestamp()
 
         }
-
       );
 
 
@@ -5340,20 +4909,16 @@ async function importPlayers() {
 
 
   showMessage(
-
     document
       .getElementById(
         "importMessage"
       ),
-
     `${imported} imported. ${skipped} duplicates skipped. ${failed} failed. Existing player data was not changed.`,
-
     failed
     ?
     "warning"
     :
     "success"
-
   );
 
 }
@@ -5427,12 +4992,10 @@ function resetImporter() {
 
 
   hideMessage(
-
     document
       .getElementById(
         "importMessage"
       )
-
   );
 
 }
@@ -5442,21 +5005,18 @@ function resetImporter() {
 function downloadTemplate() {
 
   const csv =
-
     [
       [
         "First Name",
         "Last Name",
         "Age Group"
       ],
-
       [
         "John",
         "Smith",
         "14U"
       ]
     ]
-
       .map(
         row =>
           row
@@ -5465,7 +5025,6 @@ function downloadTemplate() {
             )
             .join(",")
       )
-
       .join("\n");
 
 
@@ -5530,7 +5089,6 @@ function bindModals() {
     )
     .forEach(
       button =>
-
         button.addEventListener(
           "click",
           () =>
@@ -5538,7 +5096,6 @@ function bindModals() {
               button.dataset.close
             )
         )
-
     );
 
 
@@ -5548,7 +5105,6 @@ function bindModals() {
     )
     .forEach(
       backdrop =>
-
         backdrop.addEventListener(
           "click",
           event => {
@@ -5566,7 +5122,6 @@ function bindModals() {
 
           }
         )
-
     );
 
 
@@ -5855,7 +5410,6 @@ function comparePlayers(
 ) {
 
   return (
-
     a.lastName
       .localeCompare(
         b.lastName,
@@ -5864,9 +5418,7 @@ function comparePlayers(
           numeric: true
         }
       )
-
     ||
-
     a.firstName
       .localeCompare(
         b.firstName,
@@ -5875,7 +5427,6 @@ function comparePlayers(
           numeric: true
         }
       )
-
   );
 
 }
@@ -5916,15 +5467,12 @@ function findExistingPlayer(
 
   return athletes.find(
     athlete =>
-
       playerMatchKey(
         athlete.firstName,
         athlete.lastName,
         athlete.ageGroup
       )
-
       ===
-
       target
   );
 
@@ -5939,21 +5487,17 @@ function playerMatchKey(
 ) {
 
   return [
-
     normalizeText(
       firstName
     ),
-
     normalizeText(
       lastName
     ),
-
     normalizeText(
       normalizeAgeGroup(
         ageGroup
       )
     )
-
   ]
     .join("|");
 
@@ -5976,19 +5520,15 @@ function playerDocumentId(
 
 
   const slug =
-
     `${normalizeText(firstName)}-${normalizeText(lastName)}-${normalizeText(ageGroup)}`
-
       .replace(
         /[^a-z0-9]+/g,
         "-"
       )
-
       .replace(
         /^-+|-+$/g,
         ""
       )
-
       .slice(
         0,
         80
@@ -5996,9 +5536,7 @@ function playerDocumentId(
 
 
   return (
-
     `${slug}-${hashString(key)}`
-
   );
 
 }
@@ -6061,7 +5599,6 @@ function normalizeSpreadsheetRow(
   ) {
 
     output[
-
       String(key)
         .trim()
         .toLowerCase()
@@ -6073,7 +5610,6 @@ function normalizeSpreadsheetRow(
           /\s+/g,
           " "
         )
-
     ] = value;
 
   }
@@ -6088,24 +5624,18 @@ function normalizeSpreadsheetRow(
 function updateAgeFilters() {
 
   const ages =
-
     [
       ...new Set(
-
         athletes
-
           .map(
             athlete =>
               athlete.ageGroup
           )
-
           .filter(
             Boolean
           )
-
       )
     ]
-
       .sort(
         naturalSort
       );
@@ -6131,11 +5661,8 @@ function updateAgeFilters() {
 
 
     select.innerHTML =
-
       `<option value="">All Age Groups</option>`
-
       +
-
       ages.map(
         age =>
           `<option value="${escapeHtml(age)}">${escapeHtml(age)}</option>`
