@@ -39,23 +39,24 @@ import {
 /* ============================================================
    FIREBASE CONFIG
 
-   COPY YOUR FIREBASE WEB CONFIG HERE
+   IMPORTANT:
+   REPLACE THIS ENTIRE OBJECT WITH YOUR ACTUAL
+   FIREBASE CONFIG FROM:
+
+   Firebase
+   -> Project Settings
+   -> General
+   -> Your apps
+   -> SDK setup and configuration
 ============================================================ */
 
 const firebaseConfig = {
-
-  apiKey: "YOUR_API_KEY",
-
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-
-  projectId: "YOUR_PROJECT_ID",
-
-  storageBucket: "YOUR_PROJECT.firebasestorage.app",
-
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-
-  appId: "YOUR_APP_ID"
-
+  apiKey: "PASTE_YOUR_REAL_API_KEY_HERE",
+  authDomain: "PASTE_YOUR_REAL_AUTH_DOMAIN_HERE",
+  projectId: "PASTE_YOUR_REAL_PROJECT_ID_HERE",
+  storageBucket: "PASTE_YOUR_REAL_STORAGE_BUCKET_HERE",
+  messagingSenderId: "PASTE_YOUR_REAL_MESSAGING_SENDER_ID_HERE",
+  appId: "PASTE_YOUR_REAL_APP_ID_HERE"
 };
 
 
@@ -80,6 +81,19 @@ const db = getFirestore(app);
 
 const ADMIN_EMAIL =
   "wes@ninthinningbaseball.com";
+
+
+
+/* ============================================================
+   COLLECTION NAMES
+
+   YOUR EXISTING DATABASE USES "players"
+   SO WE ARE USING THAT HERE.
+============================================================ */
+
+const PLAYERS_COLLECTION = "players";
+
+const RESULTS_COLLECTION = "results";
 
 
 
@@ -167,20 +181,14 @@ let importRows = [];
 
 
 let athleteSort = {
-
   key: "lastName",
-
   ascending: true
-
 };
 
 
 let resultSort = {
-
   key: "athlete",
-
   ascending: true
-
 };
 
 
@@ -215,7 +223,7 @@ document.addEventListener(
 
 
 /* ============================================================
-   AUTHENTICATION
+   LOGIN SETUP
 ============================================================ */
 
 function setupLogin() {
@@ -273,33 +281,90 @@ async function handleLogin(event) {
   hideMessage(message);
 
 
+  if (!email || !password) {
+
+    showMessage(
+      message,
+      "Enter your email and password.",
+      "error"
+    );
+
+    return;
+
+  }
+
+
   try {
 
     await signInWithEmailAndPassword(
-
       auth,
-
       email,
-
       password
-
     );
 
   }
 
   catch (error) {
 
-    console.error(error);
+    console.error(
+      "LOGIN ERROR:",
+      error.code,
+      error.message
+    );
+
+
+    let friendlyMessage =
+      `${error.code}: ${error.message}`;
+
+
+    if (
+      error.code === "auth/invalid-credential"
+      ||
+      error.code === "auth/wrong-password"
+      ||
+      error.code === "auth/user-not-found"
+    ) {
+
+      friendlyMessage =
+        "Invalid email or password.";
+
+    }
+
+
+    else if (
+      error.code === "auth/operation-not-allowed"
+    ) {
+
+      friendlyMessage =
+        "Email/password login is not enabled in Firebase Authentication.";
+
+    }
+
+
+    else if (
+      error.code === "auth/invalid-api-key"
+    ) {
+
+      friendlyMessage =
+        "Firebase configuration is incorrect. Check the firebaseConfig section in script.js.";
+
+    }
+
+
+    else if (
+      error.code === "auth/network-request-failed"
+    ) {
+
+      friendlyMessage =
+        "Network error. Check your internet connection and try again.";
+
+    }
 
 
     showMessage(
-
       message,
-
-      "Invalid email or password.",
-
+      friendlyMessage,
       "error"
-
     );
 
   }
@@ -313,9 +378,7 @@ async function handleLogin(event) {
 ============================================================ */
 
 onAuthStateChanged(
-
   auth,
-
   async user => {
 
     currentUser = user;
@@ -370,7 +433,6 @@ onAuthStateChanged(
     await refreshData();
 
   }
-
 );
 
 
@@ -389,15 +451,11 @@ function isAdmin() {
 
 
   return (
-
     currentUser.email
       .trim()
       .toLowerCase()
-
     ===
-
     ADMIN_EMAIL.toLowerCase()
-
   );
 
 }
@@ -405,7 +463,7 @@ function isAdmin() {
 
 
 /* ============================================================
-   SHOW / HIDE ADMIN CONTROLS
+   ADMIN CONTROLS
 ============================================================ */
 
 function updateAdminControls() {
@@ -457,11 +515,8 @@ function updateAdminControls() {
 async function refreshData() {
 
   await Promise.all([
-
     loadAthletes(),
-
     loadResults()
-
   ]);
 
 
@@ -480,7 +535,7 @@ async function refreshData() {
 
 
 /* ============================================================
-   LOAD ATHLETES
+   LOAD PLAYERS
 ============================================================ */
 
 async function loadAthletes() {
@@ -491,7 +546,7 @@ async function loadAthletes() {
       await getDocs(
         collection(
           db,
-          "athletes"
+          PLAYERS_COLLECTION
         )
       );
 
@@ -513,22 +568,34 @@ async function loadAthletes() {
             firstName:
               cleanText(
                 data.firstName
-                ?? data.first_name
-                ?? ""
+                ??
+                data.first_name
+                ??
+                data.firstname
+                ??
+                ""
               ),
 
             lastName:
               cleanText(
                 data.lastName
-                ?? data.last_name
-                ?? ""
+                ??
+                data.last_name
+                ??
+                data.lastname
+                ??
+                ""
               ),
 
             ageGroup:
               normalizeAgeGroup(
                 data.ageGroup
-                ?? data.age_group
-                ?? ""
+                ??
+                data.age_group
+                ??
+                data.age
+                ??
+                ""
               )
 
           };
@@ -565,13 +632,13 @@ async function loadAthletes() {
   catch (error) {
 
     console.error(
-      "Could not load athletes:",
+      "Could not load players:",
       error
     );
 
 
     showToast(
-      "Could not load athletes.",
+      `Could not load players: ${error.message}`,
       true
     );
 
@@ -591,17 +658,14 @@ async function loadResults() {
 
     const q =
       query(
-
         collection(
           db,
-          "results"
+          RESULTS_COLLECTION
         ),
-
         orderBy(
           "createdAt",
           "desc"
         )
-
       );
 
 
@@ -612,11 +676,8 @@ async function loadResults() {
     results =
       snapshot.docs.map(
         document => ({
-
           id: document.id,
-
           ...document.data()
-
         })
       );
 
@@ -624,16 +685,11 @@ async function loadResults() {
 
   catch (error) {
 
-    console.error(
-      "Could not load results:",
+    console.warn(
+      "Ordered results query failed. Trying fallback.",
       error
     );
 
-
-    /*
-      This fallback handles databases that have old records
-      without a createdAt field.
-    */
 
     try {
 
@@ -641,7 +697,7 @@ async function loadResults() {
         await getDocs(
           collection(
             db,
-            "results"
+            RESULTS_COLLECTION
           )
         );
 
@@ -649,11 +705,8 @@ async function loadResults() {
       results =
         snapshot.docs.map(
           document => ({
-
             id: document.id,
-
             ...document.data()
-
           })
         );
 
@@ -662,12 +715,13 @@ async function loadResults() {
     catch (secondError) {
 
       console.error(
+        "Could not load results:",
         secondError
       );
 
 
       showToast(
-        "Could not load results.",
+        `Could not load results: ${secondError.message}`,
         true
       );
 
@@ -688,7 +742,6 @@ function setupNavigation() {
   document
     .querySelectorAll(".nav-tab")
     .forEach(
-
       button => {
 
         button.addEventListener(
@@ -699,11 +752,7 @@ function setupNavigation() {
               .querySelectorAll(".nav-tab")
               .forEach(
                 tab => {
-
-                  tab.classList.remove(
-                    "active"
-                  );
-
+                  tab.classList.remove("active");
                 }
               );
 
@@ -712,18 +761,12 @@ function setupNavigation() {
               .querySelectorAll(".view")
               .forEach(
                 view => {
-
-                  view.classList.remove(
-                    "active"
-                  );
-
+                  view.classList.remove("active");
                 }
               );
 
 
-            button.classList.add(
-              "active"
-            );
+            button.classList.add("active");
 
 
             document
@@ -735,9 +778,7 @@ function setupNavigation() {
 
 
             if (
-              button.dataset.view
-              ===
-              "resultsView"
+              button.dataset.view === "resultsView"
             ) {
 
               renderResults();
@@ -748,7 +789,6 @@ function setupNavigation() {
         );
 
       }
-
     );
 
 }
@@ -834,17 +874,13 @@ function renderTestingAthletes() {
         const matchesSearch =
           !search
           ||
-          searchText.includes(
-            search
-          );
+          searchText.includes(search);
 
 
         const matchesAge =
           !age
           ||
-          athlete.ageGroup
-            ===
-          age;
+          athlete.ageGroup === age;
 
 
         return (
@@ -885,9 +921,7 @@ function renderTestingAthletes() {
     athlete => {
 
       const button =
-        document.createElement(
-          "button"
-        );
+        document.createElement("button");
 
 
       button.type =
@@ -903,18 +937,12 @@ function renderTestingAthletes() {
           <div>
 
             <strong>
-              ${escapeHtml(
-                athlete.firstName
-              )}
-              ${escapeHtml(
-                athlete.lastName
-              )}
+              ${escapeHtml(athlete.firstName)}
+              ${escapeHtml(athlete.lastName)}
             </strong>
 
             <small>
-              ${escapeHtml(
-                athlete.ageGroup
-              )}
+              ${escapeHtml(athlete.ageGroup)}
             </small>
 
           </div>
@@ -934,9 +962,7 @@ function renderTestingAthletes() {
 
 
           document
-            .getElementById(
-              "testingSearch"
-            )
+            .getElementById("testingSearch")
             .value = "";
 
 
@@ -965,23 +991,17 @@ function updateSelectedAthlete() {
 
   const selector =
     document
-      .getElementById(
-        "athleteSelectorPanel"
-      );
+      .getElementById("athleteSelectorPanel");
 
 
   const selectedPanel =
     document
-      .getElementById(
-        "selectedAthletePanel"
-      );
+      .getElementById("selectedAthletePanel");
 
 
   const testGrid =
     document
-      .getElementById(
-        "testGrid"
-      );
+      .getElementById("testGrid");
 
 
   if (!selectedAthlete) {
@@ -1002,7 +1022,6 @@ function updateSelectedAthlete() {
 
 
     renderTestingAthletes();
-
 
     return;
 
@@ -1025,17 +1044,13 @@ function updateSelectedAthlete() {
 
 
   document
-    .getElementById(
-      "selectedAthleteName"
-    )
+    .getElementById("selectedAthleteName")
     .textContent =
     `${selectedAthlete.firstName} ${selectedAthlete.lastName}`;
 
 
   document
-    .getElementById(
-      "selectedAthleteAge"
-    )
+    .getElementById("selectedAthleteAge")
     .textContent =
     selectedAthlete.ageGroup;
 
@@ -1047,16 +1062,14 @@ function updateSelectedAthlete() {
 
 
 /* ============================================================
-   RENDER TEST CARDS
+   TEST CARDS
 ============================================================ */
 
 function renderTestCards() {
 
   const grid =
     document
-      .getElementById(
-        "testGrid"
-      );
+      .getElementById("testGrid");
 
 
   grid.innerHTML = "";
@@ -1066,9 +1079,7 @@ function renderTestCards() {
     event => {
 
       const card =
-        document.createElement(
-          "article"
-        );
+        document.createElement("article");
 
 
       card.className =
@@ -1077,39 +1088,29 @@ function renderTestCards() {
 
       const attempts =
         selectedAthlete
-
         ?
-
         getAttempts(
           selectedAthlete.id,
           event.key
         )
-
         :
-
         [];
 
 
       const best =
         selectedAthlete
-
         ?
-
         getBestResult(
           selectedAthlete.id,
           event.key
         )
-
         :
-
         null;
 
 
 
       if (
-        event.direction
-        ===
-        "passfail"
+        event.direction === "passfail"
       ) {
 
         card.innerHTML =
@@ -1124,9 +1125,7 @@ function renderTestCards() {
                 </div>
 
                 <h3>
-                  ${escapeHtml(
-                    event.label
-                  )}
+                  ${escapeHtml(event.label)}
                 </h3>
 
               </div>
@@ -1134,9 +1133,7 @@ function renderTestCards() {
 
               ${
                 best
-
                 ?
-
                 `
                 <span class="best-chip">
                   ${escapeHtml(
@@ -1147,9 +1144,7 @@ function renderTestCards() {
                   )}
                 </span>
                 `
-
                 :
-
                 ""
               }
 
@@ -1199,16 +1194,10 @@ function renderTestCards() {
                 <div class="kicker">
 
                   ${
-                    event.direction
-                    ===
-                    "low"
-
+                    event.direction === "low"
                     ?
-
                     "LOWEST IS BEST"
-
                     :
-
                     "HIGHEST IS BEST"
                   }
 
@@ -1216,9 +1205,7 @@ function renderTestCards() {
 
 
                 <h3>
-                  ${escapeHtml(
-                    event.label
-                  )}
+                  ${escapeHtml(event.label)}
                 </h3>
 
               </div>
@@ -1226,9 +1213,7 @@ function renderTestCards() {
 
               ${
                 best
-
                 ?
-
                 `
                 <span class="best-chip">
                   ${escapeHtml(
@@ -1239,9 +1224,7 @@ function renderTestCards() {
                   )}
                 </span>
                 `
-
                 :
-
                 ""
               }
 
@@ -1255,16 +1238,12 @@ function renderTestCards() {
                 type="number"
                 inputmode="decimal"
                 step="${event.step}"
-                placeholder="${escapeHtml(
-                  event.placeholder
-                )}"
+                placeholder="${escapeHtml(event.placeholder)}"
               />
 
 
               <span class="unit">
-                ${escapeHtml(
-                  event.unit
-                )}
+                ${escapeHtml(event.unit)}
               </span>
 
 
@@ -1298,9 +1277,7 @@ function renderTestCards() {
 
 
   document
-    .querySelectorAll(
-      ".save-result-button"
-    )
+    .querySelectorAll(".save-result-button")
     .forEach(
       button => {
 
@@ -1321,9 +1298,7 @@ function renderTestCards() {
 
 
   document
-    .querySelectorAll(
-      ".assessment-button"
-    )
+    .querySelectorAll(".assessment-button")
     .forEach(
       button => {
 
@@ -1332,11 +1307,8 @@ function renderTestCards() {
           () => {
 
             saveAssessment(
-
               button.dataset.event,
-
               button.dataset.assessment
-
             );
 
           }
@@ -1353,9 +1325,7 @@ function renderTestCards() {
    SAVE NUMERIC RESULT
 ============================================================ */
 
-async function saveNumericResult(
-  eventKey
-) {
+async function saveNumericResult(eventKey) {
 
   if (
     !selectedAthlete
@@ -1369,9 +1339,7 @@ async function saveNumericResult(
 
 
   const event =
-    getEvent(
-      eventKey
-    );
+    getEvent(eventKey);
 
 
   const input =
@@ -1388,9 +1356,7 @@ async function saveNumericResult(
 
 
   if (
-    !Number.isFinite(
-      value
-    )
+    !Number.isFinite(value)
   ) {
 
     showToast(
@@ -1401,7 +1367,6 @@ async function saveNumericResult(
 
     input.focus();
 
-
     return;
 
   }
@@ -1410,12 +1375,10 @@ async function saveNumericResult(
   try {
 
     await addDoc(
-
       collection(
         db,
-        "results"
+        RESULTS_COLLECTION
       ),
-
       {
 
         athleteId:
@@ -1449,7 +1412,6 @@ async function saveNumericResult(
           serverTimestamp()
 
       }
-
     );
 
 
@@ -1476,7 +1438,7 @@ async function saveNumericResult(
 
 
     showToast(
-      "Could not save result.",
+      `Could not save result: ${error.message}`,
       true
     );
 
@@ -1488,9 +1450,6 @@ async function saveNumericResult(
 
 /* ============================================================
    SAVE PASS / FAIL
-
-   THERE IS NO EXTRA SAVE BUTTON.
-   CLICKING PASS OR FAIL SAVES IT.
 ============================================================ */
 
 async function saveAssessment(
@@ -1510,20 +1469,16 @@ async function saveAssessment(
 
 
   const event =
-    getEvent(
-      eventKey
-    );
+    getEvent(eventKey);
 
 
   try {
 
     await addDoc(
-
       collection(
         db,
-        "results"
+        RESULTS_COLLECTION
       ),
-
       {
 
         athleteId:
@@ -1557,7 +1512,6 @@ async function saveAssessment(
           serverTimestamp()
 
       }
-
     );
 
 
@@ -1581,7 +1535,7 @@ async function saveAssessment(
 
 
     showToast(
-      "Could not save assessment.",
+      `Could not save assessment: ${error.message}`,
       true
     );
 
@@ -1592,7 +1546,7 @@ async function saveAssessment(
 
 
 /* ============================================================
-   ATTEMPT HISTORY
+   ATTEMPTS
 ============================================================ */
 
 function getAttempts(
@@ -1603,26 +1557,16 @@ function getAttempts(
   return results
     .filter(
       result => (
-
-        result.athleteId
-        ===
-        athleteId
-
+        result.athleteId === athleteId
         &&
-
-        result.event
-        ===
-        eventKey
-
+        result.event === eventKey
       )
     )
     .sort(
       (a, b) => (
-
         getTimestampValue(b.createdAt)
         -
         getTimestampValue(a.createdAt)
-
       )
     );
 
@@ -1640,9 +1584,7 @@ function getBestResult(
 ) {
 
   const event =
-    getEvent(
-      eventKey
-    );
+    getEvent(eventKey);
 
 
   const attempts =
@@ -1664,9 +1606,7 @@ function getBestResult(
 
 
   if (
-    event.direction
-    ===
-    "passfail"
+    event.direction === "passfail"
   ) {
 
     return attempts[0];
@@ -1678,9 +1618,7 @@ function getBestResult(
     attempts.filter(
       result =>
         Number.isFinite(
-          Number(
-            result.value
-          )
+          Number(result.value)
         )
     );
 
@@ -1696,56 +1634,34 @@ function getBestResult(
     (best, current) => {
 
       const bestValue =
-        Number(
-          best.value
-        );
+        Number(best.value);
 
 
       const currentValue =
-        Number(
-          current.value
-        );
+        Number(current.value);
 
 
       if (
-        event.direction
-        ===
-        "low"
+        event.direction === "low"
       ) {
 
         return (
-
-          currentValue
-          <
-          bestValue
-
+          currentValue < bestValue
           ?
-
           current
-
           :
-
           best
-
         );
 
       }
 
 
       return (
-
-        currentValue
-        >
-        bestValue
-
+        currentValue > bestValue
         ?
-
         current
-
         :
-
         best
-
       );
 
     }
@@ -1777,16 +1693,12 @@ function renderAttemptHistory(
 
   const best =
     selectedAthlete
-
     ?
-
     getBestResult(
       selectedAthlete.id,
       event.key
     )
-
     :
-
     null;
 
 
@@ -1804,16 +1716,10 @@ function renderAttemptHistory(
             const bestClass =
               best
               &&
-              best.id
-              ===
-              attempt.id
-
+              best.id === attempt.id
               ?
-
               "best-attempt"
-
               :
-
               "";
 
 
@@ -1823,14 +1729,12 @@ function renderAttemptHistory(
               >
 
                 <span>
-
                   ${escapeHtml(
                     formatResult(
                       attempt,
                       event
                     )
                   )}
-
                 </span>
 
                 <small>
@@ -1843,17 +1747,13 @@ function renderAttemptHistory(
 
                   ${
                     attempt.enteredByEmail
-
                     ?
-
                     ` • ${escapeHtml(
                       shortCoachName(
                         attempt.enteredByEmail
                       )
                     )}`
-
                     :
-
                     ""
                   }
 
@@ -1874,7 +1774,7 @@ function renderAttemptHistory(
 
 
 /* ============================================================
-   ATHLETES PAGE
+   ATHLETE CONTROLS
 ============================================================ */
 
 function setupAthleteControls() {
@@ -1896,9 +1796,7 @@ function setupAthleteControls() {
 
 
   document
-    .querySelectorAll(
-      "[data-athlete-sort]"
-    )
+    .querySelectorAll("[data-athlete-sort]")
     .forEach(
       header => {
 
@@ -1911,9 +1809,7 @@ function setupAthleteControls() {
 
 
             if (
-              athleteSort.key
-              ===
-              key
+              athleteSort.key === key
             ) {
 
               athleteSort.ascending =
@@ -1924,11 +1820,8 @@ function setupAthleteControls() {
             else {
 
               athleteSort = {
-
                 key,
-
                 ascending: true
-
               };
 
             }
@@ -1954,24 +1847,18 @@ function renderAthleteTable() {
 
   const body =
     document
-      .getElementById(
-        "athleteTableBody"
-      );
+      .getElementById("athleteTableBody");
 
 
   const empty =
     document
-      .getElementById(
-        "athleteEmpty"
-      );
+      .getElementById("athleteEmpty");
 
 
   const search =
     normalizeText(
       document
-        .getElementById(
-          "athleteSearch"
-        )
+        .getElementById("athleteSearch")
         .value
     );
 
@@ -1979,9 +1866,7 @@ function renderAthleteTable() {
   const age =
     normalizeAgeGroup(
       document
-        .getElementById(
-          "athleteAgeFilter"
-        )
+        .getElementById("athleteAgeFilter")
         .value
     );
 
@@ -1997,25 +1882,17 @@ function renderAthleteTable() {
 
 
         return (
-
           (
             !search
             ||
-            text.includes(
-              search
-            )
+            text.includes(search)
           )
-
           &&
-
           (
             !age
             ||
-            athlete.ageGroup
-              ===
-            age
+            athlete.ageGroup === age
           )
-
         );
 
       }
@@ -2027,19 +1904,13 @@ function renderAthleteTable() {
 
       const av =
         String(
-          a[
-            athleteSort.key
-          ]
-          ?? ""
+          a[athleteSort.key] ?? ""
         );
 
 
       const bv =
         String(
-          b[
-            athleteSort.key
-          ]
-          ?? ""
+          b[athleteSort.key] ?? ""
         );
 
 
@@ -2054,13 +1925,9 @@ function renderAthleteTable() {
 
 
       return athleteSort.ascending
-
         ?
-
         comparison
-
         :
-
         -comparison;
 
     }
@@ -2074,34 +1941,24 @@ function renderAthleteTable() {
     athlete => {
 
       const row =
-        document.createElement(
-          "tr"
-        );
+        document.createElement("tr");
 
 
       row.innerHTML =
         `
 
           <td>
-            ${escapeHtml(
-              athlete.firstName
-            )}
+            ${escapeHtml(athlete.firstName)}
           </td>
 
           <td>
-            ${escapeHtml(
-              athlete.lastName
-            )}
+            ${escapeHtml(athlete.lastName)}
           </td>
 
           <td>
 
             <span class="age-pill">
-
-              ${escapeHtml(
-                athlete.ageGroup
-              )}
-
+              ${escapeHtml(athlete.ageGroup)}
             </span>
 
           </td>
@@ -2119,9 +1976,7 @@ function renderAthleteTable() {
 
   empty.classList.toggle(
     "hidden",
-    filtered.length
-    !==
-    0
+    filtered.length !== 0
   );
 
 }
@@ -2129,15 +1984,13 @@ function renderAthleteTable() {
 
 
 /* ============================================================
-   RESULTS PAGE
+   RESULTS CONTROLS
 ============================================================ */
 
 function setupResultControls() {
 
   document
-    .getElementById(
-      "resultsSearch"
-    )
+    .getElementById("resultsSearch")
     .addEventListener(
       "input",
       renderResults
@@ -2145,9 +1998,7 @@ function setupResultControls() {
 
 
   document
-    .getElementById(
-      "resultsAgeFilter"
-    )
+    .getElementById("resultsAgeFilter")
     .addEventListener(
       "change",
       renderResults
@@ -2155,9 +2006,7 @@ function setupResultControls() {
 
 
   document
-    .getElementById(
-      "resultsEventFilter"
-    )
+    .getElementById("resultsEventFilter")
     .addEventListener(
       "change",
       renderResults
@@ -2165,9 +2014,7 @@ function setupResultControls() {
 
 
   document
-    .querySelectorAll(
-      "[data-result-sort]"
-    )
+    .querySelectorAll("[data-result-sort]")
     .forEach(
       header => {
 
@@ -2180,9 +2027,7 @@ function setupResultControls() {
 
 
             if (
-              resultSort.key
-              ===
-              key
+              resultSort.key === key
             ) {
 
               resultSort.ascending =
@@ -2193,11 +2038,8 @@ function setupResultControls() {
             else {
 
               resultSort = {
-
                 key,
-
                 ascending: true
-
               };
 
             }
@@ -2223,24 +2065,18 @@ function renderResults() {
 
   const body =
     document
-      .getElementById(
-        "resultsTableBody"
-      );
+      .getElementById("resultsTableBody");
 
 
   const empty =
     document
-      .getElementById(
-        "resultsEmpty"
-      );
+      .getElementById("resultsEmpty");
 
 
   const search =
     normalizeText(
       document
-        .getElementById(
-          "resultsSearch"
-        )
+        .getElementById("resultsSearch")
         .value
     );
 
@@ -2248,18 +2084,14 @@ function renderResults() {
   const age =
     normalizeAgeGroup(
       document
-        .getElementById(
-          "resultsAgeFilter"
-        )
+        .getElementById("resultsAgeFilter")
         .value
     );
 
 
   const eventFilter =
     document
-      .getElementById(
-        "resultsEventFilter"
-      )
+      .getElementById("resultsEventFilter")
       .value;
 
 
@@ -2270,37 +2102,24 @@ function renderResults() {
         let athlete =
           athletes.find(
             player =>
-              player.id
-              ===
-              result.athleteId
+              player.id === result.athleteId
           );
 
-
-        /*
-          Results keep athlete names on the entry itself,
-          so old results can still display even if athlete
-          lookup fails.
-        */
 
         if (!athlete) {
 
           athlete = {
-
             id:
               result.athleteId,
 
             firstName:
-              result.athleteFirstName
-              ?? "",
+              result.athleteFirstName ?? "",
 
             lastName:
-              result.athleteLastName
-              ?? "",
+              result.athleteLastName ?? "",
 
             ageGroup:
-              result.ageGroup
-              ?? ""
-
+              result.ageGroup ?? ""
           };
 
         }
@@ -2327,20 +2146,13 @@ function renderResults() {
 
 
         return {
-
           result,
-
           athlete,
-
           event,
-
           best:
             best
             &&
-            best.id
-            ===
-            result.id
-
+            best.id === result.id
         };
 
       }
@@ -2360,37 +2172,25 @@ function renderResults() {
 
 
         return (
-
           (
             !search
             ||
-            text.includes(
-              search
-            )
+            text.includes(search)
           )
-
           &&
-
           (
             !age
             ||
             normalizeAgeGroup(
               row.athlete.ageGroup
-            )
-            ===
-            age
+            ) === age
           )
-
           &&
-
           (
             !eventFilter
             ||
-            row.event.key
-            ===
-            eventFilter
+            row.event.key === eventFilter
           )
-
         );
 
       }
@@ -2409,14 +2209,10 @@ function renderResults() {
     item => {
 
       const row =
-        document.createElement(
-          "tr"
-        );
+        document.createElement("tr");
 
 
-      if (
-        item.best
-      ) {
+      if (item.best) {
 
         row.classList.add(
           "best-result-row"
@@ -2429,41 +2225,24 @@ function renderResults() {
         `
 
           <td>
-
             <strong>
-
-              ${escapeHtml(
-                item.athlete.firstName
-              )}
-
-              ${escapeHtml(
-                item.athlete.lastName
-              )}
-
+              ${escapeHtml(item.athlete.firstName)}
+              ${escapeHtml(item.athlete.lastName)}
             </strong>
-
           </td>
 
 
           <td>
 
             <span class="age-pill">
-
-              ${escapeHtml(
-                item.athlete.ageGroup
-              )}
-
+              ${escapeHtml(item.athlete.ageGroup)}
             </span>
 
           </td>
 
 
           <td>
-
-            ${escapeHtml(
-              item.event.label
-            )}
-
+            ${escapeHtml(item.event.label)}
           </td>
 
 
@@ -2472,39 +2251,32 @@ function renderResults() {
             <span
               class="${item.best ? "best-result-value" : ""}"
             >
-
               ${escapeHtml(
                 formatResult(
                   item.result,
                   item.event
                 )
               )}
-
             </span>
 
           </td>
 
 
           <td>
-
             ${escapeHtml(
               shortCoachName(
-                item.result.enteredByEmail
-                ?? ""
+                item.result.enteredByEmail ?? ""
               )
             )}
-
           </td>
 
 
           <td>
-
             ${escapeHtml(
               shortDate(
                 item.result.createdAt
               )
             )}
-
           </td>
 
         `;
@@ -2520,9 +2292,7 @@ function renderResults() {
 
   empty.classList.toggle(
     "hidden",
-    rows.length
-    !==
-    0
+    rows.length !== 0
   );
 
 }
@@ -2640,15 +2410,9 @@ function compareResultRows(
 
 
   if (
-    typeof av
-    ===
-    "number"
-
+    typeof av === "number"
     &&
-
-    typeof bv
-    ===
-    "number"
+    typeof bv === "number"
   ) {
 
     comparison =
@@ -2672,13 +2436,9 @@ function compareResultRows(
 
 
   return resultSort.ascending
-
     ?
-
     comparison
-
     :
-
     -comparison;
 
 }
@@ -2719,21 +2479,15 @@ function updateAgeFilters() {
 
 
   [
-
     "testingAgeFilter",
-
     "athleteAgeFilter",
-
     "resultsAgeFilter"
-
   ].forEach(
     id => {
 
       const select =
         document
-          .getElementById(
-            id
-          );
+          .getElementById(id);
 
 
       const oldValue =
@@ -2752,9 +2506,7 @@ function updateAgeFilters() {
         age => {
 
           const option =
-            document.createElement(
-              "option"
-            );
+            document.createElement("option");
 
 
           option.value =
@@ -2799,18 +2551,14 @@ function renderEventFilter() {
 
   const select =
     document
-      .getElementById(
-        "resultsEventFilter"
-      );
+      .getElementById("resultsEventFilter");
 
 
   EVENTS.forEach(
     event => {
 
       const option =
-        document.createElement(
-          "option"
-        );
+        document.createElement("option");
 
 
       option.value =
@@ -2840,9 +2588,7 @@ function setupUploader() {
 
   const uploadButton =
     document
-      .getElementById(
-        "uploadPlayersButton"
-      );
+      .getElementById("uploadPlayersButton");
 
 
   uploadButton.addEventListener(
@@ -2865,9 +2611,7 @@ function setupUploader() {
 
 
       document
-        .getElementById(
-          "uploadModal"
-        )
+        .getElementById("uploadModal")
         .classList
         .remove("hidden");
 
@@ -2876,9 +2620,7 @@ function setupUploader() {
 
 
   document
-    .getElementById(
-      "closeUploadButton"
-    )
+    .getElementById("closeUploadButton")
     .addEventListener(
       "click",
       closeUploadModal
@@ -2886,9 +2628,7 @@ function setupUploader() {
 
 
   document
-    .getElementById(
-      "cancelImportButton"
-    )
+    .getElementById("cancelImportButton")
     .addEventListener(
       "click",
       closeUploadModal
@@ -2896,9 +2636,7 @@ function setupUploader() {
 
 
   document
-    .getElementById(
-      "playerFileInput"
-    )
+    .getElementById("playerFileInput")
     .addEventListener(
       "change",
       handleFileUpload
@@ -2906,9 +2644,7 @@ function setupUploader() {
 
 
   document
-    .getElementById(
-      "importPlayersConfirmButton"
-    )
+    .getElementById("importPlayersConfirmButton")
     .addEventListener(
       "click",
       importPlayers
@@ -2916,9 +2652,7 @@ function setupUploader() {
 
 
   document
-    .getElementById(
-      "downloadTemplateButton"
-    )
+    .getElementById("downloadTemplateButton")
     .addEventListener(
       "click",
       downloadTemplate
@@ -2935,9 +2669,7 @@ function setupUploader() {
 function closeUploadModal() {
 
   document
-    .getElementById(
-      "uploadModal"
-    )
+    .getElementById("uploadModal")
     .classList
     .add("hidden");
 
@@ -2955,55 +2687,41 @@ function resetImporter() {
 
 
   document
-    .getElementById(
-      "playerFileInput"
-    )
+    .getElementById("playerFileInput")
     .value = "";
 
 
   document
-    .getElementById(
-      "selectedFileName"
-    )
+    .getElementById("selectedFileName")
     .textContent =
     "No file selected.";
 
 
   document
-    .getElementById(
-      "previewBody"
-    )
+    .getElementById("previewBody")
     .innerHTML = "";
 
 
   document
-    .getElementById(
-      "previewSection"
-    )
+    .getElementById("previewSection")
     .classList
     .add("hidden");
 
 
   document
-    .getElementById(
-      "importSummary"
-    )
+    .getElementById("importSummary")
     .classList
     .add("hidden");
 
 
   document
-    .getElementById(
-      "importPlayersConfirmButton"
-    )
+    .getElementById("importPlayersConfirmButton")
     .disabled = true;
 
 
   hideMessage(
     document
-      .getElementById(
-        "importMessage"
-      )
+      .getElementById("importMessage")
   );
 
 }
@@ -3037,9 +2755,7 @@ async function handleFileUpload(
 
 
   document
-    .getElementById(
-      "selectedFileName"
-    )
+    .getElementById("selectedFileName")
     .textContent =
     file.name;
 
@@ -3113,18 +2829,12 @@ async function handleFileUpload(
 
 
     showMessage(
-
       document
-        .getElementById(
-          "importMessage"
-        ),
-
+        .getElementById("importMessage"),
       error.message
       ||
       "Could not read file.",
-
       "error"
-
     );
 
   }
@@ -3233,20 +2943,14 @@ function buildImportRows(
 
       const key =
         playerMatchKey(
-
           firstName,
-
           lastName,
-
           ageGroup
-
         );
 
 
       if (
-        seenUploadKeys.has(
-          key
-        )
+        seenUploadKeys.has(key)
       ) {
 
         importRow.status =
@@ -3269,13 +2973,9 @@ function buildImportRows(
 
       if (
         existingAthleteMatch(
-
           firstName,
-
           lastName,
-
           ageGroup
-
         )
       ) {
 
@@ -3319,16 +3019,12 @@ function normalizeSpreadsheetRow(
 
       const normalizedKey =
         String(key)
-
           .trim()
-
           .toLowerCase()
-
           .replace(
             /[_-]+/g,
             " "
           )
-
           .replace(
             /\s+/g,
             " "
@@ -3357,82 +3053,62 @@ function renderImportPreview() {
 
   const body =
     document
-      .getElementById(
-        "previewBody"
-      );
+      .getElementById("previewBody");
 
 
   const newRows =
     importRows.filter(
       row =>
-        row.status
-        ===
-        "new"
+        row.status === "new"
     );
 
 
   const duplicates =
     importRows.filter(
       row =>
-        row.status
-        ===
-        "duplicate"
+        row.status === "duplicate"
     );
 
 
   const invalid =
     importRows.filter(
       row =>
-        row.status
-        ===
-        "invalid"
+        row.status === "invalid"
     );
 
 
   document
-    .getElementById(
-      "summaryTotal"
-    )
+    .getElementById("summaryTotal")
     .textContent =
     importRows.length;
 
 
   document
-    .getElementById(
-      "summaryNew"
-    )
+    .getElementById("summaryNew")
     .textContent =
     newRows.length;
 
 
   document
-    .getElementById(
-      "summaryDuplicate"
-    )
+    .getElementById("summaryDuplicate")
     .textContent =
     duplicates.length;
 
 
   document
-    .getElementById(
-      "summaryInvalid"
-    )
+    .getElementById("summaryInvalid")
     .textContent =
     invalid.length;
 
 
   document
-    .getElementById(
-      "importSummary"
-    )
+    .getElementById("importSummary")
     .classList
     .remove("hidden");
 
 
   document
-    .getElementById(
-      "previewSection"
-    )
+    .getElementById("previewSection")
     .classList
     .remove("hidden");
 
@@ -3444,9 +3120,7 @@ function renderImportPreview() {
     row => {
 
       const tr =
-        document.createElement(
-          "tr"
-        );
+        document.createElement("tr");
 
 
       let className =
@@ -3454,9 +3128,7 @@ function renderImportPreview() {
 
 
       if (
-        row.status
-        ===
-        "duplicate"
+        row.status === "duplicate"
       ) {
 
         className =
@@ -3466,9 +3138,7 @@ function renderImportPreview() {
 
 
       if (
-        row.status
-        ===
-        "invalid"
+        row.status === "invalid"
       ) {
 
         className =
@@ -3482,25 +3152,19 @@ function renderImportPreview() {
 
           <td>
             ${escapeHtml(
-              row.firstName
-              ||
-              "—"
+              row.firstName || "—"
             )}
           </td>
 
           <td>
             ${escapeHtml(
-              row.lastName
-              ||
-              "—"
+              row.lastName || "—"
             )}
           </td>
 
           <td>
             ${escapeHtml(
-              row.ageGroup
-              ||
-              "—"
+              row.ageGroup || "—"
             )}
           </td>
 
@@ -3509,11 +3173,9 @@ function renderImportPreview() {
             <span
               class="status-pill ${className}"
             >
-
               ${escapeHtml(
                 row.reason
               )}
-
             </span>
 
           </td>
@@ -3530,33 +3192,20 @@ function renderImportPreview() {
 
 
   document
-    .getElementById(
-      "importPlayersConfirmButton"
-    )
+    .getElementById("importPlayersConfirmButton")
     .disabled =
-    newRows.length
-    ===
-    0;
+    newRows.length === 0;
 
 
   showMessage(
-
     document
-      .getElementById(
-        "importMessage"
-      ),
-
+      .getElementById("importMessage"),
     `${newRows.length} new player${newRows.length === 1 ? "" : "s"} ready. Existing players will not be changed.`,
-
     newRows.length
     ?
-
     "success"
-
     :
-
     "warning"
-
   );
 
 }
@@ -3566,12 +3215,10 @@ function renderImportPreview() {
 /* ============================================================
    IMPORT PLAYERS
 
-   CRITICAL:
+   EXISTING PLAYER IS NEVER UPDATED.
 
-   WE DO NOT UPDATE EXISTING ATHLETES.
-
+   MATCH:
    FIRST NAME + LAST NAME + AGE GROUP
-   DETERMINE DUPLICATES.
 ============================================================ */
 
 async function importPlayers() {
@@ -3590,9 +3237,7 @@ async function importPlayers() {
 
   const button =
     document
-      .getElementById(
-        "importPlayersConfirmButton"
-      );
+      .getElementById("importPlayersConfirmButton");
 
 
   button.disabled = true;
@@ -3601,22 +3246,13 @@ async function importPlayers() {
     "Importing...";
 
 
-  /*
-    Reload the roster immediately before import.
-
-    This prevents stale browser data from creating
-    an obvious duplicate.
-  */
-
   await loadAthletes();
 
 
   const newPlayers =
     importRows.filter(
       row =>
-        row.status
-        ===
-        "new"
+        row.status === "new"
     );
 
 
@@ -3632,19 +3268,11 @@ async function importPlayers() {
     const player of newPlayers
   ) {
 
-    /*
-      Recheck matching athlete in current roster.
-    */
-
     if (
       existingAthleteMatch(
-
         player.firstName,
-
         player.lastName,
-
         player.ageGroup
-
       )
     ) {
 
@@ -3655,48 +3283,23 @@ async function importPlayers() {
     }
 
 
-    /*
-      Deterministic athlete document ID.
-
-      Example:
-
-      john-smith-14u
-
-      This gives another layer of duplicate protection.
-    */
-
     const documentId =
       athleteDocumentId(
-
         player.firstName,
-
         player.lastName,
-
         player.ageGroup
-
       );
 
 
     const athleteRef =
       doc(
-
         db,
-
-        "athletes",
-
+        PLAYERS_COLLECTION,
         documentId
-
       );
 
 
     try {
-
-      /*
-        Check the document directly.
-
-        IMPORTANT:
-        If it exists, DO NOTHING.
-      */
 
       const existing =
         await getDoc(
@@ -3715,19 +3318,8 @@ async function importPlayers() {
       }
 
 
-      /*
-        setDoc is used only after verifying
-        this deterministic document does not exist.
-
-        NO merge.
-        NO update.
-        NO overwrite of an existing athlete.
-      */
-
       await setDoc(
-
         athleteRef,
-
         {
 
           firstName:
@@ -3764,7 +3356,6 @@ async function importPlayers() {
             serverTimestamp()
 
         }
-
       );
 
 
@@ -3805,23 +3396,14 @@ async function importPlayers() {
 
 
   showMessage(
-
     document
-      .getElementById(
-        "importMessage"
-      ),
-
+      .getElementById("importMessage"),
     `${imported} imported. ${skipped} duplicates skipped. ${failed} failed. Existing player data was not changed.`,
-
     failed
     ?
-
     "warning"
-
     :
-
     "success"
-
   );
 
 
@@ -3833,9 +3415,7 @@ async function importPlayers() {
       row => {
 
         if (
-          row.status
-          ===
-          "invalid"
+          row.status === "invalid"
         ) {
 
           return row;
@@ -3845,26 +3425,16 @@ async function importPlayers() {
 
         if (
           existingAthleteMatch(
-
             row.firstName,
-
             row.lastName,
-
             row.ageGroup
-
           )
         ) {
 
           return {
-
             ...row,
-
-            status:
-              "duplicate",
-
-            reason:
-              "Already exists — skipped"
-
+            status: "duplicate",
+            reason: "Already exists — skipped"
           };
 
         }
@@ -3883,34 +3453,20 @@ async function importPlayers() {
 
 
 /* ============================================================
-   EXISTING ATHLETE MATCH
-
-   EXACT MATCH REQUIRES ALL THREE:
-
-   FIRST NAME
-   LAST NAME
-   AGE GROUP
+   EXISTING PLAYER MATCH
 ============================================================ */
 
 function existingAthleteMatch(
-
   firstName,
-
   lastName,
-
   ageGroup
-
 ) {
 
   const target =
     playerMatchKey(
-
       firstName,
-
       lastName,
-
       ageGroup
-
     );
 
 
@@ -3919,20 +3475,14 @@ function existingAthleteMatch(
 
       const existing =
         playerMatchKey(
-
           athlete.firstName,
-
           athlete.lastName,
-
           athlete.ageGroup
-
         );
 
 
       return (
-        existing
-        ===
-        target
+        existing === target
       );
 
     }
@@ -3943,35 +3493,21 @@ function existingAthleteMatch(
 
 
 /* ============================================================
-   PLAYER MATCH KEY
+   MATCH KEY
 ============================================================ */
 
 function playerMatchKey(
-
   firstName,
-
   lastName,
-
   ageGroup
-
 ) {
 
   return [
-
+    normalizeText(firstName),
+    normalizeText(lastName),
     normalizeText(
-      firstName
-    ),
-
-    normalizeText(
-      lastName
-    ),
-
-    normalizeText(
-      normalizeAgeGroup(
-        ageGroup
-      )
+      normalizeAgeGroup(ageGroup)
     )
-
   ].join("|");
 
 }
@@ -3979,17 +3515,13 @@ function playerMatchKey(
 
 
 /* ============================================================
-   FIRESTORE DOCUMENT ID
+   PLAYER DOCUMENT ID
 ============================================================ */
 
 function athleteDocumentId(
-
   firstName,
-
   lastName,
-
   ageGroup
-
 ) {
 
   const value =
@@ -3997,12 +3529,10 @@ function athleteDocumentId(
 
 
   return value
-
     .replace(
       /[^a-z0-9]+/g,
       "-"
     )
-
     .replace(
       /^-+|-+$/g,
       ""
@@ -4013,7 +3543,7 @@ function athleteDocumentId(
 
 
 /* ============================================================
-   DOWNLOAD CSV TEMPLATE
+   DOWNLOAD TEMPLATE
 ============================================================ */
 
 function downloadTemplate() {
@@ -4025,41 +3555,33 @@ function downloadTemplate() {
         "Last Name",
         "Age Group"
       ],
-
       [
         "John",
         "Smith",
         "14U"
       ],
-
       [
         "Mason",
         "Jones",
         "13U"
       ]
-
     ]
-
       .map(
         row =>
           row.map(
             csvEscape
           ).join(",")
       )
-
       .join("\n");
 
 
   const blob =
     new Blob(
-
       [csv],
-
       {
         type:
           "text/csv;charset=utf-8"
       }
-
     );
 
 
@@ -4070,9 +3592,7 @@ function downloadTemplate() {
 
 
   const link =
-    document.createElement(
-      "a"
-    );
+    document.createElement("a");
 
 
   link.href =
@@ -4112,9 +3632,7 @@ function getEvent(
 
   return EVENTS.find(
     event =>
-      event.key
-      ===
-      eventKey
+      event.key === eventKey
   );
 
 }
@@ -4127,15 +3645,11 @@ function formatResult(
 ) {
 
   if (
-    event.direction
-    ===
-    "passfail"
+    event.direction === "passfail"
   ) {
 
     return (
-      result.assessment
-      ||
-      "—"
+      result.assessment || "—"
     );
 
   }
@@ -4148,9 +3662,7 @@ function formatResult(
 
 
   if (
-    !Number.isFinite(
-      value
-    )
+    !Number.isFinite(value)
   ) {
 
     return "—";
@@ -4163,13 +3675,9 @@ function formatResult(
     +
     (
       event.unit
-
       ?
-
       ` ${event.unit}`
-
       :
-
       ""
     )
   );
@@ -4202,9 +3710,7 @@ function cleanText(
   return String(
     value ?? ""
   )
-
     .trim()
-
     .replace(
       /\s+/g,
       " "
@@ -4237,18 +3743,6 @@ function normalizeAgeGroup(
     )
     .toUpperCase();
 
-
-  /*
-    Converts:
-
-    14u
-    14 U
-    14-U
-
-    into:
-
-    14U
-  */
 
   age =
     age.replace(
@@ -4293,9 +3787,7 @@ function getTimestampValue(
 
 
   if (
-    typeof timestamp.toMillis
-    ===
-    "function"
+    typeof timestamp.toMillis === "function"
   ) {
 
     return timestamp.toMillis();
@@ -4308,30 +3800,20 @@ function getTimestampValue(
   ) {
 
     return (
-      timestamp.seconds
-      *
-      1000
+      timestamp.seconds * 1000
     );
 
   }
 
 
   const value =
-    new Date(
-      timestamp
-    ).getTime();
+    new Date(timestamp).getTime();
 
 
-  return Number.isFinite(
-    value
-  )
-
+  return Number.isFinite(value)
     ?
-
     value
-
     :
-
     0;
 
 }
@@ -4356,27 +3838,20 @@ function shortDate(
 
 
   const date =
-    new Date(
-      millis
-    );
+    new Date(millis);
 
 
   return date.toLocaleString(
     [],
     {
-
       month:
         "short",
-
       day:
         "numeric",
-
       hour:
         "numeric",
-
       minute:
         "2-digit"
-
     }
   );
 
@@ -4406,27 +3881,22 @@ function escapeHtml(
   return String(
     value ?? ""
   )
-
     .replace(
       /&/g,
       "&amp;"
     )
-
     .replace(
       /</g,
       "&lt;"
     )
-
     .replace(
       />/g,
       "&gt;"
     )
-
     .replace(
       /"/g,
       "&quot;"
     )
-
     .replace(
       /'/g,
       "&#039;"
@@ -4441,13 +3911,9 @@ function escapeHtml(
 ============================================================ */
 
 function showMessage(
-
   element,
-
   text,
-
   type
-
 ) {
 
   element.textContent =
@@ -4484,18 +3950,13 @@ let toastTimer;
 
 
 function showToast(
-
   message,
-
   error = false
-
 ) {
 
   const toast =
     document
-      .getElementById(
-        "toast"
-      );
+      .getElementById("toast");
 
 
   toast.textContent =
@@ -4504,13 +3965,9 @@ function showToast(
 
   toast.className =
     error
-
     ?
-
     "toast toast-error"
-
     :
-
     "toast";
 
 
@@ -4528,7 +3985,6 @@ function showToast(
         );
 
       },
-
       3500
     );
 
