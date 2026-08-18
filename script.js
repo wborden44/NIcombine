@@ -28,7 +28,7 @@ import {
 
 
 /* ============================================================
-   FIREBASE CONFIG
+   FIREBASE
 ============================================================ */
 
 const firebaseConfig = {
@@ -54,7 +54,6 @@ const firebaseConfig = {
 };
 
 
-
 const app =
   initializeApp(
     firebaseConfig
@@ -71,7 +70,7 @@ const db =
 
 
 /* ============================================================
-   ADMIN
+   SETTINGS
 ============================================================ */
 
 const ADMIN_EMAIL =
@@ -88,14 +87,9 @@ const RESULTS_COLLECTION =
 
 
 /* ============================================================
-   EVENTS
+   TESTS
 
-   ORDER IS INTENTIONAL.
-
-   FINAL FOUR:
-
-   5/10/5       | 10-YARD SHUTTLE
-   SQUAT        | BROAD JUMP
+   BROAD JUMP IS BEFORE THE TWO TIMED TESTS.
 ============================================================ */
 
 const EVENTS = [
@@ -300,6 +294,27 @@ const EVENTS = [
 
   {
     key:
+      "broadJump",
+
+    label:
+      "Broad Jump",
+
+    unit:
+      "in",
+
+    type:
+      "number",
+
+    direction:
+      "high",
+
+    wide:
+      true
+  },
+
+
+  {
+    key:
       "fiveTenFive",
 
     label:
@@ -358,24 +373,6 @@ const EVENTS = [
 
     direction:
       "passfail"
-  },
-
-
-  {
-    key:
-      "broadJump",
-
-    label:
-      "Broad Jump",
-
-    unit:
-      "in",
-
-    type:
-      "number",
-
-    direction:
-      "high"
   }
 
 ];
@@ -474,7 +471,7 @@ EVENTS
 
 
 /* ============================================================
-   STARTUP
+   START
 ============================================================ */
 
 document.addEventListener(
@@ -503,7 +500,7 @@ document.addEventListener(
 
 
 /* ============================================================
-   AUTH
+   LOGIN
 ============================================================ */
 
 function bindLogin() {
@@ -599,10 +596,12 @@ function bindLogin() {
           }
 
 
-          if (
+          else if (
+
             error.code
             ===
             "auth/too-many-requests"
+
           ) {
 
             text =
@@ -782,7 +781,7 @@ function isAdmin() {
 
 
 /* ============================================================
-   DATA
+   LOAD DATA
 ============================================================ */
 
 async function refreshData() {
@@ -852,24 +851,25 @@ async function loadAthletes() {
 
     athletes =
 
-      snapshot.docs.map(
+      snapshot.docs
 
-        document =>
+        .map(
 
-          normalizePlayer(
+          document =>
 
-            document.id,
+            normalizePlayer(
 
-            document.data()
+              document.id,
 
-          )
+              document.data()
 
-      );
+            )
 
+        )
 
-    athletes.sort(
-      comparePlayers
-    );
+        .sort(
+          comparePlayers
+        );
 
   }
 
@@ -1313,6 +1313,13 @@ function normalizeEventKey(
       "medBallRight",
 
 
+    broadJump:
+      "broadJump",
+
+    broad_jump:
+      "broadJump",
+
+
     fiveTenFive:
       "fiveTenFive",
 
@@ -1331,14 +1338,7 @@ function normalizeEventKey(
       "squatAssessment",
 
     squat_assessment:
-      "squatAssessment",
-
-
-    broadJump:
-      "broadJump",
-
-    broad_jump:
-      "broadJump"
+      "squatAssessment"
 
   };
 
@@ -1390,6 +1390,17 @@ function bindNavigation() {
 function showView(
   viewId
 ) {
+
+  if (
+    viewId
+    !==
+    "testingView"
+  ) {
+
+    resetAllTimers();
+
+  }
+
 
   document
     .querySelectorAll(
@@ -1474,7 +1485,7 @@ function showView(
 
 
 /* ============================================================
-   ATHLETE PAGE
+   ATHLETES
 ============================================================ */
 
 function bindAthletePage() {
@@ -1586,9 +1597,7 @@ function bindAthletePage() {
                 key,
 
                 asc:
-                  key
-                  ===
-                  "combineScore"
+                  true
 
               };
 
@@ -1690,99 +1699,47 @@ function renderAthleteTable() {
 
     (a, b) => {
 
-      let av =
+      const av =
+        String(
 
-        athleteSort.key
-        ===
-        "combineScore"
+          a[
+            athleteSort.key
+          ]
 
-        ?
-
-        getCombineScore(a)
-
-        :
-
-        a[
-          athleteSort.key
-        ];
-
-
-      let bv =
-
-        athleteSort.key
-        ===
-        "combineScore"
-
-        ?
-
-        getCombineScore(b)
-
-        :
-
-        b[
-          athleteSort.key
-        ];
-
-
-      if (
-        athleteSort.key
-        ===
-        "combineScore"
-      ) {
-
-        av =
-          av
           ??
-          Infinity;
 
-
-        bv =
-          bv
-          ??
-          Infinity;
-
-
-        return (
-
-          athleteSort.asc
-
-          ?
-
-          av - bv
-
-          :
-
-          bv - av
+          ""
 
         );
 
-      }
+
+      const bv =
+        String(
+
+          b[
+            athleteSort.key
+          ]
+
+          ??
+
+          ""
+
+        );
 
 
       const comparison =
+        av.localeCompare(
 
-        String(
-          av
-          ??
-          ""
-        )
+          bv,
 
-          .localeCompare(
+          undefined,
 
-            String(
-              bv
-              ??
-              ""
-            ),
+          {
+            numeric:
+              true
+          }
 
-            undefined,
-
-            {
-              numeric:
-                true
-            }
-
-          );
+        );
 
 
       return (
@@ -1812,12 +1769,6 @@ function renderAthleteTable() {
 
     athlete => {
 
-      const score =
-        getCombineScore(
-          athlete
-        );
-
-
       const row =
         document.createElement(
           "tr"
@@ -1828,16 +1779,38 @@ function renderAthleteTable() {
         `
 
           <td>
-            ${escapeHtml(
-              athlete.firstName
-            )}
+
+            <button
+              class="athlete-name-link"
+              data-player-id="${escapeHtml(
+                athlete.id
+              )}"
+            >
+
+              ${escapeHtml(
+                athlete.firstName
+              )}
+
+            </button>
+
           </td>
 
 
           <td>
-            ${escapeHtml(
-              athlete.lastName
-            )}
+
+            <button
+              class="athlete-name-link"
+              data-player-id="${escapeHtml(
+                athlete.id
+              )}"
+            >
+
+              ${escapeHtml(
+                athlete.lastName
+              )}
+
+            </button>
+
           </td>
 
 
@@ -1850,39 +1823,6 @@ function renderAthleteTable() {
               )}
 
             </span>
-
-          </td>
-
-
-          <td>
-
-            ${
-              score
-              ==
-              null
-
-              ?
-
-              "—"
-
-              :
-
-              score.toFixed(1)
-            }
-
-          </td>
-
-
-          <td>
-
-            <button
-              class="button test-player-button"
-              data-player-id="${escapeHtml(
-                athlete.id
-              )}"
-            >
-              TEST
-            </button>
 
           </td>
 
@@ -1900,7 +1840,7 @@ function renderAthleteTable() {
 
   body
     .querySelectorAll(
-      ".test-player-button"
+      ".athlete-name-link"
     )
     .forEach(
 
@@ -1993,6 +1933,7 @@ async function addPlayer(
 
 
   if (
+
     !firstName
 
     ||
@@ -2002,6 +1943,7 @@ async function addPlayer(
     ||
 
     !ageGroup
+
   ) {
 
     showMessage(
@@ -2073,7 +2015,9 @@ async function addPlayer(
   try {
 
     const existing =
-      await getDoc(ref);
+      await getDoc(
+        ref
+      );
 
 
     if (
@@ -2189,7 +2133,7 @@ async function addPlayer(
 
 
 /* ============================================================
-   TESTING PAGE
+   TESTING
 ============================================================ */
 
 function bindTestingPage() {
@@ -2373,7 +2317,7 @@ function renderTestCards() {
 
 
       card.className =
-        `test-card test-${event.type}`;
+        `test-card test-${event.type}${event.wide ? " wide-test-card" : ""}`;
 
 
       const stats =
@@ -2427,9 +2371,13 @@ function renderTestCards() {
 
                 `
                 <span class="best-chip">
-                  BEST ${formatNumber(
+
+                  BEST
+                  ${formatNumber(
                     stats.best.value
-                  )} sec
+                  )}
+                  sec
+
                 </span>
                 `
 
@@ -2451,50 +2399,48 @@ function renderTestCards() {
             </div>
 
 
-            <div class="timer-buttons">
+            <button
+              class="timer-toggle-button ${
+                state.running
+                ?
+                "running"
+                :
+                ""
+              }"
+              data-event="${event.key}"
+            >
 
-              <button
-                class="button timer-start"
-                data-event="${event.key}"
-                ${
-                  state.running
-                  ?
-                  "disabled"
-                  :
-                  ""
-                }
-              >
-                START
-              </button>
+              ${
+                state.running
+                ?
+                "STOP"
+                :
+                "START"
+              }
 
-
-              <button
-                class="button timer-stop danger-button"
-                data-event="${event.key}"
-                ${
-                  state.running
-                  ?
-                  ""
-                  :
-                  "disabled"
-                }
-              >
-                STOP
-              </button>
+            </button>
 
 
-              <button
-                class="button button-secondary timer-reset"
-                data-event="${event.key}"
-              >
-                RESET
-              </button>
-
-            </div>
+            <button
+              class="timer-reset-button"
+              data-event="${event.key}"
+              ${
+                state.running
+                ?
+                "disabled"
+                :
+                ""
+              }
+            >
+              RESET
+            </button>
 
 
             <p class="timer-help">
-              STOP records the time automatically. Delete a missed press below.
+
+              Tap START, then tap the same button to STOP.
+              Stopping saves the time automatically.
+
             </p>
 
 
@@ -2509,7 +2455,7 @@ function renderTestCards() {
       }
 
 
-      /* PASS FAIL */
+      /* PASS / FAIL */
       else if (
         event.type
         ===
@@ -2553,11 +2499,13 @@ function renderTestCards() {
                     ""
                   }"
                 >
+
                   ${escapeHtml(
                     stats.latest.assessment
                     ||
                     "—"
                   )}
+
                 </span>
                 `
 
@@ -2690,6 +2638,7 @@ function renderTestCards() {
 
         }
 
+
         else if (
           stats.best
         ) {
@@ -2773,7 +2722,8 @@ function renderTestCards() {
               class="number-entry-button"
               data-event="${event.key}"
             >
-              ENTER ${escapeHtml(
+              ENTER
+              ${escapeHtml(
                 event.unit
                   .toUpperCase()
               )}
@@ -2800,14 +2750,13 @@ function renderTestCards() {
   );
 
 
-
   grid
     .querySelectorAll(
       ".number-entry-button"
     )
     .forEach(
 
-      button =>
+      button => {
 
         button.addEventListener(
           "click",
@@ -2815,59 +2764,41 @@ function renderTestCards() {
             openNumberPad(
               button.dataset.event
             )
-        )
+        );
+
+      }
 
     );
 
 
-
   grid
     .querySelectorAll(
-      ".timer-start"
+      ".timer-toggle-button"
     )
     .forEach(
 
-      button =>
+      button => {
 
         button.addEventListener(
           "click",
           () =>
-            startTimer(
+            toggleTimer(
               button.dataset.event
             )
-        )
+        );
+
+      }
 
     );
 
 
-
   grid
     .querySelectorAll(
-      ".timer-stop"
+      ".timer-reset-button"
     )
     .forEach(
 
-      button =>
-
-        button.addEventListener(
-          "click",
-          () =>
-            stopTimer(
-              button.dataset.event
-            )
-        )
-
-    );
-
-
-
-  grid
-    .querySelectorAll(
-      ".timer-reset"
-    )
-    .forEach(
-
-      button =>
+      button => {
 
         button.addEventListener(
           "click",
@@ -2875,10 +2806,11 @@ function renderTestCards() {
             resetTimer(
               button.dataset.event
             )
-        )
+        );
+
+      }
 
     );
-
 
 
   grid
@@ -2887,7 +2819,7 @@ function renderTestCards() {
     )
     .forEach(
 
-      button =>
+      button => {
 
         button.addEventListener(
           "click",
@@ -2895,10 +2827,11 @@ function renderTestCards() {
             saveAssessment(
               button.dataset.assessment
             )
-        )
+        );
+
+      }
 
     );
-
 
 
   grid
@@ -2907,7 +2840,7 @@ function renderTestCards() {
     )
     .forEach(
 
-      button =>
+      button => {
 
         button.addEventListener(
           "click",
@@ -2915,7 +2848,9 @@ function renderTestCards() {
             deleteAttempt(
               button.dataset.resultId
             )
-        )
+        );
+
+      }
 
     );
 
@@ -2924,7 +2859,7 @@ function renderTestCards() {
 
 
 /* ============================================================
-   ATTEMPT DISPLAY
+   ATTEMPTS
 ============================================================ */
 
 function renderAttempts(
@@ -3072,9 +3007,11 @@ function renderAttempts(
                   <div>
 
                     <strong>
+
                       ${escapeHtml(
                         valueText
                       )}
+
                     </strong>
 
 
@@ -3149,7 +3086,7 @@ function renderAttempts(
 
 
 /* ============================================================
-   CALCULATOR KEYPAD
+   KEYPAD
 ============================================================ */
 
 function openNumberPad(
@@ -3163,11 +3100,13 @@ function openNumberPad(
 
 
   if (
+
     !event
 
     ||
 
     !selectedAthlete
+
   ) {
 
     return;
@@ -3401,7 +3340,7 @@ function updateNumberPadDisplay() {
 
 
 /* ============================================================
-   SAVE NUMBER RESULT
+   SAVE RESULT
 ============================================================ */
 
 async function saveNumericResult(
@@ -3499,8 +3438,6 @@ async function saveNumericResult(
 
     renderTestCards();
 
-    renderAthleteTable();
-
     renderResultsMatrix();
 
 
@@ -3546,7 +3483,7 @@ async function saveNumericResult(
 
 
 /* ============================================================
-   SQUAT ASSESSMENT
+   SQUAT
 ============================================================ */
 
 async function saveAssessment(
@@ -3767,8 +3704,6 @@ async function deleteAttempt(
 
     renderTestCards();
 
-    renderAthleteTable();
-
     renderResultsMatrix();
 
 
@@ -3804,8 +3739,51 @@ async function deleteAttempt(
 
 
 /* ============================================================
-   TIMERS
+   TIMER
+
+   SAME BUTTON STARTS AND STOPS.
 ============================================================ */
+
+function toggleTimer(
+  eventKey
+) {
+
+  const state =
+    timerStates[
+      eventKey
+    ];
+
+
+  if (
+    !state
+  ) {
+
+    return;
+
+  }
+
+
+  if (
+    state.running
+  ) {
+
+    stopTimer(
+      eventKey
+    );
+
+  }
+
+  else {
+
+    startTimer(
+      eventKey
+    );
+
+  }
+
+}
+
+
 
 function startTimer(
   eventKey
@@ -3849,6 +3827,9 @@ function startTimer(
   );
 
 
+  renderTestCards();
+
+
   state.intervalId =
     setInterval(
 
@@ -3886,9 +3867,6 @@ function startTimer(
       10
 
     );
-
-
-  renderTestCards();
 
 }
 
@@ -3989,7 +3967,13 @@ function resetTimer(
 
 
   if (
+
     !state
+
+    ||
+
+    state.running
+
   ) {
 
     return;
@@ -4000,10 +3984,6 @@ function resetTimer(
   clearInterval(
     state.intervalId
   );
-
-
-  state.running =
-    false;
 
 
   state.startedAt =
@@ -4030,49 +4010,45 @@ function resetAllTimers() {
     timerStates
   )
     .forEach(
-      resetTimerSilently
+
+      eventKey => {
+
+        const state =
+          timerStates[
+            eventKey
+          ];
+
+
+        clearInterval(
+          state.intervalId
+        );
+
+
+        Object.assign(
+
+          state,
+
+          {
+
+            running:
+              false,
+
+            startedAt:
+              0,
+
+            elapsedMs:
+              0,
+
+            intervalId:
+              null
+
+          }
+
+        );
+
+      }
+
     );
-
-}
-
-
-
-function resetTimerSilently(
-  eventKey
-) {
-
-  const state =
-    timerStates[
-      eventKey
-    ];
-
-
-  clearInterval(
-    state.intervalId
-  );
-
-
-  Object.assign(
-
-    state,
-
-    {
-
-      running:
-        false,
-
-      startedAt:
-        0,
-
-      elapsedMs:
-        0,
-
-      intervalId:
-        null
-
-    }
-
-  );
 
 }
 
@@ -4096,7 +4072,7 @@ function formatTimer(
 
 
 /* ============================================================
-   PLAYER INDEX DRAWER
+   INDEX
 ============================================================ */
 
 function openIndexDrawer() {
@@ -4167,6 +4143,15 @@ function renderIndexDrawer() {
       .getElementById(
         "indexPlayerList"
       );
+
+
+  if (
+    !container
+  ) {
+
+    return;
+
+  }
 
 
   const search =
@@ -4307,12 +4292,14 @@ function renderIndexDrawer() {
                 >
 
                   <span>
+
                     ${escapeHtml(
                       player.lastName
                     )},
                     ${escapeHtml(
                       player.firstName
                     )}
+
                   </span>
 
                   <span>
@@ -4465,10 +4452,12 @@ function renderResultsMatrix() {
           class="sticky-athlete sortable"
           data-sort-key="athlete"
         >
+
           Athlete
           ${sortArrow(
             "athlete"
           )}
+
         </th>
 
 
@@ -4476,21 +4465,12 @@ function renderResultsMatrix() {
           class="sortable"
           data-sort-key="ageGroup"
         >
+
           Age
           ${sortArrow(
             "ageGroup"
           )}
-        </th>
 
-
-        <th
-          class="sortable"
-          data-sort-key="combineScore"
-        >
-          Score
-          ${sortArrow(
-            "combineScore"
-          )}
         </th>
 
 
@@ -4577,34 +4557,40 @@ function renderResultsMatrix() {
 
     athletes.filter(
 
-      athlete =>
+      athlete => {
 
-        (
-          !search
+        return (
 
-          ||
+          (
+            !search
 
-          normalizeText(
+            ||
 
-            `${athlete.firstName} ${athlete.lastName}`
+            normalizeText(
 
-          )
-            .includes(
-              search
+              `${athlete.firstName} ${athlete.lastName}`
+
             )
-        )
+              .includes(
+                search
+              )
+          )
 
-        &&
+          &&
 
-        (
-          !age
+          (
+            !age
 
-          ||
+            ||
 
-          athlete.ageGroup
-          ===
-          age
-        )
+            athlete.ageGroup
+            ===
+            age
+          )
+
+        );
+
+      }
 
     );
 
@@ -4621,12 +4607,6 @@ function renderResultsMatrix() {
   rows.forEach(
 
     athlete => {
-
-      const score =
-        getCombineScore(
-          athlete
-        );
-
 
       const cells =
 
@@ -4682,7 +4662,11 @@ function renderResultsMatrix() {
             ) {
 
               return `
-                <td>—</td>
+
+                <td>
+                  —
+                </td>
+
               `;
 
             }
@@ -4697,14 +4681,19 @@ function renderResultsMatrix() {
                 <td>
 
                   <strong>
+
                     ${formatNumber(
                       stats.best.value
                     )}
+
                   </strong>
+
 
                   <small class="matrix-sub">
 
-                    avg ${
+                    avg
+
+                    ${
                       stats.avgLast3
                       ==
                       null
@@ -4734,9 +4723,11 @@ function renderResultsMatrix() {
               <td>
 
                 <strong>
+
                   ${formatNumber(
                     stats.best.value
                   )}
+
                 </strong>
 
               </td>
@@ -4792,25 +4783,6 @@ function renderResultsMatrix() {
           </td>
 
 
-          <td>
-
-            ${
-              score
-              ==
-              null
-
-              ?
-
-              "—"
-
-              :
-
-              score.toFixed(1)
-            }
-
-          </td>
-
-
           ${cells}
 
         `;
@@ -4831,7 +4803,7 @@ function renderResultsMatrix() {
     )
     .forEach(
 
-      button =>
+      button => {
 
         button.addEventListener(
           "click",
@@ -4839,7 +4811,9 @@ function renderResultsMatrix() {
             startTesting(
               button.dataset.playerId
             )
-        )
+        );
+
+      }
 
     );
 
@@ -4941,6 +4915,7 @@ function compareMatrixPlayers(
 
 
   let av;
+
   let bv;
 
 
@@ -4972,81 +4947,6 @@ function compareMatrixPlayers(
 
     bv =
       b.ageGroup;
-
-  }
-
-
-  else if (
-    key
-    ===
-    "combineScore"
-  ) {
-
-    av =
-      getCombineScore(a);
-
-
-    bv =
-      getCombineScore(b);
-
-
-    if (
-
-      av
-      ==
-      null
-
-      &&
-
-      bv
-      ==
-      null
-
-    ) {
-
-      return comparePlayers(
-        a,
-        b
-      );
-
-    }
-
-
-    if (
-      av
-      ==
-      null
-    ) {
-
-      return 1;
-
-    }
-
-
-    if (
-      bv
-      ==
-      null
-    ) {
-
-      return -1;
-
-    }
-
-
-    return (
-
-      matrixSort.asc
-
-      ?
-
-      av - bv
-
-      :
-
-      bv - av
-
-    );
 
   }
 
@@ -5517,15 +5417,14 @@ function getBestAttempt(
         );
 
 
-      return (
-
+      if (
         direction
         ===
         "low"
+      ) {
 
-        ?
+        return (
 
-        (
           currentValue
           <
           bestValue
@@ -5537,23 +5436,25 @@ function getBestAttempt(
           :
 
           best
-        )
+
+        );
+
+      }
+
+
+      return (
+
+        currentValue
+        >
+        bestValue
+
+        ?
+
+        current
 
         :
 
-        (
-          currentValue
-          >
-          bestValue
-
-          ?
-
-          current
-
-          :
-
-          best
-        )
+        best
 
       );
 
@@ -5566,224 +5467,7 @@ function getBestAttempt(
 
 
 /* ============================================================
-   COMBINE SCORE
-
-   AVERAGE AGE-GROUP EVENT PLACEMENT.
-   LOWER = BETTER.
-============================================================ */
-
-function getCombineScore(
-  player
-) {
-
-  const ranks =
-    [];
-
-
-  EVENTS
-    .filter(
-
-      event =>
-        event.type
-        !==
-        "passfail"
-
-    )
-    .forEach(
-
-      event => {
-
-        const peers =
-
-          athletes
-
-            .filter(
-
-              athlete =>
-                athlete.ageGroup
-                ===
-                player.ageGroup
-
-            )
-
-            .map(
-
-              athlete => ({
-
-                id:
-                  athlete.id,
-
-                value:
-                  getSortValue(
-
-                    athlete.id,
-
-                    event
-
-                  )
-
-              })
-
-            )
-
-            .filter(
-
-              entry =>
-                entry.value
-                !=
-                null
-
-            );
-
-
-        if (
-          !peers.length
-        ) {
-
-          return;
-
-        }
-
-
-        peers.sort(
-
-          (a, b) =>
-
-            event.direction
-            ===
-            "low"
-
-            ?
-
-            a.value
-            -
-            b.value
-
-            :
-
-            b.value
-            -
-            a.value
-
-        );
-
-
-        let lastValue =
-          null;
-
-
-        let lastRank =
-          0;
-
-
-        const rankMap =
-          new Map();
-
-
-        peers.forEach(
-
-          (
-            entry,
-            index
-          ) => {
-
-            if (
-
-              lastValue
-              ===
-              null
-
-              ||
-
-              entry.value
-              !==
-              lastValue
-
-            ) {
-
-              lastRank =
-                index
-                +
-                1;
-
-            }
-
-
-            rankMap.set(
-
-              entry.id,
-
-              lastRank
-
-            );
-
-
-            lastValue =
-              entry.value;
-
-          }
-
-        );
-
-
-        if (
-          rankMap.has(
-            player.id
-          )
-        ) {
-
-          ranks.push(
-
-            rankMap.get(
-              player.id
-            )
-
-          );
-
-        }
-
-      }
-
-    );
-
-
-  if (
-    !ranks.length
-  ) {
-
-    return null;
-
-  }
-
-
-  return (
-
-    ranks.reduce(
-
-      (
-        sum,
-        rank
-      ) =>
-        sum
-        +
-        rank,
-
-      0
-
-    )
-
-    /
-
-    ranks.length
-
-  );
-
-}
-
-
-
-/* ============================================================
-   BULK IMPORT
+   UPLOAD
 ============================================================ */
 
 function bindUploader() {
@@ -6339,9 +6023,11 @@ function renderImportPreview() {
               <span
                 class="status-pill status-${row.status}"
               >
+
                 ${escapeHtml(
                   row.reason
                 )}
+
               </span>
 
             </td>
@@ -6436,10 +6122,12 @@ async function importPlayers() {
     of
 
     importRows.filter(
+
       row =>
         row.status
         ===
         "new"
+
     )
 
   ) {
@@ -6488,7 +6176,9 @@ async function importPlayers() {
     try {
 
       const existing =
-        await getDoc(ref);
+        await getDoc(
+          ref
+        );
 
 
       if (
@@ -6716,7 +6406,6 @@ function downloadTemplate() {
       .map(
 
         row =>
-
           row
             .map(
               csvEscape
@@ -6795,7 +6484,7 @@ function bindModals() {
     )
     .forEach(
 
-      button =>
+      button => {
 
         button.addEventListener(
           "click",
@@ -6803,7 +6492,9 @@ function bindModals() {
             closeModal(
               button.dataset.close
             )
-        )
+        );
+
+      }
 
     );
 
@@ -7333,26 +7024,94 @@ function playerDocumentId(
 
 ) {
 
-  return (
+  const key =
+    playerMatchKey(
+
+      firstName,
+
+      lastName,
+
+      ageGroup
+
+    );
+
+
+  const slug =
 
     `${normalizeText(firstName)}-${normalizeText(lastName)}-${normalizeText(ageGroup)}`
 
+      .replace(
+        /[^a-z0-9]+/g,
+        "-"
+      )
+
+      .replace(
+        /^-+|-+$/g,
+        ""
+      )
+
+      .slice(
+        0,
+        80
+      );
+
+
+  return (
+
+    `${slug}-${hashString(key)}`
+
+  );
+
+}
+
+
+
+function hashString(
+  value
+) {
+
+  let hash =
+    2166136261;
+
+
+  for (
+
+    let i =
+      0;
+
+    i
+    <
+    value.length;
+
+    i++
+
+  ) {
+
+    hash ^=
+      value.charCodeAt(i);
+
+
+    hash =
+      Math.imul(
+
+        hash,
+
+        16777619
+
+      );
+
+  }
+
+
+  return (
+
+    hash
+    >>>
+    0
+
   )
-
-    .replace(
-
-      /[^a-z0-9]+/g,
-
-      "-"
-
-    )
-
-    .replace(
-
-      /^-+|-+$/g,
-
-      ""
-
+    .toString(
+      36
     );
 
 }
@@ -7467,11 +7226,19 @@ function updateAgeFilters() {
           ages.map(
 
             age =>
-              `<option value="${escapeHtml(
-                age
-              )}">${escapeHtml(
-                age
-              )}</option>`
+              `
+
+                <option value="${escapeHtml(
+                  age
+                )}">
+
+                  ${escapeHtml(
+                    age
+                  )}
+
+                </option>
+
+              `
 
           )
             .join("");
