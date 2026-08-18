@@ -1,3 +1,13 @@
+/* ============================================================
+   NINTH INNING COMBINE TRACKER
+   Firebase / Firestore Version
+============================================================ */
+
+
+/* ============================================================
+   FIREBASE IMPORTS
+============================================================ */
+
 import {
   initializeApp
 } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
@@ -5,1629 +15,841 @@ import {
 
 import {
   getAuth,
-  onAuthStateChanged,
   signInWithEmailAndPassword,
   signOut,
-  setPersistence,
-  browserLocalPersistence
+  onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
 
 
 import {
   getFirestore,
   collection,
-  collectionGroup,
   doc,
   getDoc,
+  getDocs,
   setDoc,
-  updateDoc,
   addDoc,
-  onSnapshot,
-  serverTimestamp,
-  writeBatch
+  query,
+  orderBy,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
 
 
 
-/* =========================================================
-   FIREBASE
-========================================================= */
+/* ============================================================
+   FIREBASE CONFIG
+
+   COPY YOUR FIREBASE WEB CONFIG HERE
+============================================================ */
 
 const firebaseConfig = {
 
-  apiKey:
-    "AIzaSyAJxv5u5UfWETCKQjEl3JLT1W2CMR17oeY",
+  apiKey: "YOUR_API_KEY",
 
-  authDomain:
-    "ni-kennesaw-combine.firebaseapp.com",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
 
-  projectId:
-    "ni-kennesaw-combine",
+  projectId: "YOUR_PROJECT_ID",
 
-  storageBucket:
-    "ni-kennesaw-combine.firebasestorage.app",
+  storageBucket: "YOUR_PROJECT.firebasestorage.app",
 
-  messagingSenderId:
-    "963104261958",
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
 
-  appId:
-    "1:963104261958:web:1a3aa62125299084f30747"
+  appId: "YOUR_APP_ID"
 
 };
 
 
-const app =
-  initializeApp(firebaseConfig);
 
+/* ============================================================
+   INITIALIZE FIREBASE
+============================================================ */
 
-const auth =
-  getAuth(app);
+const app = initializeApp(firebaseConfig);
 
+const auth = getAuth(app);
 
-const db =
-  getFirestore(app);
-
-
-setPersistence(
-  auth,
-  browserLocalPersistence
-).catch(console.error);
+const db = getFirestore(app);
 
 
 
-/* =========================================================
-   EVENT CONFIGURATION
-========================================================= */
+/* ============================================================
+   ADMIN ACCOUNT
 
-const EVENT_CONFIG = {
+   ONLY THIS EMAIL CAN IMPORT PLAYERS
+============================================================ */
 
-  pulldown: {
-    label: "Pulldown",
-    unit: "MPH",
+const ADMIN_EMAIL =
+  "wes@ninthinningbaseball.com";
+
+
+
+/* ============================================================
+   EVENT SETTINGS
+
+   direction:
+
+   high
+   = highest score wins
+
+   low
+   = lowest score wins
+
+   passfail
+   = pass / fail assessment
+============================================================ */
+
+const EVENTS = [
+
+  {
+    key: "gripStrength",
+    label: "Grip Strength",
+    unit: "lbs",
     direction: "high",
-    decimals: 1,
-    average: true
+    step: "0.1",
+    placeholder: "Example: 92.5"
   },
 
-  exitVelo: {
-    label: "Exit Velo",
-    unit: "MPH",
-    direction: "high",
-    decimals: 1,
-    average: true
-  },
 
-  internalRotation: {
-    label: "Internal Rotation",
-    unit: "°",
-    direction: "high",
-    decimals: 1
-  },
-
-  externalRotation: {
-    label: "External Rotation",
-    unit: "°",
-    direction: "high",
-    decimals: 1
-  },
-
-  dynoInternal: {
-    label: "Dynamometer Internal",
-    unit: "LB",
-    direction: "high",
-    decimals: 1
-  },
-
-  dynoExternal: {
-    label: "Dynamometer External",
-    unit: "LB",
-    direction: "high",
-    decimals: 1
-  },
-
-  gripLeft: {
-    label: "Grip Left",
-    unit: "LB",
-    direction: "high",
-    decimals: 1
-  },
-
-  gripRight: {
-    label: "Grip Right",
-    unit: "LB",
-    direction: "high",
-    decimals: 1
-  },
-
-  medBallLeft: {
-    label: "Med Ball Left",
-    unit: "IN",
-    direction: "high",
-    decimals: 1
-  },
-
-  medBallRight: {
-    label: "Med Ball Right",
-    unit: "IN",
-    direction: "high",
-    decimals: 1
-  },
-
-  fiveTenFive: {
-    label: "5 / 10 / 5",
-    unit: "s",
+  {
+    key: "fiveTenFive",
+    label: "5/10/5 Run",
+    unit: "sec",
     direction: "low",
-    decimals: 2,
-    timer: true
+    step: "0.01",
+    placeholder: "Example: 4.72"
   },
 
-  tenYard: {
-    label: "10-Yard Shuttle",
-    unit: "s",
+
+  {
+    key: "tenYardShuttle",
+    label: "10 Yard Shuttle",
+    unit: "sec",
     direction: "low",
-    decimals: 2,
-    timer: true
+    step: "0.01",
+    placeholder: "Example: 2.08"
   },
 
-  broadJump: {
+
+  {
+    key: "squatAssessment",
+    label: "Squat Assessment",
+    unit: "",
+    direction: "passfail"
+  },
+
+
+  {
+    key: "broadJump",
     label: "Broad Jump",
-    unit: "IN",
+    unit: "in",
     direction: "high",
-    decimals: 1
+    step: "0.25",
+    placeholder: "Total inches"
   }
+
+];
+
+
+
+/* ============================================================
+   APPLICATION STATE
+============================================================ */
+
+let currentUser = null;
+
+let athletes = [];
+
+let results = [];
+
+let selectedAthlete = null;
+
+let importRows = [];
+
+
+let athleteSort = {
+
+  key: "lastName",
+
+  ascending: true
 
 };
 
 
-const RANKED_EVENTS =
-  Object.keys(EVENT_CONFIG);
+let resultSort = {
 
+  key: "athlete",
 
-const TOTAL_RANKED_EVENTS =
-  RANKED_EVENTS.length;
-
-
-
-/* =========================================================
-   RESULT SORTING
-========================================================= */
-
-const SORT_CONFIG = {
-
-  overallRank: {
-    type: "number",
-    defaultDirection: "asc"
-  },
-
-  lastName: {
-    type: "text",
-    defaultDirection: "asc"
-  },
-
-  ageGroup: {
-    type: "number",
-    defaultDirection: "asc"
-  },
-
-  combineScore: {
-    type: "number",
-    defaultDirection: "asc"
-  },
-
-  squat: {
-    type: "squat",
-    defaultDirection: "asc"
-  }
+  ascending: true
 
 };
 
 
-RANKED_EVENTS.forEach(
-  key => {
 
-    SORT_CONFIG[key] = {
+/* ============================================================
+   DOM READY
+============================================================ */
 
-      type: "number",
+document.addEventListener(
+  "DOMContentLoaded",
+  () => {
 
-      defaultDirection:
-        EVENT_CONFIG[key].direction === "low"
-          ? "asc"
-          : "desc"
+    setupNavigation();
 
-    };
+    setupLogin();
+
+    setupAthleteControls();
+
+    setupTestingControls();
+
+    setupResultControls();
+
+    setupUploader();
+
+    renderEventFilter();
+
+    renderTestCards();
 
   }
 );
 
 
 
-/* =========================================================
-   STATE
-========================================================= */
-
-let players = [];
-
-let attempts = [];
-
-let currentPlayerId = null;
-
-let activeCalculatorTest = null;
-
-let calculatorInput = "";
-
-let timerControllers = [];
-
-let unsubscribePlayers = null;
-
-let unsubscribeAttempts = null;
-
-let squatNotesSaveTimer = null;
-
-
-let resultsSort = {
-  key: "combineScore",
-  direction: "asc"
-};
-
-
-
-/* =========================================================
-   DOM — LOGIN
-========================================================= */
-
-const loginView =
-  document.getElementById("loginView");
-
-const appShell =
-  document.getElementById("appShell");
-
-const loginForm =
-  document.getElementById("loginForm");
-
-const loginEmail =
-  document.getElementById("loginEmail");
-
-const loginPassword =
-  document.getElementById("loginPassword");
-
-const loginButton =
-  document.getElementById("loginButton");
-
-const loginError =
-  document.getElementById("loginError");
-
-const logoutButton =
-  document.getElementById("logoutButton");
-
-const signedInUser =
-  document.getElementById("signedInUser");
-
-
-
-/* =========================================================
-   DOM — APP
-========================================================= */
-
-const playersView =
-  document.getElementById("playersView");
-
-const resultsView =
-  document.getElementById("resultsView");
-
-const testView =
-  document.getElementById("testView");
-
-
-const playersNavButton =
-  document.getElementById("playersNavButton");
-
-const resultsNavButton =
-  document.getElementById("resultsNavButton");
-
-const mainResultsButton =
-  document.getElementById("mainResultsButton");
-
-const backToPlayersButton =
-  document.getElementById("backToPlayersButton");
-
-
-const playersTableBody =
-  document.getElementById("playersTableBody");
-
-const resultsTableBody =
-  document.getElementById("resultsTableBody");
-
-
-const playerSearch =
-  document.getElementById("playerSearch");
-
-const playerAgeFilter =
-  document.getElementById("playerAgeFilter");
-
-const resultsSearch =
-  document.getElementById("resultsSearch");
-
-const resultsAgeFilter =
-  document.getElementById("resultsAgeFilter");
-
-
-const testPlayerName =
-  document.getElementById("testPlayerName");
-
-const testPlayerAge =
-  document.getElementById("testPlayerAge");
-
-
-
-/* =========================================================
-   DOM — ADD PLAYER
-========================================================= */
-
-const addPlayerButton =
-  document.getElementById("addPlayerButton");
-
-const addPlayerModal =
-  document.getElementById("addPlayerModal");
-
-const closeAddPlayerButton =
-  document.getElementById("closeAddPlayerButton");
-
-const savePlayerButton =
-  document.getElementById("savePlayerButton");
-
-const newPlayerFirstName =
-  document.getElementById("newPlayerFirstName");
-
-const newPlayerLastName =
-  document.getElementById("newPlayerLastName");
-
-const newPlayerAgeGroup =
-  document.getElementById("newPlayerAgeGroup");
-
-
-
-/* =========================================================
-   DOM — DRAWER
-========================================================= */
-
-const indexButton =
-  document.getElementById("indexButton");
-
-const playerDrawer =
-  document.getElementById("playerDrawer");
-
-const drawerBackdrop =
-  document.getElementById("drawerBackdrop");
-
-const closeDrawerButton =
-  document.getElementById("closeDrawerButton");
-
-const drawerSearch =
-  document.getElementById("drawerSearch");
-
-const drawerPlayerList =
-  document.getElementById("drawerPlayerList");
-
-
-
-/* =========================================================
-   DOM — CALCULATOR
-========================================================= */
-
-const numberModal =
-  document.getElementById("numberModal");
-
-const calculatorLabel =
-  document.getElementById("calculatorLabel");
-
-const calculatorValue =
-  document.getElementById("calculatorValue");
-
-const calculatorUnit =
-  document.getElementById("calculatorUnit");
-
-const calculatorSaveButton =
-  document.getElementById("calculatorSaveButton");
-
-const closeCalculatorButton =
-  document.getElementById("closeCalculatorButton");
-
-const calculatorButtons =
-  document.querySelectorAll(
-    ".calculator-grid button"
-  );
-
-
-
-/* =========================================================
-   DOM — SQUAT
-========================================================= */
-
-const squatPassButton =
-  document.getElementById("squatPassButton");
-
-const squatFailButton =
-  document.getElementById("squatFailButton");
-
-const squatNotes =
-  document.getElementById("squatNotes");
-
-
-
-/* =========================================================
-   PLAYER NORMALIZATION
-========================================================= */
-
-function normalizePlayer(raw) {
-
-  const oldSquat =
-    raw.squat ||
-    raw.results?.squat ||
-    {};
-
-
-  return {
-
-    ...raw,
-
-    squat: {
-
-      status:
-        oldSquat.status || null,
-
-      notes:
-        oldSquat.notes || ""
-
-    }
-
-  };
-
-}
-
-
-
-/* =========================================================
-   AUTH
-========================================================= */
-
-function showLogin(message = "") {
-
-  loginError.textContent =
-    message;
-
-  loginView.classList.remove(
-    "hidden"
-  );
-
-  appShell.classList.add(
-    "hidden"
-  );
-
-}
-
-
-function showApp(user) {
-
-  loginError.textContent = "";
-
-  loginView.classList.add(
-    "hidden"
-  );
-
-  appShell.classList.remove(
-    "hidden"
-  );
-
-  signedInUser.textContent =
-    user.email || "SIGNED IN";
-
-  showView("players");
-
-}
-
-
-function authErrorMessage(error) {
-
-  switch (error.code) {
-
-    case "auth/invalid-credential":
-    case "auth/wrong-password":
-    case "auth/user-not-found":
-
-      return "Incorrect email or password.";
-
-    case "auth/user-disabled":
-
-      return "This account has been disabled.";
-
-    case "auth/too-many-requests":
-
-      return "Too many attempts. Try again later.";
-
-    case "auth/network-request-failed":
-
-      return "Network error. Check your connection.";
-
-    default:
-
-      return "Sign-in failed.";
-
-  }
-
-}
-
-
-async function isApprovedStaff(user) {
-
-  const snap =
-    await getDoc(
-
-      doc(
-        db,
-        "staff",
-        user.uid
-      )
-
+/* ============================================================
+   AUTHENTICATION
+============================================================ */
+
+function setupLogin() {
+
+  document
+    .getElementById("loginForm")
+    .addEventListener(
+      "submit",
+      handleLogin
     );
 
-  return snap.exists();
 
-}
+  document
+    .getElementById("logoutButton")
+    .addEventListener(
+      "click",
+      async () => {
 
-
-
-/* =========================================================
-   FIRESTORE REALTIME LISTENERS
-========================================================= */
-
-function stopDataListeners() {
-
-  if (unsubscribePlayers) {
-
-    unsubscribePlayers();
-
-    unsubscribePlayers = null;
-
-  }
-
-
-  if (unsubscribeAttempts) {
-
-    unsubscribeAttempts();
-
-    unsubscribeAttempts = null;
-
-  }
-
-}
-
-
-function renderAfterDatabaseChange() {
-
-  renderEverything();
-
-
-  if (
-    currentPlayerId &&
-    getCurrentPlayer() &&
-    testView.classList.contains("active-view")
-  ) {
-
-    renderTestView();
-
-  }
-
-}
-
-
-function startDataListeners() {
-
-  stopDataListeners();
-
-
-  unsubscribePlayers =
-    onSnapshot(
-
-      collection(
-        db,
-        "players"
-      ),
-
-      snapshot => {
-
-        players =
-          snapshot.docs.map(
-            playerDoc =>
-
-              normalizePlayer({
-
-                id:
-                  playerDoc.id,
-
-                ...playerDoc.data()
-
-              })
-
-          );
-
-        renderAfterDatabaseChange();
-
-      },
-
-      error => {
-
-        console.error(
-          "Player listener failed:",
-          error
-        );
-
-        alert(
-          "Could not load players."
-        );
+        await signOut(auth);
 
       }
-
-    );
-
-
-  unsubscribeAttempts =
-    onSnapshot(
-
-      collectionGroup(
-        db,
-        "attempts"
-      ),
-
-      snapshot => {
-
-        attempts =
-          snapshot.docs.map(
-            attemptDoc => {
-
-              const data =
-                attemptDoc.data();
-
-              const parentPlayer =
-                attemptDoc.ref.parent.parent;
-
-              return {
-
-                id:
-                  attemptDoc.id,
-
-                playerId:
-                  data.playerId ||
-                  parentPlayer?.id ||
-                  "",
-
-                ...data
-
-              };
-
-            }
-          );
-
-        renderAfterDatabaseChange();
-
-      },
-
-      error => {
-
-        console.error(
-          "Attempt listener failed:",
-          error
-        );
-
-        alert(
-          "Could not load measurement attempts. Check your Firestore rules."
-        );
-
-      }
-
     );
 
 }
 
 
 
-/* =========================================================
+/* ============================================================
+   LOGIN
+============================================================ */
+
+async function handleLogin(event) {
+
+  event.preventDefault();
+
+
+  const email =
+    document
+      .getElementById("loginEmail")
+      .value
+      .trim();
+
+
+  const password =
+    document
+      .getElementById("loginPassword")
+      .value;
+
+
+  const message =
+    document
+      .getElementById("loginMessage");
+
+
+  hideMessage(message);
+
+
+  try {
+
+    await signInWithEmailAndPassword(
+
+      auth,
+
+      email,
+
+      password
+
+    );
+
+  }
+
+  catch (error) {
+
+    console.error(error);
+
+
+    showMessage(
+
+      message,
+
+      "Invalid email or password.",
+
+      "error"
+
+    );
+
+  }
+
+}
+
+
+
+/* ============================================================
    AUTH STATE
-========================================================= */
+============================================================ */
 
 onAuthStateChanged(
+
   auth,
 
   async user => {
 
+    currentUser = user;
+
+
     if (!user) {
 
-      stopDataListeners();
+      document
+        .getElementById("loginScreen")
+        .classList
+        .remove("hidden");
 
-      players = [];
-      attempts = [];
 
-      currentPlayerId = null;
+      document
+        .getElementById("app")
+        .classList
+        .add("hidden");
 
-      showLogin();
+
+      selectedAthlete = null;
+
+      athletes = [];
+
+      results = [];
 
       return;
 
     }
 
 
-    try {
-
-      const approved =
-        await isApprovedStaff(user);
-
-
-      if (!approved) {
-
-        await signOut(auth);
-
-        showLogin(
-          "This account is not approved."
-        );
-
-        return;
-
-      }
+    document
+      .getElementById("loginScreen")
+      .classList
+      .add("hidden");
 
 
-      showApp(user);
+    document
+      .getElementById("app")
+      .classList
+      .remove("hidden");
 
-      startDataListeners();
 
-    } catch (error) {
+    document
+      .getElementById("loggedInEmail")
+      .textContent =
+      user.email || "";
 
-      console.error(
-        "Staff verification failed:",
-        error
-      );
 
-      await signOut(auth)
-        .catch(() => {});
+    updateAdminControls();
 
-      showLogin(
-        "Could not verify staff access."
-      );
 
-    }
+    await refreshData();
 
   }
+
 );
 
 
 
-/* =========================================================
-   LOGIN EVENTS
-========================================================= */
+/* ============================================================
+   ADMIN CHECK
+============================================================ */
 
-loginForm.addEventListener(
-  "submit",
+function isAdmin() {
 
-  async event => {
+  if (!currentUser?.email) {
 
-    event.preventDefault();
-
-    loginError.textContent = "";
-
-    loginButton.disabled = true;
-
-    loginButton.textContent =
-      "SIGNING IN...";
-
-
-    try {
-
-      await signInWithEmailAndPassword(
-
-        auth,
-
-        loginEmail.value.trim(),
-
-        loginPassword.value
-
-      );
-
-      loginPassword.value = "";
-
-    } catch (error) {
-
-      loginError.textContent =
-        authErrorMessage(error);
-
-    } finally {
-
-      loginButton.disabled = false;
-
-      loginButton.textContent =
-        "SIGN IN";
-
-    }
+    return false;
 
   }
-);
 
-
-logoutButton.addEventListener(
-  "click",
-
-  async () => {
-
-    cancelAllTimers();
-
-    closePlayerDrawer();
-
-    closeCalculator();
-
-    closeAddPlayerModal();
-
-    await signOut(auth);
-
-  }
-);
-
-
-
-/* =========================================================
-   UTILITIES
-========================================================= */
-
-function getCurrentPlayer() {
-
-  return players.find(
-    player =>
-      player.id === currentPlayerId
-  );
-
-}
-
-
-function ageNumber(ageGroup) {
-
-  return (
-    parseInt(ageGroup, 10) ||
-    999
-  );
-
-}
-
-
-function escapeHTML(value) {
-
-  return String(value ?? "")
-
-    .replaceAll("&", "&amp;")
-
-    .replaceAll("<", "&lt;")
-
-    .replaceAll(">", "&gt;")
-
-    .replaceAll('"', "&quot;")
-
-    .replaceAll("'", "&#039;");
-
-}
-
-
-function isNumber(value) {
 
   return (
 
-    value !== null &&
+    currentUser.email
+      .trim()
+      .toLowerCase()
 
-    value !== "" &&
+    ===
 
-    Number.isFinite(
-      Number(value)
-    )
+    ADMIN_EMAIL.toLowerCase()
 
   );
 
 }
 
 
-function attemptTime(attempt) {
 
-  if (
-    attempt.createdAt &&
-    typeof attempt.createdAt.toMillis === "function"
-  ) {
+/* ============================================================
+   SHOW / HIDE ADMIN CONTROLS
+============================================================ */
 
-    return attempt.createdAt.toMillis();
+function updateAdminControls() {
+
+  const uploadButton =
+    document
+      .getElementById("uploadPlayersButton");
+
+
+  const adminBadge =
+    document
+      .getElementById("adminBadge");
+
+
+  if (isAdmin()) {
+
+    uploadButton
+      .classList
+      .remove("hidden");
+
+
+    adminBadge
+      .classList
+      .remove("hidden");
 
   }
 
-  return Number(
-    attempt.clientCreatedAt || 0
-  );
+  else {
 
-}
-
-
-function formatAttemptTime(attempt) {
-
-  let date;
+    uploadButton
+      .classList
+      .add("hidden");
 
 
-  if (
-    attempt.createdAt &&
-    typeof attempt.createdAt.toDate === "function"
-  ) {
-
-    date =
-      attempt.createdAt.toDate();
-
-  } else {
-
-    date =
-      new Date(
-        attempt.clientCreatedAt ||
-        Date.now()
-      );
+    adminBadge
+      .classList
+      .add("hidden");
 
   }
 
-
-  return date.toLocaleString(
-    [],
-    {
-      month: "numeric",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit"
-    }
-  );
-
 }
 
 
-function coachName(attempt) {
 
-  const email =
-    attempt.enteredByEmail ||
-    "staff";
+/* ============================================================
+   REFRESH DATABASE
+============================================================ */
 
-  return email.includes("@")
-    ? email.split("@")[0]
-    : email;
+async function refreshData() {
 
-}
+  await Promise.all([
+
+    loadAthletes(),
+
+    loadResults()
+
+  ]);
 
 
-function playerRef(playerId) {
+  updateAgeFilters();
 
-  return doc(
-    db,
-    "players",
-    playerId
-  );
+  renderAthleteTable();
+
+  renderTestingAthletes();
+
+  renderResults();
+
+  updateSelectedAthlete();
 
 }
 
 
 
-/* =========================================================
-   ATTEMPT HELPERS
-========================================================= */
+/* ============================================================
+   LOAD ATHLETES
+============================================================ */
 
-function getActiveAttempts(
-  playerId,
-  eventKey
-) {
+async function loadAthletes() {
 
-  return attempts
+  try {
 
-    .filter(
-      attempt =>
-
-        attempt.playerId ===
-          playerId &&
-
-        attempt.eventKey ===
-          eventKey &&
-
-        attempt.active !== false &&
-
-        isNumber(
-          attempt.value
+    const snapshot =
+      await getDocs(
+        collection(
+          db,
+          "athletes"
         )
-    )
+      );
 
-    .sort(
-      (a, b) =>
-        attemptTime(b) -
-        attemptTime(a)
-    );
 
-}
+    athletes =
+      snapshot.docs.map(
+        document => {
 
+          const data =
+            document.data();
 
-function getBestAttemptValue(
-  playerId,
-  eventKey
-) {
 
-  const entries =
-    getActiveAttempts(
-      playerId,
-      eventKey
-    );
+          return {
 
+            id: document.id,
 
-  if (!entries.length) {
+            ...data,
 
-    return null;
+            firstName:
+              cleanText(
+                data.firstName
+                ?? data.first_name
+                ?? ""
+              ),
 
-  }
+            lastName:
+              cleanText(
+                data.lastName
+                ?? data.last_name
+                ?? ""
+              ),
 
-
-  const values =
-    entries.map(
-      attempt =>
-        Number(attempt.value)
-    );
-
-
-  if (
-    EVENT_CONFIG[eventKey]
-      .direction === "low"
-  ) {
-
-    return Math.min(...values);
-
-  }
-
-
-  return Math.max(...values);
-
-}
-
-
-function getAverageAttemptValue(
-  playerId,
-  eventKey
-) {
-
-  const entries =
-    getActiveAttempts(
-      playerId,
-      eventKey
-    );
-
-
-  if (!entries.length) {
-
-    return null;
-
-  }
-
-
-  return (
-    entries.reduce(
-      (sum, attempt) =>
-        sum +
-        Number(attempt.value),
-      0
-    )
-    /
-    entries.length
-  );
-
-}
-
-
-function formatEventValue(
-  eventKey,
-  value
-) {
-
-  if (!isNumber(value)) {
-
-    return "—";
-
-  }
-
-
-  return Number(value).toFixed(
-    EVENT_CONFIG[eventKey]
-      .decimals
-  );
-
-}
-
-
-
-/* =========================================================
-   ADD INDIVIDUAL ATTEMPT
-========================================================= */
-
-async function addMeasurementAttempt(
-  playerId,
-  eventKey,
-  value
-) {
-
-  if (!auth.currentUser) {
-
-    throw new Error(
-      "Not signed in"
-    );
-
-  }
-
-
-  await addDoc(
-
-    collection(
-      db,
-      "players",
-      playerId,
-      "attempts"
-    ),
-
-    {
-
-      playerId,
-
-      eventKey,
-
-      value:
-        Number(value),
-
-      active:
-        true,
-
-      enteredByUid:
-        auth.currentUser.uid,
-
-      enteredByEmail:
-        auth.currentUser.email || "",
-
-      createdAt:
-        serverTimestamp(),
-
-      clientCreatedAt:
-        Date.now()
-
-    }
-
-  );
-
-}
-
-
-
-/* =========================================================
-   VOID ATTEMPT
-
-   The document stays in Firestore.
-========================================================= */
-
-async function voidAttempt(attempt) {
-
-  if (!auth.currentUser) {
-
-    return;
-
-  }
-
-
-  await updateDoc(
-
-    doc(
-      db,
-      "players",
-      attempt.playerId,
-      "attempts",
-      attempt.id
-    ),
-
-    {
-
-      active:
-        false,
-
-      deletedAt:
-        serverTimestamp(),
-
-      deletedByUid:
-        auth.currentUser.uid,
-
-      deletedByEmail:
-        auth.currentUser.email || ""
-
-    }
-
-  );
-
-}
-
-
-
-/* =========================================================
-   RANKING
-========================================================= */
-
-function calculateRankings() {
-
-  const rankingData = {};
-
-
-  players.forEach(
-    player => {
-
-      rankingData[player.id] = {
-
-        eventRanks: {},
-
-        completedEvents: 0,
-
-        combineScore: null,
-
-        overallRank: null
-
-      };
-
-    }
-  );
-
-
-  const ageGroups =
-    [
-      ...new Set(
-        players.map(
-          player =>
-            player.ageGroup
-        )
-      )
-    ];
-
-
-  ageGroups.forEach(
-    ageGroup => {
-
-      const agePlayers =
-        players.filter(
-          player =>
-            player.ageGroup ===
-            ageGroup
-        );
-
-
-      RANKED_EVENTS.forEach(
-        eventKey => {
-
-          const direction =
-            EVENT_CONFIG[eventKey]
-              .direction;
-
-
-          const competitors =
-            agePlayers
-
-              .map(
-                player => ({
-
-                  player,
-
-                  value:
-                    getBestAttemptValue(
-                      player.id,
-                      eventKey
-                    )
-
-                })
+            ageGroup:
+              normalizeAgeGroup(
+                data.ageGroup
+                ?? data.age_group
+                ?? ""
               )
 
-              .filter(
-                item =>
-                  isNumber(
-                    item.value
-                  )
+          };
+
+        }
+      );
+
+
+    athletes.sort(
+      (a, b) => {
+
+        const last =
+          a.lastName.localeCompare(
+            b.lastName
+          );
+
+
+        if (last !== 0) {
+
+          return last;
+
+        }
+
+
+        return a.firstName.localeCompare(
+          b.firstName
+        );
+
+      }
+    );
+
+  }
+
+  catch (error) {
+
+    console.error(
+      "Could not load athletes:",
+      error
+    );
+
+
+    showToast(
+      "Could not load athletes.",
+      true
+    );
+
+  }
+
+}
+
+
+
+/* ============================================================
+   LOAD RESULTS
+============================================================ */
+
+async function loadResults() {
+
+  try {
+
+    const q =
+      query(
+
+        collection(
+          db,
+          "results"
+        ),
+
+        orderBy(
+          "createdAt",
+          "desc"
+        )
+
+      );
+
+
+    const snapshot =
+      await getDocs(q);
+
+
+    results =
+      snapshot.docs.map(
+        document => ({
+
+          id: document.id,
+
+          ...document.data()
+
+        })
+      );
+
+  }
+
+  catch (error) {
+
+    console.error(
+      "Could not load results:",
+      error
+    );
+
+
+    /*
+      This fallback handles databases that have old records
+      without a createdAt field.
+    */
+
+    try {
+
+      const snapshot =
+        await getDocs(
+          collection(
+            db,
+            "results"
+          )
+        );
+
+
+      results =
+        snapshot.docs.map(
+          document => ({
+
+            id: document.id,
+
+            ...document.data()
+
+          })
+        );
+
+    }
+
+    catch (secondError) {
+
+      console.error(
+        secondError
+      );
+
+
+      showToast(
+        "Could not load results.",
+        true
+      );
+
+    }
+
+  }
+
+}
+
+
+
+/* ============================================================
+   NAVIGATION
+============================================================ */
+
+function setupNavigation() {
+
+  document
+    .querySelectorAll(".nav-tab")
+    .forEach(
+
+      button => {
+
+        button.addEventListener(
+          "click",
+          () => {
+
+            document
+              .querySelectorAll(".nav-tab")
+              .forEach(
+                tab => {
+
+                  tab.classList.remove(
+                    "active"
+                  );
+
+                }
               );
 
 
-          competitors.sort(
-            (a, b) =>
+            document
+              .querySelectorAll(".view")
+              .forEach(
+                view => {
 
-              direction === "low"
+                  view.classList.remove(
+                    "active"
+                  );
 
-                ? a.value -
-                  b.value
-
-                : b.value -
-                  a.value
-          );
-
-
-          let previousValue = null;
-
-          let previousRank = null;
+                }
+              );
 
 
-          competitors.forEach(
-            (item, index) => {
-
-              const rank =
-
-                previousValue !== null &&
-                item.value === previousValue
-
-                  ? previousRank
-
-                  : index + 1;
-
-
-              rankingData[
-                item.player.id
-              ].eventRanks[
-                eventKey
-              ] = rank;
-
-
-              previousValue =
-                item.value;
-
-              previousRank =
-                rank;
-
-            }
-          );
-
-        }
-      );
-
-
-      agePlayers.forEach(
-        player => {
-
-          const ranks =
-            Object.values(
-
-              rankingData[
-                player.id
-              ].eventRanks
-
+            button.classList.add(
+              "active"
             );
 
 
-          rankingData[
-            player.id
-          ].completedEvents =
-            ranks.length;
-
-
-          if (
-            ranks.length ===
-            TOTAL_RANKED_EVENTS
-          ) {
-
-            rankingData[
-              player.id
-            ].combineScore =
-
-              ranks.reduce(
-                (sum, rank) =>
-                  sum + rank,
-                0
+            document
+              .getElementById(
+                button.dataset.view
               )
-              /
-              ranks.length;
+              .classList
+              .add("active");
+
+
+            if (
+              button.dataset.view
+              ===
+              "resultsView"
+            ) {
+
+              renderResults();
+
+            }
 
           }
-
-        }
-      );
-
-
-      const eligible =
-        agePlayers
-
-          .filter(
-            player =>
-              rankingData[
-                player.id
-              ].combineScore !== null
-          )
-
-          .sort(
-            (a, b) =>
-              rankingData[
-                a.id
-              ].combineScore -
-              rankingData[
-                b.id
-              ].combineScore
-          );
-
-
-      let previousScore = null;
-
-      let previousRank = null;
-
-
-      eligible.forEach(
-        (player, index) => {
-
-          const score =
-            rankingData[
-              player.id
-            ].combineScore;
-
-
-          const rank =
-
-            previousScore !== null &&
-            Math.abs(
-              score -
-              previousScore
-            ) < 0.000001
-
-              ? previousRank
-
-              : index + 1;
-
-
-          rankingData[
-            player.id
-          ].overallRank =
-            rank;
-
-
-          previousScore =
-            score;
-
-          previousRank =
-            rank;
-
-        }
-      );
-
-    }
-  );
-
-
-  return rankingData;
-
-}
-
-
-
-/* =========================================================
-   MAIN PLAYER SORT
-========================================================= */
-
-function sortPlayersForMain(
-  playerList,
-  rankings
-) {
-
-  return [...playerList].sort(
-    (a, b) => {
-
-      const ageDifference =
-        ageNumber(a.ageGroup) -
-        ageNumber(b.ageGroup);
-
-
-      if (ageDifference !== 0) {
-
-        return ageDifference;
-
-      }
-
-
-      const rankA =
-        rankings[a.id].overallRank;
-
-      const rankB =
-        rankings[b.id].overallRank;
-
-
-      if (
-        rankA !== null &&
-        rankB !== null &&
-        rankA !== rankB
-      ) {
-
-        return rankA - rankB;
-
-      }
-
-
-      if (
-        rankA !== null &&
-        rankB === null
-      ) {
-
-        return -1;
-
-      }
-
-
-      if (
-        rankA === null &&
-        rankB !== null
-      ) {
-
-        return 1;
-
-      }
-
-
-      const lastCompare =
-        a.lastName.localeCompare(
-          b.lastName
         );
 
-
-      if (lastCompare !== 0) {
-
-        return lastCompare;
-
       }
 
-
-      return a.firstName.localeCompare(
-        b.firstName
-      );
-
-    }
-  );
+    );
 
 }
 
 
 
-/* =========================================================
-   PLAYERS TABLE
-========================================================= */
+/* ============================================================
+   TESTING CONTROLS
+============================================================ */
 
-function renderPlayersTable() {
+function setupTestingControls() {
 
-  const rankings =
-    calculateRankings();
+  document
+    .getElementById("testingSearch")
+    .addEventListener(
+      "input",
+      renderTestingAthletes
+    );
+
+
+  document
+    .getElementById("testingAgeFilter")
+    .addEventListener(
+      "change",
+      renderTestingAthletes
+    );
+
+
+  document
+    .getElementById("changeAthleteButton")
+    .addEventListener(
+      "click",
+      () => {
+
+        selectedAthlete = null;
+
+        updateSelectedAthlete();
+
+      }
+    );
+
+}
+
+
+
+/* ============================================================
+   TESTING ATHLETE LIST
+============================================================ */
+
+function renderTestingAthletes() {
+
+  const container =
+    document
+      .getElementById("testingAthleteList");
 
 
   const search =
-    playerSearch.value
-      .trim()
-      .toLowerCase();
+    normalizeText(
+      document
+        .getElementById("testingSearch")
+        .value
+    );
 
 
-  const ageFilter =
-    playerAgeFilter.value;
+  const age =
+    normalizeAgeGroup(
+      document
+        .getElementById("testingAgeFilter")
+        .value
+    );
 
 
   let filtered =
-    players.filter(
-      player => {
+    athletes.filter(
+      athlete => {
 
-        const normal =
-          `${player.firstName} ${player.lastName}`
-            .toLowerCase();
-
-        const reverse =
-          `${player.lastName} ${player.firstName}`
-            .toLowerCase();
+        const searchText =
+          normalizeText(
+            `${athlete.firstName} ${athlete.lastName} ${athlete.ageGroup}`
+          );
 
 
         const matchesSearch =
-          !search ||
-          normal.includes(search) ||
-          reverse.includes(search);
+          !search
+          ||
+          searchText.includes(
+            search
+          );
 
 
         const matchesAge =
-          ageFilter === "ALL" ||
-          player.ageGroup ===
-            ageFilter;
+          !age
+          ||
+          athlete.ageGroup
+            ===
+          age;
 
 
         return (
-          matchesSearch &&
+          matchesSearch
+          &&
           matchesAge
         );
 
@@ -1636,331 +858,97 @@ function renderPlayersTable() {
 
 
   filtered =
-    sortPlayersForMain(
-      filtered,
-      rankings
+    filtered.slice(
+      0,
+      50
     );
+
+
+  container.innerHTML = "";
 
 
   if (!filtered.length) {
 
-    playersTableBody.innerHTML = `
-
-      <tr>
-
-        <td
-          colspan="6"
-          class="empty-state"
-        >
-          No players found.
-        </td>
-
-      </tr>
-    `;
+    container.innerHTML =
+      `
+        <div class="empty-state">
+          No matching athletes.
+        </div>
+      `;
 
     return;
 
   }
 
 
-  playersTableBody.innerHTML =
-    filtered.map(
-      player => {
+  filtered.forEach(
+    athlete => {
 
-        const ranking =
-          rankings[player.id];
-
-
-        const rankDisplay =
-          ranking.overallRank !== null
-
-            ? `#${ranking.overallRank}`
-
-            : "—";
+      const button =
+        document.createElement(
+          "button"
+        );
 
 
-        const scoreDisplay =
-          ranking.combineScore !== null
-
-            ? ranking.combineScore
-                .toFixed(2)
-
-            : `INCOMPLETE (${ranking.completedEvents}/${TOTAL_RANKED_EVENTS})`;
+      button.type =
+        "button";
 
 
-        return `
+      button.className =
+        "athlete-pick";
 
-          <tr>
 
-            <td class="rank-cell">
-              ${rankDisplay}
-            </td>
+      button.innerHTML =
+        `
+          <div>
 
-            <td>
-              ${escapeHTML(
-                player.firstName
+            <strong>
+              ${escapeHtml(
+                athlete.firstName
               )}
-            </td>
-
-            <td>
-              ${escapeHTML(
-                player.lastName
+              ${escapeHtml(
+                athlete.lastName
               )}
-            </td>
+            </strong>
 
-            <td>
-              ${escapeHTML(
-                player.ageGroup
+            <small>
+              ${escapeHtml(
+                athlete.ageGroup
               )}
-            </td>
+            </small>
 
-            <td class="score-cell">
-              ${scoreDisplay}
-            </td>
+          </div>
 
-            <td>
-
-              <button
-                class="test-button"
-                data-player-id="${player.id}"
-              >
-                TEST
-              </button>
-
-            </td>
-
-          </tr>
+          <span class="arrow">
+            ›
+          </span>
         `;
 
-      }
-    ).join("");
 
-}
+      button.addEventListener(
+        "click",
+        () => {
 
-
-
-/* =========================================================
-   RESULTS SORTING
-========================================================= */
-
-function resultsSortValue(
-  player,
-  sortKey,
-  rankings
-) {
-
-  switch (sortKey) {
-
-    case "overallRank":
-
-      return rankings[
-        player.id
-      ].overallRank;
+          selectedAthlete =
+            athlete;
 
 
-    case "lastName":
+          document
+            .getElementById(
+              "testingSearch"
+            )
+            .value = "";
 
-      return `${player.lastName} ${player.firstName}`;
 
+          updateSelectedAthlete();
 
-    case "ageGroup":
-
-      return ageNumber(
-        player.ageGroup
+        }
       );
 
 
-    case "combineScore":
-
-      return rankings[
-        player.id
-      ].combineScore;
-
-
-    case "squat":
-
-      return player.squat?.status || null;
-
-
-    default:
-
-      return getBestAttemptValue(
-        player.id,
-        sortKey
+      container.appendChild(
+        button
       );
-
-  }
-
-}
-
-
-function fallbackPlayerSort(a, b) {
-
-  const ageDifference =
-    ageNumber(a.ageGroup) -
-    ageNumber(b.ageGroup);
-
-
-  if (ageDifference !== 0) {
-
-    return ageDifference;
-
-  }
-
-
-  const lastCompare =
-    a.lastName.localeCompare(
-      b.lastName
-    );
-
-
-  if (lastCompare !== 0) {
-
-    return lastCompare;
-
-  }
-
-
-  return a.firstName.localeCompare(
-    b.firstName
-  );
-
-}
-
-
-function sortResultsPlayers(
-  playerList,
-  rankings
-) {
-
-  const config =
-    SORT_CONFIG[
-      resultsSort.key
-    ];
-
-
-  return [...playerList].sort(
-    (a, b) => {
-
-      const valueA =
-        resultsSortValue(
-          a,
-          resultsSort.key,
-          rankings
-        );
-
-
-      const valueB =
-        resultsSortValue(
-          b,
-          resultsSort.key,
-          rankings
-        );
-
-
-      const missingA =
-        valueA === null ||
-        valueA === undefined ||
-        valueA === "";
-
-
-      const missingB =
-        valueB === null ||
-        valueB === undefined ||
-        valueB === "";
-
-
-      if (
-        missingA &&
-        !missingB
-      ) {
-
-        return 1;
-
-      }
-
-
-      if (
-        !missingA &&
-        missingB
-      ) {
-
-        return -1;
-
-      }
-
-
-      if (
-        missingA &&
-        missingB
-      ) {
-
-        return fallbackPlayerSort(
-          a,
-          b
-        );
-
-      }
-
-
-      let comparison = 0;
-
-
-      if (
-        config.type === "text"
-      ) {
-
-        comparison =
-          String(valueA)
-            .localeCompare(
-              String(valueB)
-            );
-
-      }
-
-      else if (
-        config.type === "squat"
-      ) {
-
-        const order = {
-          PASS: 1,
-          FAIL: 2
-        };
-
-
-        comparison =
-          (order[valueA] || 999) -
-          (order[valueB] || 999);
-
-      }
-
-      else {
-
-        comparison =
-          Number(valueA) -
-          Number(valueB);
-
-      }
-
-
-      if (
-        resultsSort.direction ===
-        "desc"
-      ) {
-
-        comparison *= -1;
-
-      }
-
-
-      return comparison === 0
-
-        ? fallbackPlayerSort(
-            a,
-            b
-          )
-
-        : comparison;
 
     }
   );
@@ -1968,50 +956,391 @@ function sortResultsPlayers(
 }
 
 
-function updateSortHeaders() {
+
+/* ============================================================
+   SELECTED ATHLETE
+============================================================ */
+
+function updateSelectedAthlete() {
+
+  const selector =
+    document
+      .getElementById(
+        "athleteSelectorPanel"
+      );
+
+
+  const selectedPanel =
+    document
+      .getElementById(
+        "selectedAthletePanel"
+      );
+
+
+  const testGrid =
+    document
+      .getElementById(
+        "testGrid"
+      );
+
+
+  if (!selectedAthlete) {
+
+    selector
+      .classList
+      .remove("hidden");
+
+
+    selectedPanel
+      .classList
+      .add("hidden");
+
+
+    testGrid
+      .classList
+      .add("hidden");
+
+
+    renderTestingAthletes();
+
+
+    return;
+
+  }
+
+
+  selector
+    .classList
+    .add("hidden");
+
+
+  selectedPanel
+    .classList
+    .remove("hidden");
+
+
+  testGrid
+    .classList
+    .remove("hidden");
+
+
+  document
+    .getElementById(
+      "selectedAthleteName"
+    )
+    .textContent =
+    `${selectedAthlete.firstName} ${selectedAthlete.lastName}`;
+
+
+  document
+    .getElementById(
+      "selectedAthleteAge"
+    )
+    .textContent =
+    selectedAthlete.ageGroup;
+
+
+  renderTestCards();
+
+}
+
+
+
+/* ============================================================
+   RENDER TEST CARDS
+============================================================ */
+
+function renderTestCards() {
+
+  const grid =
+    document
+      .getElementById(
+        "testGrid"
+      );
+
+
+  grid.innerHTML = "";
+
+
+  EVENTS.forEach(
+    event => {
+
+      const card =
+        document.createElement(
+          "article"
+        );
+
+
+      card.className =
+        "test-card";
+
+
+      const attempts =
+        selectedAthlete
+
+        ?
+
+        getAttempts(
+          selectedAthlete.id,
+          event.key
+        )
+
+        :
+
+        [];
+
+
+      const best =
+        selectedAthlete
+
+        ?
+
+        getBestResult(
+          selectedAthlete.id,
+          event.key
+        )
+
+        :
+
+        null;
+
+
+
+      if (
+        event.direction
+        ===
+        "passfail"
+      ) {
+
+        card.innerHTML =
+          `
+
+            <div class="test-card-header">
+
+              <div>
+
+                <div class="kicker">
+                  ASSESSMENT
+                </div>
+
+                <h3>
+                  ${escapeHtml(
+                    event.label
+                  )}
+                </h3>
+
+              </div>
+
+
+              ${
+                best
+
+                ?
+
+                `
+                <span class="best-chip">
+                  ${escapeHtml(
+                    formatResult(
+                      best,
+                      event
+                    )
+                  )}
+                </span>
+                `
+
+                :
+
+                ""
+              }
+
+            </div>
+
+
+            <div class="pass-fail-grid">
+
+              <button
+                class="assessment-button pass"
+                data-event="${event.key}"
+                data-assessment="Pass"
+              >
+                PASS
+              </button>
+
+
+              <button
+                class="assessment-button fail"
+                data-event="${event.key}"
+                data-assessment="Fail"
+              >
+                FAIL
+              </button>
+
+            </div>
+
+
+            ${renderAttemptHistory(
+              attempts,
+              event
+            )}
+
+          `;
+
+      }
+
+      else {
+
+        card.innerHTML =
+          `
+
+            <div class="test-card-header">
+
+              <div>
+
+                <div class="kicker">
+
+                  ${
+                    event.direction
+                    ===
+                    "low"
+
+                    ?
+
+                    "LOWEST IS BEST"
+
+                    :
+
+                    "HIGHEST IS BEST"
+                  }
+
+                </div>
+
+
+                <h3>
+                  ${escapeHtml(
+                    event.label
+                  )}
+                </h3>
+
+              </div>
+
+
+              ${
+                best
+
+                ?
+
+                `
+                <span class="best-chip">
+                  ${escapeHtml(
+                    formatResult(
+                      best,
+                      event
+                    )
+                  )}
+                </span>
+                `
+
+                :
+
+                ""
+              }
+
+            </div>
+
+
+            <div class="result-entry-row">
+
+              <input
+                id="test-${event.key}"
+                type="number"
+                inputmode="decimal"
+                step="${event.step}"
+                placeholder="${escapeHtml(
+                  event.placeholder
+                )}"
+              />
+
+
+              <span class="unit">
+                ${escapeHtml(
+                  event.unit
+                )}
+              </span>
+
+
+              <button
+                class="button save-result-button"
+                data-event="${event.key}"
+              >
+                Save
+              </button>
+
+            </div>
+
+
+            ${renderAttemptHistory(
+              attempts,
+              event
+            )}
+
+          `;
+
+      }
+
+
+      grid.appendChild(
+        card
+      );
+
+    }
+  );
+
+
 
   document
     .querySelectorAll(
-      ".sort-header"
+      ".save-result-button"
     )
     .forEach(
       button => {
 
-        const indicator =
-          button.querySelector(
-            ".sort-indicator"
-          );
+        button.addEventListener(
+          "click",
+          () => {
 
+            saveNumericResult(
+              button.dataset.event
+            );
 
-        button.classList.remove(
-          "active-sort"
+          }
         );
 
-
-        if (
-          button.dataset.sort ===
-          resultsSort.key
-        ) {
-
-          button.classList.add(
-            "active-sort"
-          );
+      }
+    );
 
 
-          indicator.textContent =
-            resultsSort.direction ===
-            "asc"
 
-              ? "↑"
+  document
+    .querySelectorAll(
+      ".assessment-button"
+    )
+    .forEach(
+      button => {
 
-              : "↓";
+        button.addEventListener(
+          "click",
+          () => {
 
-        } else {
+            saveAssessment(
 
-          indicator.textContent =
-            "↕";
+              button.dataset.event,
 
-        }
+              button.dataset.assessment
+
+            );
+
+          }
+        );
 
       }
     );
@@ -2020,53 +1349,671 @@ function updateSortHeaders() {
 
 
 
-/* =========================================================
-   RESULTS TABLE
-========================================================= */
+/* ============================================================
+   SAVE NUMERIC RESULT
+============================================================ */
 
-function renderResultsTable() {
+async function saveNumericResult(
+  eventKey
+) {
 
-  const rankings =
-    calculateRankings();
+  if (
+    !selectedAthlete
+    ||
+    !currentUser
+  ) {
+
+    return;
+
+  }
+
+
+  const event =
+    getEvent(
+      eventKey
+    );
+
+
+  const input =
+    document
+      .getElementById(
+        `test-${eventKey}`
+      );
+
+
+  const value =
+    Number(
+      input.value
+    );
+
+
+  if (
+    !Number.isFinite(
+      value
+    )
+  ) {
+
+    showToast(
+      "Enter a valid number.",
+      true
+    );
+
+
+    input.focus();
+
+
+    return;
+
+  }
+
+
+  try {
+
+    await addDoc(
+
+      collection(
+        db,
+        "results"
+      ),
+
+      {
+
+        athleteId:
+          selectedAthlete.id,
+
+        athleteFirstName:
+          selectedAthlete.firstName,
+
+        athleteLastName:
+          selectedAthlete.lastName,
+
+        ageGroup:
+          selectedAthlete.ageGroup,
+
+        event:
+          eventKey,
+
+        value:
+          value,
+
+        assessment:
+          null,
+
+        enteredByUid:
+          currentUser.uid,
+
+        enteredByEmail:
+          currentUser.email || "",
+
+        createdAt:
+          serverTimestamp()
+
+      }
+
+    );
+
+
+    input.value = "";
+
+
+    await loadResults();
+
+
+    renderTestCards();
+
+    renderResults();
+
+
+    showToast(
+      `${event.label} saved.`
+    );
+
+  }
+
+  catch (error) {
+
+    console.error(error);
+
+
+    showToast(
+      "Could not save result.",
+      true
+    );
+
+  }
+
+}
+
+
+
+/* ============================================================
+   SAVE PASS / FAIL
+
+   THERE IS NO EXTRA SAVE BUTTON.
+   CLICKING PASS OR FAIL SAVES IT.
+============================================================ */
+
+async function saveAssessment(
+  eventKey,
+  assessment
+) {
+
+  if (
+    !selectedAthlete
+    ||
+    !currentUser
+  ) {
+
+    return;
+
+  }
+
+
+  const event =
+    getEvent(
+      eventKey
+    );
+
+
+  try {
+
+    await addDoc(
+
+      collection(
+        db,
+        "results"
+      ),
+
+      {
+
+        athleteId:
+          selectedAthlete.id,
+
+        athleteFirstName:
+          selectedAthlete.firstName,
+
+        athleteLastName:
+          selectedAthlete.lastName,
+
+        ageGroup:
+          selectedAthlete.ageGroup,
+
+        event:
+          eventKey,
+
+        value:
+          null,
+
+        assessment:
+          assessment,
+
+        enteredByUid:
+          currentUser.uid,
+
+        enteredByEmail:
+          currentUser.email || "",
+
+        createdAt:
+          serverTimestamp()
+
+      }
+
+    );
+
+
+    await loadResults();
+
+
+    renderTestCards();
+
+    renderResults();
+
+
+    showToast(
+      `${event.label}: ${assessment}`
+    );
+
+  }
+
+  catch (error) {
+
+    console.error(error);
+
+
+    showToast(
+      "Could not save assessment.",
+      true
+    );
+
+  }
+
+}
+
+
+
+/* ============================================================
+   ATTEMPT HISTORY
+============================================================ */
+
+function getAttempts(
+  athleteId,
+  eventKey
+) {
+
+  return results
+    .filter(
+      result => (
+
+        result.athleteId
+        ===
+        athleteId
+
+        &&
+
+        result.event
+        ===
+        eventKey
+
+      )
+    )
+    .sort(
+      (a, b) => (
+
+        getTimestampValue(b.createdAt)
+        -
+        getTimestampValue(a.createdAt)
+
+      )
+    );
+
+}
+
+
+
+/* ============================================================
+   BEST RESULT
+============================================================ */
+
+function getBestResult(
+  athleteId,
+  eventKey
+) {
+
+  const event =
+    getEvent(
+      eventKey
+    );
+
+
+  const attempts =
+    getAttempts(
+      athleteId,
+      eventKey
+    );
+
+
+  if (
+    !event
+    ||
+    !attempts.length
+  ) {
+
+    return null;
+
+  }
+
+
+  if (
+    event.direction
+    ===
+    "passfail"
+  ) {
+
+    return attempts[0];
+
+  }
+
+
+  const numeric =
+    attempts.filter(
+      result =>
+        Number.isFinite(
+          Number(
+            result.value
+          )
+        )
+    );
+
+
+  if (!numeric.length) {
+
+    return null;
+
+  }
+
+
+  return numeric.reduce(
+    (best, current) => {
+
+      const bestValue =
+        Number(
+          best.value
+        );
+
+
+      const currentValue =
+        Number(
+          current.value
+        );
+
+
+      if (
+        event.direction
+        ===
+        "low"
+      ) {
+
+        return (
+
+          currentValue
+          <
+          bestValue
+
+          ?
+
+          current
+
+          :
+
+          best
+
+        );
+
+      }
+
+
+      return (
+
+        currentValue
+        >
+        bestValue
+
+        ?
+
+        current
+
+        :
+
+        best
+
+      );
+
+    }
+  );
+
+}
+
+
+
+/* ============================================================
+   ATTEMPT DISPLAY
+============================================================ */
+
+function renderAttemptHistory(
+  attempts,
+  event
+) {
+
+  if (!attempts.length) {
+
+    return `
+      <div class="no-attempts">
+        No entries yet.
+      </div>
+    `;
+
+  }
+
+
+  const best =
+    selectedAthlete
+
+    ?
+
+    getBestResult(
+      selectedAthlete.id,
+      event.key
+    )
+
+    :
+
+    null;
+
+
+  return `
+    <div class="attempt-history">
+
+      <div class="attempt-title">
+        All Entries
+      </div>
+
+      ${
+        attempts.map(
+          attempt => {
+
+            const bestClass =
+              best
+              &&
+              best.id
+              ===
+              attempt.id
+
+              ?
+
+              "best-attempt"
+
+              :
+
+              "";
+
+
+            return `
+              <div
+                class="attempt-row ${bestClass}"
+              >
+
+                <span>
+
+                  ${escapeHtml(
+                    formatResult(
+                      attempt,
+                      event
+                    )
+                  )}
+
+                </span>
+
+                <small>
+
+                  ${escapeHtml(
+                    shortDate(
+                      attempt.createdAt
+                    )
+                  )}
+
+                  ${
+                    attempt.enteredByEmail
+
+                    ?
+
+                    ` • ${escapeHtml(
+                      shortCoachName(
+                        attempt.enteredByEmail
+                      )
+                    )}`
+
+                    :
+
+                    ""
+                  }
+
+                </small>
+
+              </div>
+            `;
+
+          }
+        ).join("")
+      }
+
+    </div>
+  `;
+
+}
+
+
+
+/* ============================================================
+   ATHLETES PAGE
+============================================================ */
+
+function setupAthleteControls() {
+
+  document
+    .getElementById("athleteSearch")
+    .addEventListener(
+      "input",
+      renderAthleteTable
+    );
+
+
+  document
+    .getElementById("athleteAgeFilter")
+    .addEventListener(
+      "change",
+      renderAthleteTable
+    );
+
+
+  document
+    .querySelectorAll(
+      "[data-athlete-sort]"
+    )
+    .forEach(
+      header => {
+
+        header.addEventListener(
+          "click",
+          () => {
+
+            const key =
+              header.dataset.athleteSort;
+
+
+            if (
+              athleteSort.key
+              ===
+              key
+            ) {
+
+              athleteSort.ascending =
+                !athleteSort.ascending;
+
+            }
+
+            else {
+
+              athleteSort = {
+
+                key,
+
+                ascending: true
+
+              };
+
+            }
+
+
+            renderAthleteTable();
+
+          }
+        );
+
+      }
+    );
+
+}
+
+
+
+/* ============================================================
+   ATHLETE TABLE
+============================================================ */
+
+function renderAthleteTable() {
+
+  const body =
+    document
+      .getElementById(
+        "athleteTableBody"
+      );
+
+
+  const empty =
+    document
+      .getElementById(
+        "athleteEmpty"
+      );
 
 
   const search =
-    resultsSearch.value
-      .trim()
-      .toLowerCase();
+    normalizeText(
+      document
+        .getElementById(
+          "athleteSearch"
+        )
+        .value
+    );
 
 
-  const ageFilter =
-    resultsAgeFilter.value;
+  const age =
+    normalizeAgeGroup(
+      document
+        .getElementById(
+          "athleteAgeFilter"
+        )
+        .value
+    );
 
 
   let filtered =
-    players.filter(
-      player => {
+    athletes.filter(
+      athlete => {
 
-        const normal =
-          `${player.firstName} ${player.lastName}`
-            .toLowerCase();
-
-        const reverse =
-          `${player.lastName} ${player.firstName}`
-            .toLowerCase();
+        const text =
+          normalizeText(
+            `${athlete.firstName} ${athlete.lastName} ${athlete.ageGroup}`
+          );
 
 
         return (
 
           (
-            !search ||
-            normal.includes(search) ||
-            reverse.includes(search)
+            !search
+            ||
+            text.includes(
+              search
+            )
           )
 
           &&
 
           (
-            ageFilter === "ALL" ||
-            player.ageGroup ===
-              ageFilter
+            !age
+            ||
+            athlete.ageGroup
+              ===
+            age
           )
 
         );
@@ -2075,699 +2022,1178 @@ function renderResultsTable() {
     );
 
 
-  filtered =
-    sortResultsPlayers(
-      filtered,
-      rankings
-    );
+  filtered.sort(
+    (a, b) => {
+
+      const av =
+        String(
+          a[
+            athleteSort.key
+          ]
+          ?? ""
+        );
 
 
-  updateSortHeaders();
+      const bv =
+        String(
+          b[
+            athleteSort.key
+          ]
+          ?? ""
+        );
 
 
-  if (!filtered.length) {
-
-    resultsTableBody.innerHTML = `
-
-      <tr>
-
-        <td
-          colspan="19"
-          class="empty-state"
-        >
-          No results found.
-        </td>
-
-      </tr>
-    `;
-
-    return;
-
-  }
+      const comparison =
+        av.localeCompare(
+          bv,
+          undefined,
+          {
+            numeric: true
+          }
+        );
 
 
-  resultsTableBody.innerHTML =
-    filtered.map(
-      player => {
+      return athleteSort.ascending
 
-        const ranking =
-          rankings[player.id];
+        ?
 
+        comparison
 
-        const rank =
-          ranking.overallRank !== null
+        :
 
-            ? `#${ranking.overallRank}`
+        -comparison;
 
-            : "—";
+    }
+  );
 
 
-        const score =
-          ranking.combineScore !== null
-
-            ? ranking.combineScore
-                .toFixed(2)
-
-            : "—";
+  body.innerHTML = "";
 
 
-        const value =
-          key =>
-            formatEventValue(
+  filtered.forEach(
+    athlete => {
 
-              key,
-
-              getBestAttemptValue(
-                player.id,
-                key
-              )
-
-            );
+      const row =
+        document.createElement(
+          "tr"
+        );
 
 
-        return `
+      row.innerHTML =
+        `
 
-          <tr>
+          <td>
+            ${escapeHtml(
+              athlete.firstName
+            )}
+          </td>
 
-            <td class="rank-cell">
-              ${rank}
-            </td>
+          <td>
+            ${escapeHtml(
+              athlete.lastName
+            )}
+          </td>
 
-            <td>
-              ${escapeHTML(
-                `${player.lastName}, ${player.firstName}`
+          <td>
+
+            <span class="age-pill">
+
+              ${escapeHtml(
+                athlete.ageGroup
               )}
-            </td>
 
-            <td>
-              ${escapeHTML(
-                player.ageGroup
-              )}
-            </td>
+            </span>
 
-            <td class="score-cell">
-              ${score}
-            </td>
+          </td>
 
-            <td>${value("pulldown")}</td>
-
-            <td>${value("exitVelo")}</td>
-
-            <td>${value("internalRotation")}</td>
-
-            <td>${value("externalRotation")}</td>
-
-            <td>${value("dynoInternal")}</td>
-
-            <td>${value("dynoExternal")}</td>
-
-            <td>${value("gripLeft")}</td>
-
-            <td>${value("gripRight")}</td>
-
-            <td>${value("medBallLeft")}</td>
-
-            <td>${value("medBallRight")}</td>
-
-            <td>${value("fiveTenFive")}</td>
-
-            <td>${value("tenYard")}</td>
-
-            <td>
-              ${escapeHTML(
-                player.squat?.status ||
-                "—"
-              )}
-            </td>
-
-            <td>${value("broadJump")}</td>
-
-            <td>
-
-              <button
-                class="test-button"
-                data-player-id="${player.id}"
-              >
-                TEST
-              </button>
-
-            </td>
-
-          </tr>
         `;
 
-      }
-    ).join("");
+
+      body.appendChild(
+        row
+      );
+
+    }
+  );
+
+
+  empty.classList.toggle(
+    "hidden",
+    filtered.length
+    !==
+    0
+  );
 
 }
 
 
 
-/* =========================================================
-   VIEW NAVIGATION
-========================================================= */
+/* ============================================================
+   RESULTS PAGE
+============================================================ */
 
-function showView(viewName) {
+function setupResultControls() {
 
-  if (viewName !== "test") {
-
-    cancelAllTimers();
-
-  }
-
-
-  playersView.classList.remove(
-    "active-view"
-  );
-
-  resultsView.classList.remove(
-    "active-view"
-  );
-
-  testView.classList.remove(
-    "active-view"
-  );
-
-
-  playersNavButton.classList.remove(
-    "active"
-  );
-
-  resultsNavButton.classList.remove(
-    "active"
-  );
-
-
-  if (viewName === "players") {
-
-    playersView.classList.add(
-      "active-view"
-    );
-
-    playersNavButton.classList.add(
-      "active"
-    );
-
-    renderPlayersTable();
-
-  }
-
-
-  if (viewName === "results") {
-
-    resultsView.classList.add(
-      "active-view"
-    );
-
-    resultsNavButton.classList.add(
-      "active"
-    );
-
-    renderResultsTable();
-
-  }
-
-
-  if (viewName === "test") {
-
-    testView.classList.add(
-      "active-view"
-    );
-
-    renderTestView();
-
-  }
-
-
-  window.scrollTo({
-    top: 0,
-    behavior: "smooth"
-  });
-
-}
-
-
-function openPlayerTest(playerId) {
-
-  cancelAllTimers();
-
-  currentPlayerId =
-    playerId;
-
-
-  if (!getCurrentPlayer()) {
-
-    return;
-
-  }
-
-
-  closePlayerDrawer();
-
-  showView("test");
-
-}
-
-
-
-/* =========================================================
-   RENDER ATTEMPT HISTORY
-========================================================= */
-
-function renderAttemptHistory(
-  playerId,
-  eventKey,
-  containerId
-) {
-
-  const container =
-    document.getElementById(
-      containerId
+  document
+    .getElementById(
+      "resultsSearch"
+    )
+    .addEventListener(
+      "input",
+      renderResults
     );
 
 
-  const entries =
-    getActiveAttempts(
-      playerId,
-      eventKey
+  document
+    .getElementById(
+      "resultsAgeFilter"
+    )
+    .addEventListener(
+      "change",
+      renderResults
     );
 
 
-  if (!entries.length) {
-
-    container.innerHTML = `
-
-      <div class="attempt-row">
-
-        <span class="attempt-meta">
-          No entries yet
-        </span>
-
-      </div>
-    `;
-
-    return;
-
-  }
-
-
-  const best =
-    getBestAttemptValue(
-      playerId,
-      eventKey
+  document
+    .getElementById(
+      "resultsEventFilter"
+    )
+    .addEventListener(
+      "change",
+      renderResults
     );
 
 
-  const config =
-    EVENT_CONFIG[eventKey];
+  document
+    .querySelectorAll(
+      "[data-result-sort]"
+    )
+    .forEach(
+      header => {
+
+        header.addEventListener(
+          "click",
+          () => {
+
+            const key =
+              header.dataset.resultSort;
 
 
-  container.innerHTML =
-    entries.map(
-      attempt => {
+            if (
+              resultSort.key
+              ===
+              key
+            ) {
 
-        const attemptValue =
-          Number(attempt.value);
+              resultSort.ascending =
+                !resultSort.ascending;
 
+            }
 
-        const isBest =
-          Math.abs(
-            attemptValue -
-            best
-          ) < 0.000001;
+            else {
 
+              resultSort = {
 
-        return `
+                key,
 
-          <div
-            class="attempt-row
-            ${isBest ? "best-entry" : ""}"
-          >
+                ascending: true
 
-            <div class="attempt-info">
+              };
 
-              <div class="attempt-value-line">
-
-                <span class="attempt-value">
-
-                  ${attemptValue.toFixed(
-                    config.decimals
-                  )}
-
-                  ${escapeHTML(
-                    config.unit
-                  )}
-
-                </span>
+            }
 
 
-                ${
-                  isBest
+            renderResults();
 
-                    ? `
-                      <span class="best-badge">
-                        BEST
-                      </span>
-                    `
-
-                    : ""
-                }
-
-              </div>
-
-
-              <span class="attempt-meta">
-
-                ${escapeHTML(
-                  coachName(attempt)
-                )}
-
-                •
-
-                ${escapeHTML(
-                  formatAttemptTime(
-                    attempt
-                  )
-                )}
-
-              </span>
-
-            </div>
-
-
-            <button
-              class="delete-attempt"
-              data-attempt-id="${attempt.id}"
-            >
-              VOID
-            </button>
-
-          </div>
-        `;
+          }
+        );
 
       }
-    ).join("");
+    );
 
 }
 
 
 
-/* =========================================================
-   RENDER TEST VIEW
-========================================================= */
+/* ============================================================
+   RESULTS TABLE
+============================================================ */
 
-function renderMeasurementCard(
-  player,
-  eventKey,
-  bestElementId,
-  attemptsElementId,
-  averageElementId = null
-) {
+function renderResults() {
 
-  const best =
-    getBestAttemptValue(
-      player.id,
-      eventKey
-    );
-
-
-  document.getElementById(
-    bestElementId
-  ).textContent =
-    best !== null
-
-      ? Number(best).toFixed(
-          EVENT_CONFIG[eventKey]
-            .decimals
-        )
-
-      : "—";
-
-
-  if (averageElementId) {
-
-    const average =
-      getAverageAttemptValue(
-        player.id,
-        eventKey
+  const body =
+    document
+      .getElementById(
+        "resultsTableBody"
       );
 
 
-    document.getElementById(
-      averageElementId
-    ).textContent =
-      average !== null
-
-        ? Number(average).toFixed(
-            EVENT_CONFIG[eventKey]
-              .decimals
-          )
-
-        : "—";
-
-  }
-
-
-  renderAttemptHistory(
-    player.id,
-    eventKey,
-    attemptsElementId
-  );
-
-}
-
-
-function renderTestView() {
-
-  const player =
-    getCurrentPlayer();
-
-
-  if (!player) {
-
-    return;
-
-  }
-
-
-  testPlayerName.textContent =
-    `${player.firstName} ${player.lastName}`;
-
-
-  testPlayerAge.textContent =
-    player.ageGroup;
-
-
-  renderMeasurementCard(
-    player,
-    "pulldown",
-    "pulldownBest",
-    "pulldownAttempts",
-    "pulldownAverage"
-  );
-
-
-  renderMeasurementCard(
-    player,
-    "exitVelo",
-    "exitVeloBest",
-    "exitVeloAttempts",
-    "exitVeloAverage"
-  );
-
-
-  renderMeasurementCard(
-    player,
-    "internalRotation",
-    "internalRotationBest",
-    "internalRotationAttempts"
-  );
-
-
-  renderMeasurementCard(
-    player,
-    "externalRotation",
-    "externalRotationBest",
-    "externalRotationAttempts"
-  );
-
-
-  renderMeasurementCard(
-    player,
-    "dynoInternal",
-    "dynoInternalBest",
-    "dynoInternalAttempts"
-  );
-
-
-  renderMeasurementCard(
-    player,
-    "dynoExternal",
-    "dynoExternalBest",
-    "dynoExternalAttempts"
-  );
-
-
-  renderMeasurementCard(
-    player,
-    "gripLeft",
-    "gripLeftBest",
-    "gripLeftAttempts"
-  );
-
-
-  renderMeasurementCard(
-    player,
-    "gripRight",
-    "gripRightBest",
-    "gripRightAttempts"
-  );
-
-
-  renderMeasurementCard(
-    player,
-    "medBallLeft",
-    "medBallLeftBest",
-    "medBallLeftAttempts"
-  );
-
-
-  renderMeasurementCard(
-    player,
-    "medBallRight",
-    "medBallRightBest",
-    "medBallRightAttempts"
-  );
-
-
-  renderMeasurementCard(
-    player,
-    "fiveTenFive",
-    "fiveTenFiveBest",
-    "fiveTenFiveAttempts"
-  );
-
-
-  renderMeasurementCard(
-    player,
-    "tenYard",
-    "tenYardBest",
-    "tenYardAttempts"
-  );
-
-
-  renderMeasurementCard(
-    player,
-    "broadJump",
-    "broadJumpBest",
-    "broadJumpAttempts"
-  );
-
-
-  updateSquatButtons(
-    player.squat?.status ||
-    null
-  );
-
-
-  if (
-    document.activeElement !==
-    squatNotes
-  ) {
-
-    squatNotes.value =
-      player.squat?.notes ||
-      "";
-
-  }
-
-}
-
-
-
-/* =========================================================
-   ADD PLAYER
-========================================================= */
-
-function openAddPlayerModal() {
-
-  newPlayerFirstName.value = "";
-
-  newPlayerLastName.value = "";
-
-  newPlayerAgeGroup.value = "";
-
-
-  addPlayerModal.classList.add(
-    "show"
-  );
-
-
-  setTimeout(
-    () =>
-      newPlayerFirstName.focus(),
-    50
-  );
-
-}
-
-
-function closeAddPlayerModal() {
-
-  addPlayerModal.classList.remove(
-    "show"
-  );
-
-}
-
-
-async function addPlayer() {
-
-  const firstName =
-    newPlayerFirstName.value.trim();
-
-  const lastName =
-    newPlayerLastName.value.trim();
-
-  const ageGroup =
-    newPlayerAgeGroup.value;
-
-
-  if (
-    !firstName ||
-    !lastName ||
-    !ageGroup
-  ) {
-
-    alert(
-      "Enter first name, last name, and age group."
+  const empty =
+    document
+      .getElementById(
+        "resultsEmpty"
+      );
+
+
+  const search =
+    normalizeText(
+      document
+        .getElementById(
+          "resultsSearch"
+        )
+        .value
     );
 
+
+  const age =
+    normalizeAgeGroup(
+      document
+        .getElementById(
+          "resultsAgeFilter"
+        )
+        .value
+    );
+
+
+  const eventFilter =
+    document
+      .getElementById(
+        "resultsEventFilter"
+      )
+      .value;
+
+
+  let rows =
+    results.map(
+      result => {
+
+        let athlete =
+          athletes.find(
+            player =>
+              player.id
+              ===
+              result.athleteId
+          );
+
+
+        /*
+          Results keep athlete names on the entry itself,
+          so old results can still display even if athlete
+          lookup fails.
+        */
+
+        if (!athlete) {
+
+          athlete = {
+
+            id:
+              result.athleteId,
+
+            firstName:
+              result.athleteFirstName
+              ?? "",
+
+            lastName:
+              result.athleteLastName
+              ?? "",
+
+            ageGroup:
+              result.ageGroup
+              ?? ""
+
+          };
+
+        }
+
+
+        const event =
+          getEvent(
+            result.event
+          );
+
+
+        if (!event) {
+
+          return null;
+
+        }
+
+
+        const best =
+          getBestResult(
+            athlete.id,
+            event.key
+          );
+
+
+        return {
+
+          result,
+
+          athlete,
+
+          event,
+
+          best:
+            best
+            &&
+            best.id
+            ===
+            result.id
+
+        };
+
+      }
+    )
+    .filter(Boolean);
+
+
+
+  rows =
+    rows.filter(
+      row => {
+
+        const text =
+          normalizeText(
+            `${row.athlete.firstName} ${row.athlete.lastName}`
+          );
+
+
+        return (
+
+          (
+            !search
+            ||
+            text.includes(
+              search
+            )
+          )
+
+          &&
+
+          (
+            !age
+            ||
+            normalizeAgeGroup(
+              row.athlete.ageGroup
+            )
+            ===
+            age
+          )
+
+          &&
+
+          (
+            !eventFilter
+            ||
+            row.event.key
+            ===
+            eventFilter
+          )
+
+        );
+
+      }
+    );
+
+
+  rows.sort(
+    compareResultRows
+  );
+
+
+  body.innerHTML = "";
+
+
+  rows.forEach(
+    item => {
+
+      const row =
+        document.createElement(
+          "tr"
+        );
+
+
+      if (
+        item.best
+      ) {
+
+        row.classList.add(
+          "best-result-row"
+        );
+
+      }
+
+
+      row.innerHTML =
+        `
+
+          <td>
+
+            <strong>
+
+              ${escapeHtml(
+                item.athlete.firstName
+              )}
+
+              ${escapeHtml(
+                item.athlete.lastName
+              )}
+
+            </strong>
+
+          </td>
+
+
+          <td>
+
+            <span class="age-pill">
+
+              ${escapeHtml(
+                item.athlete.ageGroup
+              )}
+
+            </span>
+
+          </td>
+
+
+          <td>
+
+            ${escapeHtml(
+              item.event.label
+            )}
+
+          </td>
+
+
+          <td>
+
+            <span
+              class="${item.best ? "best-result-value" : ""}"
+            >
+
+              ${escapeHtml(
+                formatResult(
+                  item.result,
+                  item.event
+                )
+              )}
+
+            </span>
+
+          </td>
+
+
+          <td>
+
+            ${escapeHtml(
+              shortCoachName(
+                item.result.enteredByEmail
+                ?? ""
+              )
+            )}
+
+          </td>
+
+
+          <td>
+
+            ${escapeHtml(
+              shortDate(
+                item.result.createdAt
+              )
+            )}
+
+          </td>
+
+        `;
+
+
+      body.appendChild(
+        row
+      );
+
+    }
+  );
+
+
+  empty.classList.toggle(
+    "hidden",
+    rows.length
+    !==
+    0
+  );
+
+}
+
+
+
+/* ============================================================
+   RESULT SORTING
+============================================================ */
+
+function compareResultRows(
+  a,
+  b
+) {
+
+  let av;
+
+  let bv;
+
+
+  switch (
+    resultSort.key
+  ) {
+
+    case "athlete":
+
+      av =
+        `${a.athlete.lastName}, ${a.athlete.firstName}`;
+
+      bv =
+        `${b.athlete.lastName}, ${b.athlete.firstName}`;
+
+      break;
+
+
+    case "ageGroup":
+
+      av =
+        a.athlete.ageGroup;
+
+      bv =
+        b.athlete.ageGroup;
+
+      break;
+
+
+    case "event":
+
+      av =
+        a.event.label;
+
+      bv =
+        b.event.label;
+
+      break;
+
+
+    case "value":
+
+      av =
+        a.result.assessment
+        ??
+        a.result.value
+        ??
+        "";
+
+      bv =
+        b.result.assessment
+        ??
+        b.result.value
+        ??
+        "";
+
+      break;
+
+
+    case "coach":
+
+      av =
+        a.result.enteredByEmail
+        ?? "";
+
+      bv =
+        b.result.enteredByEmail
+        ?? "";
+
+      break;
+
+
+    case "date":
+
+      av =
+        getTimestampValue(
+          a.result.createdAt
+        );
+
+      bv =
+        getTimestampValue(
+          b.result.createdAt
+        );
+
+      break;
+
+
+    default:
+
+      av = "";
+
+      bv = "";
+
+  }
+
+
+  let comparison;
+
+
+  if (
+    typeof av
+    ===
+    "number"
+
+    &&
+
+    typeof bv
+    ===
+    "number"
+  ) {
+
+    comparison =
+      av - bv;
+
+  }
+
+  else {
+
+    comparison =
+      String(av)
+        .localeCompare(
+          String(bv),
+          undefined,
+          {
+            numeric: true
+          }
+        );
+
+  }
+
+
+  return resultSort.ascending
+
+    ?
+
+    comparison
+
+    :
+
+    -comparison;
+
+}
+
+
+
+/* ============================================================
+   AGE FILTERS
+============================================================ */
+
+function updateAgeFilters() {
+
+  const ages =
+    [
+      ...new Set(
+        athletes
+          .map(
+            athlete =>
+              normalizeAgeGroup(
+                athlete.ageGroup
+              )
+          )
+          .filter(Boolean)
+      )
+    ];
+
+
+  ages.sort(
+    (a, b) =>
+      a.localeCompare(
+        b,
+        undefined,
+        {
+          numeric: true
+        }
+      )
+  );
+
+
+  [
+
+    "testingAgeFilter",
+
+    "athleteAgeFilter",
+
+    "resultsAgeFilter"
+
+  ].forEach(
+    id => {
+
+      const select =
+        document
+          .getElementById(
+            id
+          );
+
+
+      const oldValue =
+        select.value;
+
+
+      select.innerHTML =
+        `
+          <option value="">
+            All Age Groups
+          </option>
+        `;
+
+
+      ages.forEach(
+        age => {
+
+          const option =
+            document.createElement(
+              "option"
+            );
+
+
+          option.value =
+            age;
+
+
+          option.textContent =
+            age;
+
+
+          select.appendChild(
+            option
+          );
+
+        }
+      );
+
+
+      if (
+        ages.includes(
+          oldValue
+        )
+      ) {
+
+        select.value =
+          oldValue;
+
+      }
+
+    }
+  );
+
+}
+
+
+
+/* ============================================================
+   EVENT FILTER
+============================================================ */
+
+function renderEventFilter() {
+
+  const select =
+    document
+      .getElementById(
+        "resultsEventFilter"
+      );
+
+
+  EVENTS.forEach(
+    event => {
+
+      const option =
+        document.createElement(
+          "option"
+        );
+
+
+      option.value =
+        event.key;
+
+
+      option.textContent =
+        event.label;
+
+
+      select.appendChild(
+        option
+      );
+
+    }
+  );
+
+}
+
+
+
+/* ============================================================
+   IMPORT SETUP
+============================================================ */
+
+function setupUploader() {
+
+  const uploadButton =
+    document
+      .getElementById(
+        "uploadPlayersButton"
+      );
+
+
+  uploadButton.addEventListener(
+    "click",
+    () => {
+
+      if (!isAdmin()) {
+
+        showToast(
+          "Only Wes can import players.",
+          true
+        );
+
+        return;
+
+      }
+
+
+      resetImporter();
+
+
+      document
+        .getElementById(
+          "uploadModal"
+        )
+        .classList
+        .remove("hidden");
+
+    }
+  );
+
+
+  document
+    .getElementById(
+      "closeUploadButton"
+    )
+    .addEventListener(
+      "click",
+      closeUploadModal
+    );
+
+
+  document
+    .getElementById(
+      "cancelImportButton"
+    )
+    .addEventListener(
+      "click",
+      closeUploadModal
+    );
+
+
+  document
+    .getElementById(
+      "playerFileInput"
+    )
+    .addEventListener(
+      "change",
+      handleFileUpload
+    );
+
+
+  document
+    .getElementById(
+      "importPlayersConfirmButton"
+    )
+    .addEventListener(
+      "click",
+      importPlayers
+    );
+
+
+  document
+    .getElementById(
+      "downloadTemplateButton"
+    )
+    .addEventListener(
+      "click",
+      downloadTemplate
+    );
+
+}
+
+
+
+/* ============================================================
+   CLOSE IMPORT
+============================================================ */
+
+function closeUploadModal() {
+
+  document
+    .getElementById(
+      "uploadModal"
+    )
+    .classList
+    .add("hidden");
+
+}
+
+
+
+/* ============================================================
+   RESET IMPORTER
+============================================================ */
+
+function resetImporter() {
+
+  importRows = [];
+
+
+  document
+    .getElementById(
+      "playerFileInput"
+    )
+    .value = "";
+
+
+  document
+    .getElementById(
+      "selectedFileName"
+    )
+    .textContent =
+    "No file selected.";
+
+
+  document
+    .getElementById(
+      "previewBody"
+    )
+    .innerHTML = "";
+
+
+  document
+    .getElementById(
+      "previewSection"
+    )
+    .classList
+    .add("hidden");
+
+
+  document
+    .getElementById(
+      "importSummary"
+    )
+    .classList
+    .add("hidden");
+
+
+  document
+    .getElementById(
+      "importPlayersConfirmButton"
+    )
+    .disabled = true;
+
+
+  hideMessage(
+    document
+      .getElementById(
+        "importMessage"
+      )
+  );
+
+}
+
+
+
+/* ============================================================
+   READ CSV / EXCEL FILE
+============================================================ */
+
+async function handleFileUpload(
+  event
+) {
+
+  if (!isAdmin()) {
+
     return;
 
   }
 
 
-  savePlayerButton.disabled = true;
+  const file =
+    event.target.files?.[0];
 
-  savePlayerButton.textContent =
-    "ADDING...";
+
+  if (!file) {
+
+    return;
+
+  }
+
+
+  document
+    .getElementById(
+      "selectedFileName"
+    )
+    .textContent =
+    file.name;
 
 
   try {
 
-    const newRef =
-      doc(
-        collection(
-          db,
-          "players"
-        )
+    const buffer =
+      await file.arrayBuffer();
+
+
+    const workbook =
+      XLSX.read(
+        buffer,
+        {
+          type: "array"
+        }
       );
 
 
-    await setDoc(
-      newRef,
-      {
+    const sheetName =
+      workbook.SheetNames[0];
+
+
+    if (!sheetName) {
+
+      throw new Error(
+        "No worksheet found."
+      );
+
+    }
+
+
+    const worksheet =
+      workbook.Sheets[
+        sheetName
+      ];
+
+
+    const rawRows =
+      XLSX.utils.sheet_to_json(
+        worksheet,
+        {
+          defval: "",
+          raw: false
+        }
+      );
+
+
+    if (!rawRows.length) {
+
+      throw new Error(
+        "The spreadsheet contains no players."
+      );
+
+    }
+
+
+    importRows =
+      buildImportRows(
+        rawRows
+      );
+
+
+    renderImportPreview();
+
+  }
+
+  catch (error) {
+
+    console.error(error);
+
+
+    showMessage(
+
+      document
+        .getElementById(
+          "importMessage"
+        ),
+
+      error.message
+      ||
+      "Could not read file.",
+
+      "error"
+
+    );
+
+  }
+
+}
+
+
+
+/* ============================================================
+   BUILD IMPORT PREVIEW
+============================================================ */
+
+function buildImportRows(
+  rawRows
+) {
+
+  const seenUploadKeys =
+    new Set();
+
+
+  return rawRows.map(
+    (rawRow, index) => {
+
+      const row =
+        normalizeSpreadsheetRow(
+          rawRow
+        );
+
+
+      const firstName =
+        cleanText(
+          row["first name"]
+          ??
+          row["firstname"]
+          ??
+          row["first"]
+          ??
+          ""
+        );
+
+
+      const lastName =
+        cleanText(
+          row["last name"]
+          ??
+          row["lastname"]
+          ??
+          row["last"]
+          ??
+          ""
+        );
+
+
+      const ageGroup =
+        normalizeAgeGroup(
+          row["age group"]
+          ??
+          row["agegroup"]
+          ??
+          row["age"]
+          ??
+          ""
+        );
+
+
+      const importRow = {
+
+        rowNumber:
+          index + 2,
 
         firstName,
 
@@ -2775,1525 +3201,1335 @@ async function addPlayer() {
 
         ageGroup,
 
-        squat: {
-          status: null,
-          notes: ""
-        },
+        status:
+          "new",
 
-        createdAt:
-          serverTimestamp(),
+        reason:
+          "Ready to import"
 
-        createdByUid:
-          auth.currentUser.uid,
+      };
 
-        createdByEmail:
-          auth.currentUser.email || ""
-
-      }
-    );
-
-
-    closeAddPlayerModal();
-
-
-    currentPlayerId =
-      newRef.id;
-
-
-    showView("test");
-
-  } catch (error) {
-
-    console.error(
-      "Could not add player:",
-      error
-    );
-
-    alert(
-      "Player could not be added."
-    );
-
-  } finally {
-
-    savePlayerButton.disabled = false;
-
-    savePlayerButton.textContent =
-      "ADD PLAYER";
-
-  }
-
-}
-
-
-
-/* =========================================================
-   DRAWER
-========================================================= */
-
-function openPlayerDrawer() {
-
-  renderPlayerDrawer();
-
-  playerDrawer.classList.add(
-    "open"
-  );
-
-  drawerBackdrop.classList.add(
-    "show"
-  );
-
-}
-
-
-function closePlayerDrawer() {
-
-  playerDrawer.classList.remove(
-    "open"
-  );
-
-  drawerBackdrop.classList.remove(
-    "show"
-  );
-
-}
-
-
-function renderPlayerDrawer() {
-
-  const search =
-    drawerSearch.value
-      .trim()
-      .toLowerCase();
-
-
-  const filtered =
-    [...players]
-
-      .filter(
-        player => {
-
-          const normal =
-            `${player.firstName} ${player.lastName}`
-              .toLowerCase();
-
-          const reverse =
-            `${player.lastName} ${player.firstName}`
-              .toLowerCase();
-
-
-          return (
-            !search ||
-            normal.includes(search) ||
-            reverse.includes(search)
-          );
-
-        }
-      )
-
-      .sort(
-        (a, b) => {
-
-          const ageDifference =
-            ageNumber(a.ageGroup) -
-            ageNumber(b.ageGroup);
-
-
-          if (ageDifference !== 0) {
-
-            return ageDifference;
-
-          }
-
-
-          const lastCompare =
-            a.lastName.localeCompare(
-              b.lastName
-            );
-
-
-          if (lastCompare !== 0) {
-
-            return lastCompare;
-
-          }
-
-
-          return a.firstName.localeCompare(
-            b.firstName
-          );
-
-        }
-      );
-
-
-  if (!filtered.length) {
-
-    drawerPlayerList.innerHTML = `
-
-      <div class="empty-state">
-        No players found.
-      </div>
-    `;
-
-    return;
-
-  }
-
-
-  let html = "";
-
-  let currentAge = null;
-
-
-  filtered.forEach(
-    player => {
 
       if (
-        player.ageGroup !==
-        currentAge
+        !firstName
+        ||
+        !lastName
+        ||
+        !ageGroup
       ) {
 
-        currentAge =
-          player.ageGroup;
+        importRow.status =
+          "invalid";
 
 
-        html += `
+        importRow.reason =
+          "Missing required information";
 
-          <div class="drawer-age-heading">
 
-            ${escapeHTML(
-              currentAge
-            )}
-
-          </div>
-        `;
+        return importRow;
 
       }
 
 
-      html += `
+      const key =
+        playerMatchKey(
 
-        <button
-          class="drawer-player-button"
-          data-player-id="${player.id}"
-        >
+          firstName,
 
-          ${escapeHTML(
-            `${player.lastName}, ${player.firstName}`
-          )}
+          lastName,
 
-        </button>
-      `;
+          ageGroup
 
-    }
-  );
+        );
 
 
-  drawerPlayerList.innerHTML =
-    html;
+      if (
+        seenUploadKeys.has(
+          key
+        )
+      ) {
 
-}
-
-
-
-/* =========================================================
-   CALCULATOR
-========================================================= */
-
-function openAttemptCalculator(button) {
-
-  if (!getCurrentPlayer()) {
-
-    return;
-
-  }
+        importRow.status =
+          "duplicate";
 
 
-  activeCalculatorTest = {
-
-    key:
-      button.dataset.attemptTest,
-
-    label:
-      button.dataset.label,
-
-    unit:
-      button.dataset.unit
-
-  };
+        importRow.reason =
+          "Duplicate row in file";
 
 
-  calculatorInput = "";
+        return importRow;
+
+      }
 
 
-  calculatorLabel.textContent =
-    activeCalculatorTest.label;
-
-
-  calculatorUnit.textContent =
-    activeCalculatorTest.unit;
-
-
-  updateCalculatorDisplay();
-
-
-  numberModal.classList.add(
-    "show"
-  );
-
-}
-
-
-function closeCalculator() {
-
-  numberModal.classList.remove(
-    "show"
-  );
-
-  activeCalculatorTest = null;
-
-  calculatorInput = "";
-
-}
-
-
-function updateCalculatorDisplay() {
-
-  calculatorValue.textContent =
-    calculatorInput;
-
-}
-
-
-function calculatorKeyPress(key) {
-
-  if (key === "backspace") {
-
-    calculatorInput =
-      calculatorInput.slice(
-        0,
-        -1
+      seenUploadKeys.add(
+        key
       );
 
-    updateCalculatorDisplay();
 
-    return;
+      if (
+        existingAthleteMatch(
 
-  }
+          firstName,
+
+          lastName,
+
+          ageGroup
+
+        )
+      ) {
+
+        importRow.status =
+          "duplicate";
 
 
-  if (key === ".") {
+        importRow.reason =
+          "Already exists — skipped";
 
-    if (
-      calculatorInput.includes(".")
-    ) {
 
-      return;
+        return importRow;
+
+      }
+
+
+      return importRow;
 
     }
-
-
-    calculatorInput =
-      calculatorInput === ""
-
-        ? "0."
-
-        : `${calculatorInput}.`;
-
-
-    updateCalculatorDisplay();
-
-    return;
-
-  }
-
-
-  if (
-    calculatorInput.length >= 8
-  ) {
-
-    return;
-
-  }
-
-
-  calculatorInput =
-    calculatorInput === "0"
-
-      ? key
-
-      : calculatorInput + key;
-
-
-  updateCalculatorDisplay();
+  );
 
 }
 
 
-async function saveCalculatorResult() {
 
-  const player =
-    getCurrentPlayer();
+/* ============================================================
+   NORMALIZE SPREADSHEET HEADERS
+============================================================ */
 
+function normalizeSpreadsheetRow(
+  raw
+) {
 
-  if (
-    !player ||
-    !activeCalculatorTest
-  ) {
-
-    return;
-
-  }
+  const normalized = {};
 
 
-  if (
-    calculatorInput === "" ||
-    calculatorInput === "." ||
-    calculatorInput === "0."
-  ) {
+  Object.entries(
+    raw
+  ).forEach(
+    ([key, value]) => {
 
-    alert(
-      "Enter a result before saving."
+      const normalizedKey =
+        String(key)
+
+          .trim()
+
+          .toLowerCase()
+
+          .replace(
+            /[_-]+/g,
+            " "
+          )
+
+          .replace(
+            /\s+/g,
+            " "
+          );
+
+
+      normalized[
+        normalizedKey
+      ] = value;
+
+    }
+  );
+
+
+  return normalized;
+
+}
+
+
+
+/* ============================================================
+   IMPORT PREVIEW
+============================================================ */
+
+function renderImportPreview() {
+
+  const body =
+    document
+      .getElementById(
+        "previewBody"
+      );
+
+
+  const newRows =
+    importRows.filter(
+      row =>
+        row.status
+        ===
+        "new"
+    );
+
+
+  const duplicates =
+    importRows.filter(
+      row =>
+        row.status
+        ===
+        "duplicate"
+    );
+
+
+  const invalid =
+    importRows.filter(
+      row =>
+        row.status
+        ===
+        "invalid"
+    );
+
+
+  document
+    .getElementById(
+      "summaryTotal"
+    )
+    .textContent =
+    importRows.length;
+
+
+  document
+    .getElementById(
+      "summaryNew"
+    )
+    .textContent =
+    newRows.length;
+
+
+  document
+    .getElementById(
+      "summaryDuplicate"
+    )
+    .textContent =
+    duplicates.length;
+
+
+  document
+    .getElementById(
+      "summaryInvalid"
+    )
+    .textContent =
+    invalid.length;
+
+
+  document
+    .getElementById(
+      "importSummary"
+    )
+    .classList
+    .remove("hidden");
+
+
+  document
+    .getElementById(
+      "previewSection"
+    )
+    .classList
+    .remove("hidden");
+
+
+  body.innerHTML = "";
+
+
+  importRows.forEach(
+    row => {
+
+      const tr =
+        document.createElement(
+          "tr"
+        );
+
+
+      let className =
+        "status-new";
+
+
+      if (
+        row.status
+        ===
+        "duplicate"
+      ) {
+
+        className =
+          "status-duplicate";
+
+      }
+
+
+      if (
+        row.status
+        ===
+        "invalid"
+      ) {
+
+        className =
+          "status-invalid";
+
+      }
+
+
+      tr.innerHTML =
+        `
+
+          <td>
+            ${escapeHtml(
+              row.firstName
+              ||
+              "—"
+            )}
+          </td>
+
+          <td>
+            ${escapeHtml(
+              row.lastName
+              ||
+              "—"
+            )}
+          </td>
+
+          <td>
+            ${escapeHtml(
+              row.ageGroup
+              ||
+              "—"
+            )}
+          </td>
+
+          <td>
+
+            <span
+              class="status-pill ${className}"
+            >
+
+              ${escapeHtml(
+                row.reason
+              )}
+
+            </span>
+
+          </td>
+
+        `;
+
+
+      body.appendChild(
+        tr
+      );
+
+    }
+  );
+
+
+  document
+    .getElementById(
+      "importPlayersConfirmButton"
+    )
+    .disabled =
+    newRows.length
+    ===
+    0;
+
+
+  showMessage(
+
+    document
+      .getElementById(
+        "importMessage"
+      ),
+
+    `${newRows.length} new player${newRows.length === 1 ? "" : "s"} ready. Existing players will not be changed.`,
+
+    newRows.length
+    ?
+
+    "success"
+
+    :
+
+    "warning"
+
+  );
+
+}
+
+
+
+/* ============================================================
+   IMPORT PLAYERS
+
+   CRITICAL:
+
+   WE DO NOT UPDATE EXISTING ATHLETES.
+
+   FIRST NAME + LAST NAME + AGE GROUP
+   DETERMINE DUPLICATES.
+============================================================ */
+
+async function importPlayers() {
+
+  if (!isAdmin()) {
+
+    showToast(
+      "Only Wes can import players.",
+      true
     );
 
     return;
+
+  }
+
+
+  const button =
+    document
+      .getElementById(
+        "importPlayersConfirmButton"
+      );
+
+
+  button.disabled = true;
+
+  button.textContent =
+    "Importing...";
+
+
+  /*
+    Reload the roster immediately before import.
+
+    This prevents stale browser data from creating
+    an obvious duplicate.
+  */
+
+  await loadAthletes();
+
+
+  const newPlayers =
+    importRows.filter(
+      row =>
+        row.status
+        ===
+        "new"
+    );
+
+
+  let imported = 0;
+
+  let skipped = 0;
+
+  let failed = 0;
+
+
+
+  for (
+    const player of newPlayers
+  ) {
+
+    /*
+      Recheck matching athlete in current roster.
+    */
+
+    if (
+      existingAthleteMatch(
+
+        player.firstName,
+
+        player.lastName,
+
+        player.ageGroup
+
+      )
+    ) {
+
+      skipped++;
+
+      continue;
+
+    }
+
+
+    /*
+      Deterministic athlete document ID.
+
+      Example:
+
+      john-smith-14u
+
+      This gives another layer of duplicate protection.
+    */
+
+    const documentId =
+      athleteDocumentId(
+
+        player.firstName,
+
+        player.lastName,
+
+        player.ageGroup
+
+      );
+
+
+    const athleteRef =
+      doc(
+
+        db,
+
+        "athletes",
+
+        documentId
+
+      );
+
+
+    try {
+
+      /*
+        Check the document directly.
+
+        IMPORTANT:
+        If it exists, DO NOTHING.
+      */
+
+      const existing =
+        await getDoc(
+          athleteRef
+        );
+
+
+      if (
+        existing.exists()
+      ) {
+
+        skipped++;
+
+        continue;
+
+      }
+
+
+      /*
+        setDoc is used only after verifying
+        this deterministic document does not exist.
+
+        NO merge.
+        NO update.
+        NO overwrite of an existing athlete.
+      */
+
+      await setDoc(
+
+        athleteRef,
+
+        {
+
+          firstName:
+            player.firstName,
+
+          lastName:
+            player.lastName,
+
+          ageGroup:
+            player.ageGroup,
+
+          normalizedFirstName:
+            normalizeText(
+              player.firstName
+            ),
+
+          normalizedLastName:
+            normalizeText(
+              player.lastName
+            ),
+
+          normalizedAgeGroup:
+            normalizeText(
+              player.ageGroup
+            ),
+
+          createdByUid:
+            currentUser.uid,
+
+          createdByEmail:
+            currentUser.email,
+
+          createdAt:
+            serverTimestamp()
+
+        }
+
+      );
+
+
+      imported++;
+
+    }
+
+    catch (error) {
+
+      console.error(
+        "Import error:",
+        player,
+        error
+      );
+
+
+      failed++;
+
+    }
+
+  }
+
+
+
+  await loadAthletes();
+
+
+  updateAgeFilters();
+
+  renderAthleteTable();
+
+  renderTestingAthletes();
+
+
+
+  button.textContent =
+    "Import Players";
+
+
+  showMessage(
+
+    document
+      .getElementById(
+        "importMessage"
+      ),
+
+    `${imported} imported. ${skipped} duplicates skipped. ${failed} failed. Existing player data was not changed.`,
+
+    failed
+    ?
+
+    "warning"
+
+    :
+
+    "success"
+
+  );
+
+
+  button.disabled = true;
+
+
+  importRows =
+    importRows.map(
+      row => {
+
+        if (
+          row.status
+          ===
+          "invalid"
+        ) {
+
+          return row;
+
+        }
+
+
+        if (
+          existingAthleteMatch(
+
+            row.firstName,
+
+            row.lastName,
+
+            row.ageGroup
+
+          )
+        ) {
+
+          return {
+
+            ...row,
+
+            status:
+              "duplicate",
+
+            reason:
+              "Already exists — skipped"
+
+          };
+
+        }
+
+
+        return row;
+
+      }
+    );
+
+
+  renderImportPreview();
+
+}
+
+
+
+/* ============================================================
+   EXISTING ATHLETE MATCH
+
+   EXACT MATCH REQUIRES ALL THREE:
+
+   FIRST NAME
+   LAST NAME
+   AGE GROUP
+============================================================ */
+
+function existingAthleteMatch(
+
+  firstName,
+
+  lastName,
+
+  ageGroup
+
+) {
+
+  const target =
+    playerMatchKey(
+
+      firstName,
+
+      lastName,
+
+      ageGroup
+
+    );
+
+
+  return athletes.some(
+    athlete => {
+
+      const existing =
+        playerMatchKey(
+
+          athlete.firstName,
+
+          athlete.lastName,
+
+          athlete.ageGroup
+
+        );
+
+
+      return (
+        existing
+        ===
+        target
+      );
+
+    }
+  );
+
+}
+
+
+
+/* ============================================================
+   PLAYER MATCH KEY
+============================================================ */
+
+function playerMatchKey(
+
+  firstName,
+
+  lastName,
+
+  ageGroup
+
+) {
+
+  return [
+
+    normalizeText(
+      firstName
+    ),
+
+    normalizeText(
+      lastName
+    ),
+
+    normalizeText(
+      normalizeAgeGroup(
+        ageGroup
+      )
+    )
+
+  ].join("|");
+
+}
+
+
+
+/* ============================================================
+   FIRESTORE DOCUMENT ID
+============================================================ */
+
+function athleteDocumentId(
+
+  firstName,
+
+  lastName,
+
+  ageGroup
+
+) {
+
+  const value =
+    `${normalizeText(firstName)}-${normalizeText(lastName)}-${normalizeText(ageGroup)}`;
+
+
+  return value
+
+    .replace(
+      /[^a-z0-9]+/g,
+      "-"
+    )
+
+    .replace(
+      /^-+|-+$/g,
+      ""
+    );
+
+}
+
+
+
+/* ============================================================
+   DOWNLOAD CSV TEMPLATE
+============================================================ */
+
+function downloadTemplate() {
+
+  const csv =
+    [
+      [
+        "First Name",
+        "Last Name",
+        "Age Group"
+      ],
+
+      [
+        "John",
+        "Smith",
+        "14U"
+      ],
+
+      [
+        "Mason",
+        "Jones",
+        "13U"
+      ]
+
+    ]
+
+      .map(
+        row =>
+          row.map(
+            csvEscape
+          ).join(",")
+      )
+
+      .join("\n");
+
+
+  const blob =
+    new Blob(
+
+      [csv],
+
+      {
+        type:
+          "text/csv;charset=utf-8"
+      }
+
+    );
+
+
+  const url =
+    URL.createObjectURL(
+      blob
+    );
+
+
+  const link =
+    document.createElement(
+      "a"
+    );
+
+
+  link.href =
+    url;
+
+
+  link.download =
+    "combine-player-template.csv";
+
+
+  document.body.appendChild(
+    link
+  );
+
+
+  link.click();
+
+
+  link.remove();
+
+
+  URL.revokeObjectURL(
+    url
+  );
+
+}
+
+
+
+/* ============================================================
+   HELPERS
+============================================================ */
+
+function getEvent(
+  eventKey
+) {
+
+  return EVENTS.find(
+    event =>
+      event.key
+      ===
+      eventKey
+  );
+
+}
+
+
+
+function formatResult(
+  result,
+  event
+) {
+
+  if (
+    event.direction
+    ===
+    "passfail"
+  ) {
+
+    return (
+      result.assessment
+      ||
+      "—"
+    );
 
   }
 
 
   const value =
-    Number(calculatorInput);
-
-
-  if (!Number.isFinite(value)) {
-
-    alert(
-      "Enter a valid number."
+    Number(
+      result.value
     );
 
-    return;
 
-  }
-
-
-  calculatorSaveButton.disabled =
-    true;
-
-  calculatorSaveButton.textContent =
-    "SAVING...";
-
-
-  try {
-
-    await addMeasurementAttempt(
-
-      player.id,
-
-      activeCalculatorTest.key,
-
+  if (
+    !Number.isFinite(
       value
+    )
+  ) {
 
-    );
-
-
-    closeCalculator();
-
-  } catch (error) {
-
-    console.error(
-      "Could not save entry:",
-      error
-    );
-
-    alert(
-      "Entry could not be saved."
-    );
-
-  } finally {
-
-    calculatorSaveButton.disabled =
-      false;
-
-    calculatorSaveButton.textContent =
-      "SAVE ENTRY";
+    return "—";
 
   }
+
+
+  return (
+    `${trimNumber(value)}`
+    +
+    (
+      event.unit
+
+      ?
+
+      ` ${event.unit}`
+
+      :
+
+      ""
+    )
+  );
 
 }
 
 
 
-/* =========================================================
-   SQUAT
-========================================================= */
+function trimNumber(
+  value
+) {
 
-function updateSquatButtons(status) {
-
-  squatPassButton.classList.remove(
-    "pass-selected"
-  );
-
-  squatFailButton.classList.remove(
-    "fail-selected"
-  );
-
-
-  if (status === "PASS") {
-
-    squatPassButton.classList.add(
-      "pass-selected"
+  return Number(value)
+    .toLocaleString(
+      undefined,
+      {
+        maximumFractionDigits:
+          3
+      }
     );
-
-  }
-
-
-  if (status === "FAIL") {
-
-    squatFailButton.classList.add(
-      "fail-selected"
-    );
-
-  }
 
 }
 
 
-async function saveSquatStatus(status) {
 
-  const player =
-    getCurrentPlayer();
+function cleanText(
+  value
+) {
+
+  return String(
+    value ?? ""
+  )
+
+    .trim()
+
+    .replace(
+      /\s+/g,
+      " "
+    );
+
+}
 
 
-  if (!player) {
 
-    return;
+function normalizeText(
+  value
+) {
+
+  return cleanText(
+    value
+  )
+    .toLowerCase();
+
+}
+
+
+
+function normalizeAgeGroup(
+  value
+) {
+
+  let age =
+    cleanText(
+      value
+    )
+    .toUpperCase();
+
+
+  /*
+    Converts:
+
+    14u
+    14 U
+    14-U
+
+    into:
+
+    14U
+  */
+
+  age =
+    age.replace(
+      /^(\d{1,2})\s*[- ]?\s*U$/i,
+      "$1U"
+    );
+
+
+  return age;
+
+}
+
+
+
+function shortCoachName(
+  email
+) {
+
+  if (!email) {
+
+    return "—";
 
   }
 
 
-  try {
+  return String(email)
+    .split("@")[0];
 
-    const logRef =
-      doc(
-        collection(
-          db,
-          "players",
-          player.id,
-          "squatEntries"
-        )
+}
+
+
+
+function getTimestampValue(
+  timestamp
+) {
+
+  if (!timestamp) {
+
+    return 0;
+
+  }
+
+
+  if (
+    typeof timestamp.toMillis
+    ===
+    "function"
+  ) {
+
+    return timestamp.toMillis();
+
+  }
+
+
+  if (
+    timestamp.seconds
+  ) {
+
+    return (
+      timestamp.seconds
+      *
+      1000
+    );
+
+  }
+
+
+  const value =
+    new Date(
+      timestamp
+    ).getTime();
+
+
+  return Number.isFinite(
+    value
+  )
+
+    ?
+
+    value
+
+    :
+
+    0;
+
+}
+
+
+
+function shortDate(
+  timestamp
+) {
+
+  const millis =
+    getTimestampValue(
+      timestamp
+    );
+
+
+  if (!millis) {
+
+    return "Just now";
+
+  }
+
+
+  const date =
+    new Date(
+      millis
+    );
+
+
+  return date.toLocaleString(
+    [],
+    {
+
+      month:
+        "short",
+
+      day:
+        "numeric",
+
+      hour:
+        "numeric",
+
+      minute:
+        "2-digit"
+
+    }
+  );
+
+}
+
+
+
+function csvEscape(
+  value
+) {
+
+  return (
+    `"${String(value).replace(
+      /"/g,
+      '""'
+    )}"`
+  );
+
+}
+
+
+
+function escapeHtml(
+  value
+) {
+
+  return String(
+    value ?? ""
+  )
+
+    .replace(
+      /&/g,
+      "&amp;"
+    )
+
+    .replace(
+      /</g,
+      "&lt;"
+    )
+
+    .replace(
+      />/g,
+      "&gt;"
+    )
+
+    .replace(
+      /"/g,
+      "&quot;"
+    )
+
+    .replace(
+      /'/g,
+      "&#039;"
+    );
+
+}
+
+
+
+/* ============================================================
+   MESSAGES
+============================================================ */
+
+function showMessage(
+
+  element,
+
+  text,
+
+  type
+
+) {
+
+  element.textContent =
+    text;
+
+
+  element.className =
+    `message message-${type}`;
+
+}
+
+
+
+function hideMessage(
+  element
+) {
+
+  element.textContent =
+    "";
+
+
+  element.className =
+    "message hidden";
+
+}
+
+
+
+/* ============================================================
+   TOAST
+============================================================ */
+
+let toastTimer;
+
+
+function showToast(
+
+  message,
+
+  error = false
+
+) {
+
+  const toast =
+    document
+      .getElementById(
+        "toast"
       );
 
 
-    const batch =
-      writeBatch(db);
+  toast.textContent =
+    message;
 
 
-    batch.update(
+  toast.className =
+    error
 
-      playerRef(
-        player.id
-      ),
+    ?
 
-      {
+    "toast toast-error"
 
-        "squat.status":
-          status,
+    :
 
-        updatedAt:
-          serverTimestamp(),
-
-        updatedByUid:
-          auth.currentUser.uid,
-
-        updatedByEmail:
-          auth.currentUser.email || ""
-
-      }
-
-    );
-
-
-    batch.set(
-
-      logRef,
-
-      {
-
-        status,
-
-        notesSnapshot:
-          squatNotes.value,
-
-        enteredAt:
-          serverTimestamp(),
-
-        enteredByUid:
-          auth.currentUser.uid,
-
-        enteredByEmail:
-          auth.currentUser.email || ""
-
-      }
-
-    );
-
-
-    await batch.commit();
-
-
-    updateSquatButtons(
-      status
-    );
-
-  } catch (error) {
-
-    console.error(
-      "Could not save squat:",
-      error
-    );
-
-    alert(
-      "Squat assessment could not be saved."
-    );
-
-  }
-
-}
-
-
-function queueSquatNotesSave() {
-
-  const playerId =
-    currentPlayerId;
-
-  const notes =
-    squatNotes.value;
+    "toast";
 
 
   clearTimeout(
-    squatNotesSaveTimer
+    toastTimer
   );
 
 
-  squatNotesSaveTimer =
+  toastTimer =
     setTimeout(
+      () => {
 
-      async () => {
-
-        if (!playerId) {
-
-          return;
-
-        }
-
-
-        try {
-
-          await updateDoc(
-
-            playerRef(
-              playerId
-            ),
-
-            {
-
-              "squat.notes":
-                notes,
-
-              updatedAt:
-                serverTimestamp(),
-
-              updatedByUid:
-                auth.currentUser.uid,
-
-              updatedByEmail:
-                auth.currentUser.email || ""
-
-            }
-
-          );
-
-        } catch (error) {
-
-          console.error(
-            "Could not save notes:",
-            error
-          );
-
-        }
+        toast.classList.add(
+          "hidden"
+        );
 
       },
 
-      600
-
+      3500
     );
 
 }
-
-
-
-/* =========================================================
-   TIMERS
-========================================================= */
-
-function createTimer({
-  displayElement,
-  buttonElement,
-  eventKey
-}) {
-
-  let running = false;
-
-  let saving = false;
-
-  let startTime = null;
-
-  let animationFrame = null;
-
-
-  function updateTimer() {
-
-    if (!running) {
-
-      return;
-
-    }
-
-
-    const elapsed =
-      (
-        performance.now() -
-        startTime
-      ) / 1000;
-
-
-    displayElement.textContent =
-      elapsed.toFixed(2);
-
-
-    animationFrame =
-      requestAnimationFrame(
-        updateTimer
-      );
-
-  }
-
-
-  function startTimer() {
-
-    if (saving) {
-
-      return;
-
-    }
-
-
-    running = true;
-
-    startTime =
-      performance.now();
-
-
-    displayElement.textContent =
-      "0.00";
-
-
-    buttonElement.textContent =
-      "STOP";
-
-
-    buttonElement.classList.add(
-      "running"
-    );
-
-
-    animationFrame =
-      requestAnimationFrame(
-        updateTimer
-      );
-
-  }
-
-
-  async function stopTimer() {
-
-    if (!running) {
-
-      return;
-
-    }
-
-
-    const elapsed =
-      (
-        performance.now() -
-        startTime
-      ) / 1000;
-
-
-    const finalTime =
-      Number(
-        elapsed.toFixed(2)
-      );
-
-
-    running = false;
-
-
-    cancelAnimationFrame(
-      animationFrame
-    );
-
-
-    animationFrame = null;
-
-
-    buttonElement.classList.remove(
-      "running"
-    );
-
-
-    displayElement.textContent =
-      finalTime.toFixed(2);
-
-
-    const player =
-      getCurrentPlayer();
-
-
-    if (!player) {
-
-      buttonElement.textContent =
-        "START";
-
-      return;
-
-    }
-
-
-    saving = true;
-
-    buttonElement.disabled = true;
-
-    buttonElement.textContent =
-      "SAVING...";
-
-
-    try {
-
-      await addMeasurementAttempt(
-
-        player.id,
-
-        eventKey,
-
-        finalTime
-
-      );
-
-    } catch (error) {
-
-      console.error(
-        "Could not save timer:",
-        error
-      );
-
-      alert(
-        "Timed result could not be saved."
-      );
-
-    } finally {
-
-      saving = false;
-
-      buttonElement.disabled = false;
-
-      buttonElement.textContent =
-        "START";
-
-    }
-
-  }
-
-
-  function toggleTimer() {
-
-    if (saving) {
-
-      return;
-
-    }
-
-
-    if (running) {
-
-      stopTimer();
-
-    } else {
-
-      startTimer();
-
-    }
-
-  }
-
-
-  function cancel() {
-
-    if (animationFrame) {
-
-      cancelAnimationFrame(
-        animationFrame
-      );
-
-    }
-
-
-    animationFrame = null;
-
-    running = false;
-
-    startTime = null;
-
-
-    if (!saving) {
-
-      buttonElement.disabled = false;
-
-      buttonElement.textContent =
-        "START";
-
-    }
-
-
-    buttonElement.classList.remove(
-      "running"
-    );
-
-
-    displayElement.textContent =
-      "0.00";
-
-  }
-
-
-  buttonElement.addEventListener(
-    "click",
-    toggleTimer
-  );
-
-
-  return {
-    cancel
-  };
-
-}
-
-
-const fiveTenFiveController =
-  createTimer({
-
-    displayElement:
-      document.getElementById(
-        "fiveTenFiveTimer"
-      ),
-
-    buttonElement:
-      document.getElementById(
-        "fiveTenFiveStartButton"
-      ),
-
-    eventKey:
-      "fiveTenFive"
-
-  });
-
-
-const tenYardController =
-  createTimer({
-
-    displayElement:
-      document.getElementById(
-        "tenYardTimer"
-      ),
-
-    buttonElement:
-      document.getElementById(
-        "tenYardStartButton"
-      ),
-
-    eventKey:
-      "tenYard"
-
-  });
-
-
-timerControllers = [
-  fiveTenFiveController,
-  tenYardController
-];
-
-
-function cancelAllTimers() {
-
-  timerControllers.forEach(
-    controller =>
-      controller.cancel()
-  );
-
-}
-
-
-
-/* =========================================================
-   RENDER EVERYTHING
-========================================================= */
-
-function renderEverything() {
-
-  renderPlayersTable();
-
-  renderResultsTable();
-
-  renderPlayerDrawer();
-
-}
-
-
-
-/* =========================================================
-   NAVIGATION EVENTS
-========================================================= */
-
-playersNavButton.addEventListener(
-  "click",
-  () =>
-    showView("players")
-);
-
-
-resultsNavButton.addEventListener(
-  "click",
-  () =>
-    showView("results")
-);
-
-
-mainResultsButton.addEventListener(
-  "click",
-  () =>
-    showView("results")
-);
-
-
-backToPlayersButton.addEventListener(
-  "click",
-  () =>
-    showView("players")
-);
-
-
-
-/* =========================================================
-   SEARCH
-========================================================= */
-
-playerSearch.addEventListener(
-  "input",
-  renderPlayersTable
-);
-
-
-playerAgeFilter.addEventListener(
-  "change",
-  renderPlayersTable
-);
-
-
-resultsSearch.addEventListener(
-  "input",
-  renderResultsTable
-);
-
-
-resultsAgeFilter.addEventListener(
-  "change",
-  renderResultsTable
-);
-
-
-
-/* =========================================================
-   SORT EVENTS
-========================================================= */
-
-document
-  .querySelectorAll(
-    ".sort-header"
-  )
-  .forEach(
-    button => {
-
-      button.addEventListener(
-        "click",
-        () => {
-
-          const sortKey =
-            button.dataset.sort;
-
-
-          if (
-            !SORT_CONFIG[
-              sortKey
-            ]
-          ) {
-
-            return;
-
-          }
-
-
-          if (
-            resultsSort.key ===
-            sortKey
-          ) {
-
-            resultsSort.direction =
-              resultsSort.direction ===
-              "asc"
-
-                ? "desc"
-
-                : "asc";
-
-          } else {
-
-            resultsSort.key =
-              sortKey;
-
-
-            resultsSort.direction =
-              SORT_CONFIG[
-                sortKey
-              ].defaultDirection;
-
-          }
-
-
-          renderResultsTable();
-
-        }
-      );
-
-    }
-  );
-
-
-
-/* =========================================================
-   PLAYER TEST BUTTONS
-========================================================= */
-
-playersTableBody.addEventListener(
-  "click",
-  event => {
-
-    const button =
-      event.target.closest(
-        ".test-button"
-      );
-
-
-    if (button) {
-
-      openPlayerTest(
-        button.dataset.playerId
-      );
-
-    }
-
-  }
-);
-
-
-resultsTableBody.addEventListener(
-  "click",
-  event => {
-
-    const button =
-      event.target.closest(
-        ".test-button"
-      );
-
-
-    if (button) {
-
-      openPlayerTest(
-        button.dataset.playerId
-      );
-
-    }
-
-  }
-);
-
-
-
-/* =========================================================
-   ADD PLAYER EVENTS
-========================================================= */
-
-addPlayerButton.addEventListener(
-  "click",
-  openAddPlayerModal
-);
-
-
-closeAddPlayerButton.addEventListener(
-  "click",
-  closeAddPlayerModal
-);
-
-
-savePlayerButton.addEventListener(
-  "click",
-  addPlayer
-);
-
-
-addPlayerModal.addEventListener(
-  "click",
-  event => {
-
-    if (
-      event.target ===
-      addPlayerModal
-    ) {
-
-      closeAddPlayerModal();
-
-    }
-
-  }
-);
-
-
-
-/* =========================================================
-   DRAWER EVENTS
-========================================================= */
-
-indexButton.addEventListener(
-  "click",
-  openPlayerDrawer
-);
-
-
-closeDrawerButton.addEventListener(
-  "click",
-  closePlayerDrawer
-);
-
-
-drawerBackdrop.addEventListener(
-  "click",
-  closePlayerDrawer
-);
-
-
-drawerSearch.addEventListener(
-  "input",
-  renderPlayerDrawer
-);
-
-
-drawerPlayerList.addEventListener(
-  "click",
-  event => {
-
-    const button =
-      event.target.closest(
-        ".drawer-player-button"
-      );
-
-
-    if (button) {
-
-      openPlayerTest(
-        button.dataset.playerId
-      );
-
-    }
-
-  }
-);
-
-
-
-/* =========================================================
-   MEASUREMENT ENTRY BUTTONS
-========================================================= */
-
-document
-  .querySelectorAll(
-    ".add-attempt-button"
-  )
-  .forEach(
-    button => {
-
-      button.addEventListener(
-        "click",
-        () =>
-          openAttemptCalculator(
-            button
-          )
-      );
-
-    }
-  );
-
-
-
-/* =========================================================
-   VOID ATTEMPT
-========================================================= */
-
-document.addEventListener(
-  "click",
-
-  async event => {
-
-    const button =
-      event.target.closest(
-        ".delete-attempt"
-      );
-
-
-    if (!button) {
-
-      return;
-
-    }
-
-
-    const attempt =
-      attempts.find(
-        item =>
-          item.id ===
-          button.dataset.attemptId
-      );
-
-
-    if (!attempt) {
-
-      return;
-
-    }
-
-
-    button.disabled = true;
-
-    button.textContent =
-      "VOIDING...";
-
-
-    try {
-
-      await voidAttempt(
-        attempt
-      );
-
-    } catch (error) {
-
-      console.error(
-        "Could not void attempt:",
-        error
-      );
-
-      button.disabled = false;
-
-      button.textContent =
-        "VOID";
-
-      alert(
-        "Entry could not be voided."
-      );
-
-    }
-
-  }
-);
-
-
-
-/* =========================================================
-   CALCULATOR EVENTS
-========================================================= */
-
-calculatorButtons.forEach(
-  button => {
-
-    button.addEventListener(
-      "click",
-      () =>
-        calculatorKeyPress(
-          button.dataset.key
-        )
-    );
-
-  }
-);
-
-
-calculatorSaveButton.addEventListener(
-  "click",
-  saveCalculatorResult
-);
-
-
-closeCalculatorButton.addEventListener(
-  "click",
-  closeCalculator
-);
-
-
-numberModal.addEventListener(
-  "click",
-  event => {
-
-    if (
-      event.target ===
-      numberModal
-    ) {
-
-      closeCalculator();
-
-    }
-
-  }
-);
-
-
-
-/* =========================================================
-   SQUAT EVENTS
-========================================================= */
-
-squatPassButton.addEventListener(
-  "click",
-  () =>
-    saveSquatStatus(
-      "PASS"
-    )
-);
-
-
-squatFailButton.addEventListener(
-  "click",
-  () =>
-    saveSquatStatus(
-      "FAIL"
-    )
-);
-
-
-squatNotes.addEventListener(
-  "input",
-  queueSquatNotesSave
-);
-
-
-
-/* =========================================================
-   KEYBOARD CALCULATOR
-========================================================= */
-
-document.addEventListener(
-  "keydown",
-  event => {
-
-    if (
-      event.key === "Escape"
-    ) {
-
-      closeCalculator();
-
-      closeAddPlayerModal();
-
-      closePlayerDrawer();
-
-      return;
-
-    }
-
-
-    if (
-      !numberModal
-        .classList
-        .contains("show")
-    ) {
-
-      return;
-
-    }
-
-
-    if (
-      /^[0-9]$/.test(
-        event.key
-      )
-    ) {
-
-      calculatorKeyPress(
-        event.key
-      );
-
-      return;
-
-    }
-
-
-    if (
-      event.key === "."
-    ) {
-
-      calculatorKeyPress(".");
-
-      return;
-
-    }
-
-
-    if (
-      event.key ===
-      "Backspace"
-    ) {
-
-      calculatorKeyPress(
-        "backspace"
-      );
-
-      return;
-
-    }
-
-
-    if (
-      event.key ===
-      "Enter"
-    ) {
-
-      saveCalculatorResult();
-
-    }
-
-  }
-);
-
-
-
-/* =========================================================
-   START
-========================================================= */
-
-showLogin();
