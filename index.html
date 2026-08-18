@@ -1,24 +1,43 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#07111f" />
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+
+  <meta
+    name="theme-color"
+    content="#07111f"
+  />
 
   <title>Ninth Inning Combine</title>
 
   <link
     rel="stylesheet"
-    href="./style.css?v=20260818-20"
+    href="./style.css?v=20260818-30"
   />
 
-  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <script
+    src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"
+  ></script>
+
 </head>
 
 <body>
 
-  <!-- LOGIN -->
-  <section id="loginScreen" class="login-screen">
+
+  <!-- ======================================================
+       LOGIN
+  ======================================================= -->
+
+  <section
+    id="loginScreen"
+    class="login-screen"
+  >
 
     <div class="login-card">
 
@@ -78,8 +97,18 @@
   </section>
 
 
-  <!-- APP -->
-  <div id="app" class="hidden">
+
+  <!-- ======================================================
+       APP
+  ======================================================= -->
+
+  <div
+    id="app"
+    class="hidden"
+  >
+
+
+    <!-- HEADER -->
 
     <header class="topbar">
 
@@ -94,6 +123,7 @@
         </h1>
 
       </div>
+
 
       <div class="user-area">
 
@@ -123,6 +153,9 @@
     </header>
 
 
+
+    <!-- NAVIGATION -->
+
     <nav class="nav-tabs">
 
       <button
@@ -144,10 +177,14 @@
     </nav>
 
 
+
     <main class="app-shell">
 
 
-      <!-- ATHLETES -->
+      <!-- ====================================================
+           ATHLETES
+      ===================================================== -->
+
       <section
         id="athletesView"
         class="view active"
@@ -166,6 +203,7 @@
             </h2>
 
           </div>
+
 
           <div class="heading-actions">
 
@@ -241,6 +279,7 @@
 
           </div>
 
+
           <div
             id="athleteEmpty"
             class="empty-state hidden"
@@ -253,7 +292,11 @@
       </section>
 
 
-      <!-- TESTING -->
+
+      <!-- ====================================================
+           TESTING
+      ===================================================== -->
+
       <section
         id="testingView"
         class="view"
@@ -268,6 +311,7 @@
           >
             ☰ Index
           </button>
+
 
           <div class="testing-player-title">
 
@@ -286,13 +330,26 @@
 
           </div>
 
-          <button
-            id="backToAthletesButton"
-            class="button button-secondary"
-            type="button"
-          >
-            Athletes
-          </button>
+
+          <div class="testing-header-actions">
+
+            <button
+              id="deletePlayerButton"
+              class="button delete-player-button hidden"
+              type="button"
+            >
+              Delete Player
+            </button>
+
+            <button
+              id="backToAthletesButton"
+              class="button button-secondary"
+              type="button"
+            >
+              Athletes
+            </button>
+
+          </div>
 
         </div>
 
@@ -305,7 +362,11 @@
       </section>
 
 
-      <!-- RESULTS -->
+
+      <!-- ====================================================
+           RESULTS
+      ===================================================== -->
+
       <section
         id="resultsView"
         class="view"
@@ -324,6 +385,15 @@
             </h2>
 
           </div>
+
+
+          <button
+            id="exportResultsButton"
+            class="button"
+            type="button"
+          >
+            Export Excel
+          </button>
 
         </div>
 
@@ -348,10 +418,13 @@
 
           </div>
 
+
           <p class="small-note">
-            One row per athlete. Click any event heading to sort that event.
-            Pulldown and Exit Velo show max first with average beneath it.
+            One row per athlete. Click any event heading to sort.
+            Highest-result events sort high-to-low by default.
+            Timed events sort low-to-high by default.
           </p>
+
 
           <div class="table-wrap results-matrix-wrap">
 
@@ -364,6 +437,7 @@
             </table>
 
           </div>
+
 
           <div
             id="resultsEmpty"
@@ -381,11 +455,16 @@
   </div>
 
 
-  <!-- PLAYER INDEX -->
+
+  <!-- ======================================================
+       PLAYER INDEX DRAWER
+  ======================================================= -->
+
   <div
     id="indexBackdrop"
     class="drawer-backdrop hidden"
   ></div>
+
 
   <aside
     id="playerIndexDrawer"
@@ -416,11 +495,13 @@
 
     </div>
 
+
     <input
       id="indexSearch"
       type="search"
       placeholder="Search player…"
     />
+
 
     <div
       id="indexPlayerList"
@@ -430,7 +511,11 @@
   </aside>
 
 
-  <!-- ADD PLAYER -->
+
+  <!-- ======================================================
+       ADD PLAYER
+  ======================================================= -->
+
   <div
     id="addPlayerModal"
     class="modal-backdrop hidden"
@@ -480,6 +565,7 @@
 
           </div>
 
+
           <div>
 
             <label for="newLastName">
@@ -492,6 +578,7 @@
             />
 
           </div>
+
 
           <div>
 
@@ -509,10 +596,12 @@
 
         </div>
 
+
         <div
           id="addPlayerMessage"
           class="message hidden"
         ></div>
+
 
         <div class="modal-actions">
 
@@ -540,7 +629,11 @@
   </div>
 
 
-  <!-- UPLOAD PLAYERS -->
+
+  <!-- ======================================================
+       UPLOAD PLAYERS
+  ======================================================= -->
+
   <div
     id="uploadModal"
     class="modal-backdrop hidden"
@@ -572,12 +665,15 @@
 
       </div>
 
+
       <p class="muted">
-        CSV, XLS or XLSX. Required columns:
+        Accepted files: CSV, XLS and XLSX.
+        Required columns:
         <strong>First Name</strong>,
         <strong>Last Name</strong>,
         <strong>Age Group</strong>.
       </p>
+
 
       <div class="upload-actions">
 
@@ -588,6 +684,7 @@
         >
           Download Template
         </button>
+
 
         <label class="button file-button">
 
@@ -603,6 +700,7 @@
 
       </div>
 
+
       <div
         id="selectedFileName"
         class="file-name"
@@ -610,10 +708,12 @@
         No file selected.
       </div>
 
+
       <div
         id="importMessage"
         class="message hidden"
       ></div>
+
 
       <div
         id="importSummary"
@@ -621,26 +721,58 @@
       >
 
         <div class="summary-card">
-          <strong id="summaryTotal">0</strong>
-          <span>Rows</span>
+
+          <strong id="summaryTotal">
+            0
+          </strong>
+
+          <span>
+            Rows
+          </span>
+
         </div>
 
-        <div class="summary-card">
-          <strong id="summaryNew">0</strong>
-          <span>New</span>
-        </div>
 
         <div class="summary-card">
-          <strong id="summaryDuplicate">0</strong>
-          <span>Duplicates</span>
+
+          <strong id="summaryNew">
+            0
+          </strong>
+
+          <span>
+            New
+          </span>
+
         </div>
 
+
         <div class="summary-card">
-          <strong id="summaryInvalid">0</strong>
-          <span>Invalid</span>
+
+          <strong id="summaryDuplicate">
+            0
+          </strong>
+
+          <span>
+            Duplicates
+          </span>
+
+        </div>
+
+
+        <div class="summary-card">
+
+          <strong id="summaryInvalid">
+            0
+          </strong>
+
+          <span>
+            Invalid
+          </span>
+
         </div>
 
       </div>
+
 
       <div
         id="previewSection"
@@ -654,10 +786,23 @@
             <thead>
 
               <tr>
-                <th>First Name</th>
-                <th>Last Name</th>
-                <th>Age Group</th>
-                <th>Status</th>
+
+                <th>
+                  First Name
+                </th>
+
+                <th>
+                  Last Name
+                </th>
+
+                <th>
+                  Age Group
+                </th>
+
+                <th>
+                  Status
+                </th>
+
               </tr>
 
             </thead>
@@ -669,6 +814,7 @@
         </div>
 
       </div>
+
 
       <div class="modal-actions">
 
@@ -696,7 +842,11 @@
   </div>
 
 
-  <!-- NUMBER KEYPAD -->
+
+  <!-- ======================================================
+       NUMBER PAD
+  ======================================================= -->
+
   <div
     id="numberPadModal"
     class="modal-backdrop hidden"
@@ -729,6 +879,7 @@
 
       </div>
 
+
       <div class="number-display-wrap">
 
         <div
@@ -744,6 +895,7 @@
         ></div>
 
       </div>
+
 
       <div
         id="numberPadKeys"
@@ -768,6 +920,7 @@
 
       </div>
 
+
       <button
         id="saveNumberPadButton"
         class="button full-button"
@@ -781,14 +934,18 @@
   </div>
 
 
+
+  <!-- TOAST -->
+
   <div
     id="toast"
     class="toast hidden"
   ></div>
 
+
   <script
     type="module"
-    src="./script.js?v=20260818-20"
+    src="./script.js?v=20260818-30"
   ></script>
 
 </body>
