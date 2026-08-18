@@ -1,50 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
   <meta charset="UTF-8" />
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  />
-
-  <meta
-    name="theme-color"
-    content="#07111f"
-  />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#07111f" />
 
   <title>Ninth Inning Combine</title>
 
-
-  <!-- IMPORTANT:
-       Absolute GitHub Pages path -->
   <link
     rel="stylesheet"
-    href="/NIcombine/style.css?v=20260818-10"
+    href="./style.css?v=20260818-20"
   />
 
-
-  <!-- Excel / CSV reader -->
-  <script
-    src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"
-  ></script>
-
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 </head>
-
 
 <body>
 
-
-  <!-- ======================================================
-       LOGIN
-  ======================================================= -->
-
-  <section
-    id="loginScreen"
-    class="login-screen"
-  >
+  <!-- LOGIN -->
+  <section id="loginScreen" class="login-screen">
 
     <div class="login-card">
 
@@ -52,23 +26,19 @@
         NINTH INNING
       </div>
 
-
       <h1>
         Combine Tracker
       </h1>
 
-
       <p class="muted">
         Sign in with your coach account.
       </p>
-
 
       <form id="loginForm">
 
         <label for="loginEmail">
           Email
         </label>
-
 
         <input
           id="loginEmail"
@@ -77,11 +47,9 @@
           required
         />
 
-
         <label for="loginPassword">
           Password
         </label>
-
 
         <input
           id="loginPassword"
@@ -90,8 +58,8 @@
           required
         />
 
-
         <button
+          id="loginButton"
           class="button full-button"
           type="submit"
         >
@@ -99,7 +67,6 @@
         </button>
 
       </form>
-
 
       <div
         id="loginMessage"
@@ -111,18 +78,8 @@
   </section>
 
 
-
-  <!-- ======================================================
-       APP
-  ======================================================= -->
-
-  <div
-    id="app"
-    class="hidden"
-  >
-
-
-    <!-- HEADER -->
+  <!-- APP -->
+  <div id="app" class="hidden">
 
     <header class="topbar">
 
@@ -132,20 +89,17 @@
           NINTH INNING
         </div>
 
-
         <h1>
           Combine Tracker
         </h1>
 
       </div>
 
-
       <div class="user-area">
 
         <div class="user-info">
 
           <span id="loggedInEmail"></span>
-
 
           <span
             id="adminBadge"
@@ -156,10 +110,10 @@
 
         </div>
 
-
         <button
           id="logoutButton"
           class="button button-secondary"
+          type="button"
         >
           Sign Out
         </button>
@@ -169,24 +123,20 @@
     </header>
 
 
-
-    <!-- ======================================================
-         MAIN NAVIGATION
-    ======================================================= -->
-
     <nav class="nav-tabs">
 
       <button
         class="nav-tab active"
         data-view="athletesView"
+        type="button"
       >
         Athletes
       </button>
 
-
       <button
         class="nav-tab"
         data-view="resultsView"
+        type="button"
       >
         Results
       </button>
@@ -194,19 +144,14 @@
     </nav>
 
 
-
     <main class="app-shell">
 
 
-      <!-- ====================================================
-           ATHLETES
-      ===================================================== -->
-
+      <!-- ATHLETES -->
       <section
         id="athletesView"
         class="view active"
       >
-
 
         <div class="section-heading">
 
@@ -216,27 +161,26 @@
               PLAYER INDEX
             </p>
 
-
             <h2>
               Athletes
             </h2>
 
           </div>
 
-
           <div class="heading-actions">
 
             <button
               id="openAddPlayerButton"
               class="button button-secondary"
+              type="button"
             >
               Add Player
             </button>
 
-
             <button
               id="uploadPlayersButton"
               class="button hidden"
+              type="button"
             >
               Upload Players
             </button>
@@ -246,9 +190,7 @@
         </div>
 
 
-
         <div class="panel">
-
 
           <div class="toolbar">
 
@@ -257,7 +199,6 @@
               type="search"
               placeholder="Search athletes…"
             />
-
 
             <select id="athleteAgeFilter">
 
@@ -268,7 +209,6 @@
             </select>
 
           </div>
-
 
 
           <div class="table-wrap">
@@ -283,11 +223,9 @@
                     First Name
                   </th>
 
-
                   <th data-athlete-sort="lastName">
                     Last Name
                   </th>
-
 
                   <th data-athlete-sort="ageGroup">
                     Age Group
@@ -297,14 +235,11 @@
 
               </thead>
 
-
               <tbody id="athleteTableBody"></tbody>
 
             </table>
 
           </div>
-
-
 
           <div
             id="athleteEmpty"
@@ -318,28 +253,21 @@
       </section>
 
 
-
-      <!-- ====================================================
-           TESTING
-      ===================================================== -->
-
+      <!-- TESTING -->
       <section
         id="testingView"
-        class="view testing-view"
+        class="view"
       >
-
 
         <div class="testing-topbar">
 
-
           <button
             id="openIndexButton"
-            class="button button-secondary index-button"
+            class="button button-secondary"
+            type="button"
           >
             ☰ Index
           </button>
-
-
 
           <div class="testing-player-title">
 
@@ -347,11 +275,9 @@
               TESTING
             </p>
 
-
             <h2 id="testingPlayerName">
               —
             </h2>
-
 
             <span
               id="testingPlayerAge"
@@ -360,17 +286,15 @@
 
           </div>
 
-
-
           <button
             id="backToAthletesButton"
             class="button button-secondary"
+            type="button"
           >
             Athletes
           </button>
 
         </div>
-
 
 
         <div
@@ -381,16 +305,11 @@
       </section>
 
 
-
-      <!-- ====================================================
-           RESULTS
-      ===================================================== -->
-
+      <!-- RESULTS -->
       <section
         id="resultsView"
         class="view"
       >
-
 
         <div class="section-heading">
 
@@ -399,7 +318,6 @@
             <p class="kicker">
               RESULTS
             </p>
-
 
             <h2>
               Combine Results
@@ -410,9 +328,7 @@
         </div>
 
 
-
         <div class="panel">
-
 
           <div class="toolbar">
 
@@ -421,7 +337,6 @@
               type="search"
               placeholder="Search athlete…"
             />
-
 
             <select id="resultsAgeFilter">
 
@@ -433,40 +348,22 @@
 
           </div>
 
-
-
           <p class="small-note">
-
-            One row per athlete.
-
-            Click any event heading to sort that event.
-
-            Pulldown and Exit Velo show max first
-            with average beneath it.
-
+            One row per athlete. Click any event heading to sort that event.
+            Pulldown and Exit Velo show max first with average beneath it.
           </p>
 
+          <div class="table-wrap results-matrix-wrap">
 
-
-          <div
-            class="table-wrap results-matrix-wrap"
-          >
-
-            <table
-              id="resultsMatrix"
-              class="results-matrix"
-            >
+            <table class="results-matrix">
 
               <thead id="resultsMatrixHead"></thead>
-
 
               <tbody id="resultsMatrixBody"></tbody>
 
             </table>
 
           </div>
-
-
 
           <div
             id="resultsEmpty"
@@ -479,28 +376,21 @@
 
       </section>
 
-
     </main>
 
   </div>
 
 
-
-  <!-- ======================================================
-       PLAYER INDEX DRAWER
-  ======================================================= -->
-
+  <!-- PLAYER INDEX -->
   <div
     id="indexBackdrop"
     class="drawer-backdrop hidden"
   ></div>
 
-
   <aside
     id="playerIndexDrawer"
     class="player-index-drawer hidden"
   >
-
 
     <div class="drawer-header">
 
@@ -510,31 +400,27 @@
           PLAYER INDEX
         </p>
 
-
         <h2>
           Switch Player
         </h2>
 
       </div>
 
-
       <button
         id="closeIndexButton"
         class="icon-button"
+        type="button"
       >
         ×
       </button>
 
     </div>
 
-
-
     <input
       id="indexSearch"
       type="search"
       placeholder="Search player…"
     />
-
 
     <div
       id="indexPlayerList"
@@ -544,19 +430,13 @@
   </aside>
 
 
-
-  <!-- ======================================================
-       ADD PLAYER MODAL
-  ======================================================= -->
-
+  <!-- ADD PLAYER -->
   <div
     id="addPlayerModal"
     class="modal-backdrop hidden"
   >
 
-
     <div class="modal-card modal-small">
-
 
       <div class="modal-header">
 
@@ -566,17 +446,16 @@
             ROSTER
           </p>
 
-
           <h2>
             Add Player
           </h2>
 
         </div>
 
-
         <button
           class="icon-button"
           data-close="addPlayerModal"
+          type="button"
         >
           ×
         </button>
@@ -584,19 +463,15 @@
       </div>
 
 
-
       <form id="addPlayerForm">
 
-
         <div class="form-grid">
-
 
           <div>
 
             <label for="newFirstName">
               First Name
             </label>
-
 
             <input
               id="newFirstName"
@@ -605,14 +480,11 @@
 
           </div>
 
-
-
           <div>
 
             <label for="newLastName">
               Last Name
             </label>
-
 
             <input
               id="newLastName"
@@ -621,14 +493,11 @@
 
           </div>
 
-
-
           <div>
 
             <label for="newAgeGroup">
               Age Group
             </label>
-
 
             <input
               id="newAgeGroup"
@@ -640,30 +509,24 @@
 
         </div>
 
-
-
         <div
           id="addPlayerMessage"
           class="message hidden"
         ></div>
 
-
-
         <div class="modal-actions">
 
-
           <button
-            type="button"
             class="button button-secondary"
             data-close="addPlayerModal"
+            type="button"
           >
             Cancel
           </button>
 
-
           <button
-            type="submit"
             class="button"
+            type="submit"
           >
             Add Player
           </button>
@@ -677,19 +540,13 @@
   </div>
 
 
-
-  <!-- ======================================================
-       UPLOAD PLAYERS MODAL
-  ======================================================= -->
-
+  <!-- UPLOAD PLAYERS -->
   <div
     id="uploadModal"
     class="modal-backdrop hidden"
   >
 
-
     <div class="modal-card">
-
 
       <div class="modal-header">
 
@@ -699,41 +556,30 @@
             ADMIN
           </p>
 
-
           <h2>
             Upload Players
           </h2>
 
         </div>
 
-
         <button
           class="icon-button"
           data-close="uploadModal"
+          type="button"
         >
           ×
         </button>
 
       </div>
 
-
-
       <p class="muted">
-
-        Accepted files:
-        CSV, XLS and XLSX.
-
-        Required columns:
+        CSV, XLS or XLSX. Required columns:
         <strong>First Name</strong>,
         <strong>Last Name</strong>,
         <strong>Age Group</strong>.
-
       </p>
 
-
-
       <div class="upload-actions">
-
 
         <button
           id="downloadTemplateButton"
@@ -743,12 +589,9 @@
           Download Template
         </button>
 
-
-
         <label class="button file-button">
 
           Choose File
-
 
           <input
             id="playerFileInput"
@@ -760,8 +603,6 @@
 
       </div>
 
-
-
       <div
         id="selectedFileName"
         class="file-name"
@@ -769,121 +610,59 @@
         No file selected.
       </div>
 
-
-
       <div
         id="importMessage"
         class="message hidden"
       ></div>
-
-
 
       <div
         id="importSummary"
         class="summary-grid hidden"
       >
 
-
         <div class="summary-card">
-
-          <strong id="summaryTotal">
-            0
-          </strong>
-
-          <span>
-            Rows
-          </span>
-
+          <strong id="summaryTotal">0</strong>
+          <span>Rows</span>
         </div>
 
-
-
         <div class="summary-card">
-
-          <strong id="summaryNew">
-            0
-          </strong>
-
-          <span>
-            New
-          </span>
-
+          <strong id="summaryNew">0</strong>
+          <span>New</span>
         </div>
 
-
-
         <div class="summary-card">
-
-          <strong id="summaryDuplicate">
-            0
-          </strong>
-
-          <span>
-            Duplicates
-          </span>
-
+          <strong id="summaryDuplicate">0</strong>
+          <span>Duplicates</span>
         </div>
 
-
-
         <div class="summary-card">
-
-          <strong id="summaryInvalid">
-            0
-          </strong>
-
-          <span>
-            Invalid
-          </span>
-
+          <strong id="summaryInvalid">0</strong>
+          <span>Invalid</span>
         </div>
 
       </div>
-
-
 
       <div
         id="previewSection"
         class="hidden"
       >
 
-
         <div class="table-wrap preview-table">
 
-
           <table>
-
 
             <thead>
 
               <tr>
-
-                <th>
-                  First Name
-                </th>
-
-
-                <th>
-                  Last Name
-                </th>
-
-
-                <th>
-                  Age Group
-                </th>
-
-
-                <th>
-                  Status
-                </th>
-
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>Age Group</th>
+                <th>Status</th>
               </tr>
 
             </thead>
 
-
             <tbody id="previewBody"></tbody>
-
 
           </table>
 
@@ -891,19 +670,15 @@
 
       </div>
 
-
-
       <div class="modal-actions">
 
-
         <button
-          type="button"
           class="button button-secondary"
           data-close="uploadModal"
+          type="button"
         >
           Cancel
         </button>
-
 
         <button
           id="importPlayersConfirmButton"
@@ -921,19 +696,13 @@
   </div>
 
 
-
-  <!-- ======================================================
-       NUMBER KEYPAD
-  ======================================================= -->
-
+  <!-- NUMBER KEYPAD -->
   <div
     id="numberPadModal"
     class="modal-backdrop hidden"
   >
 
-
     <div class="number-pad-card">
-
 
       <div class="modal-header">
 
@@ -944,24 +713,21 @@
             class="kicker"
           ></p>
 
-
           <h2 id="numberPadTitle">
             Enter Result
           </h2>
 
         </div>
 
-
         <button
           class="icon-button"
           data-close="numberPadModal"
+          type="button"
         >
           ×
         </button>
 
       </div>
-
-
 
       <div class="number-display-wrap">
 
@@ -972,7 +738,6 @@
           —
         </div>
 
-
         <div
           id="numberPadUnit"
           class="number-unit"
@@ -980,72 +745,33 @@
 
       </div>
 
-
-
       <div
         id="numberPadKeys"
         class="number-pad-grid"
       >
 
+        <button data-key="7" type="button">7</button>
+        <button data-key="8" type="button">8</button>
+        <button data-key="9" type="button">9</button>
 
-        <button data-key="7">
-          7
-        </button>
+        <button data-key="4" type="button">4</button>
+        <button data-key="5" type="button">5</button>
+        <button data-key="6" type="button">6</button>
 
-        <button data-key="8">
-          8
-        </button>
+        <button data-key="1" type="button">1</button>
+        <button data-key="2" type="button">2</button>
+        <button data-key="3" type="button">3</button>
 
-        <button data-key="9">
-          9
-        </button>
-
-
-        <button data-key="4">
-          4
-        </button>
-
-        <button data-key="5">
-          5
-        </button>
-
-        <button data-key="6">
-          6
-        </button>
-
-
-        <button data-key="1">
-          1
-        </button>
-
-        <button data-key="2">
-          2
-        </button>
-
-        <button data-key="3">
-          3
-        </button>
-
-
-        <button data-key=".">
-          .
-        </button>
-
-        <button data-key="0">
-          0
-        </button>
-
-        <button data-key="back">
-          ⌫
-        </button>
+        <button data-key="." type="button">.</button>
+        <button data-key="0" type="button">0</button>
+        <button data-key="back" type="button">⌫</button>
 
       </div>
-
-
 
       <button
         id="saveNumberPadButton"
         class="button full-button"
+        type="button"
       >
         Save Entry
       </button>
@@ -1055,31 +781,15 @@
   </div>
 
 
-
-  <!-- ======================================================
-       TOAST
-  ======================================================= -->
-
   <div
     id="toast"
     class="toast hidden"
   ></div>
 
-
-
-  <!-- ======================================================
-       MAIN JAVASCRIPT
-
-       IMPORTANT:
-       Absolute GitHub Pages path
-  ======================================================= -->
-
   <script
     type="module"
-    src="/NIcombine/script.js?v=20260818-10"
+    src="./script.js?v=20260818-20"
   ></script>
 
-
 </body>
-
 </html>
