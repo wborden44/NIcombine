@@ -120,11 +120,17 @@ body.modal-open {
 
 .login-card {
 
-  width: min(420px,100%);
+  width:
+    min(
+      420px,
+      100%
+    );
 
   padding: 2rem;
 
-  border: 1px solid var(--line);
+  border:
+    1px solid
+    var(--line);
 
   border-radius: 1.2rem;
 
@@ -135,7 +141,8 @@ body.modal-open {
       var(--panel)
     );
 
-  box-shadow: var(--shadow);
+  box-shadow:
+    var(--shadow);
 
 }
 
@@ -183,7 +190,9 @@ body.modal-open {
 
   padding: 1.15rem 2rem;
 
-  border-bottom: 1px solid var(--line);
+  border-bottom:
+    1px solid
+    var(--line);
 
 }
 
@@ -251,7 +260,8 @@ body.modal-open {
 
   color: var(--green);
 
-  background: rgba(45,212,139,.12);
+  background:
+    rgba(45,212,139,.12);
 
   font-size: .6rem;
 
@@ -261,7 +271,7 @@ body.modal-open {
 
 
 
-/* NAVIGATION */
+/* NAV */
 
 .nav-tabs {
 
@@ -277,11 +287,15 @@ body.modal-open {
 
   padding: .65rem 2rem;
 
-  border-bottom: 1px solid var(--line);
+  border-bottom:
+    1px solid
+    var(--line);
 
-  background: rgba(7,17,31,.92);
+  background:
+    rgba(7,17,31,.92);
 
-  backdrop-filter: blur(10px);
+  backdrop-filter:
+    blur(10px);
 
 }
 
@@ -296,7 +310,8 @@ body.modal-open {
 
   color: var(--muted);
 
-  background: transparent;
+  background:
+    transparent;
 
   font-weight: 850;
 
@@ -307,7 +322,8 @@ body.modal-open {
 
   color: #fff;
 
-  background: var(--panel2);
+  background:
+    var(--panel2);
 
 }
 
@@ -317,10 +333,11 @@ body.modal-open {
 
 .app-shell {
 
-  width: min(
-    1260px,
-    calc(100% - 2rem)
-  );
+  width:
+    min(
+      1260px,
+      calc(100% - 2rem)
+    );
 
   margin: 0 auto;
 
@@ -359,11 +376,12 @@ body.modal-open {
 
   margin: 0;
 
-  font-size: clamp(
-    1.55rem,
-    4vw,
-    2.35rem
-  );
+  font-size:
+    clamp(
+      1.55rem,
+      4vw,
+      2.35rem
+    );
 
   letter-spacing: -.04em;
 
@@ -385,7 +403,9 @@ body.modal-open {
 .testing-topbar,
 .number-pad-card {
 
-  border: 1px solid var(--line);
+  border:
+    1px solid
+    var(--line);
 
   background:
     linear-gradient(
@@ -394,7 +414,8 @@ body.modal-open {
       rgba(14,29,48,.96)
     );
 
-  box-shadow: var(--shadow);
+  box-shadow:
+    var(--shadow);
 
 }
 
@@ -436,7 +457,9 @@ textarea {
 
   padding: .75rem .85rem;
 
-  border: 1px solid var(--line);
+  border:
+    1px solid
+    var(--line);
 
   border-radius: .7rem;
 
@@ -444,7 +467,8 @@ textarea {
 
   color: #fff;
 
-  background: rgba(0,0,0,.18);
+  background:
+    rgba(0,0,0,.18);
 
 }
 
@@ -458,7 +482,8 @@ input:focus,
 select:focus,
 textarea:focus {
 
-  border-color: rgba(35,167,255,.75);
+  border-color:
+    rgba(35,167,255,.75);
 
   box-shadow:
     0 0 0 3px rgba(35,167,255,.1);
@@ -504,21 +529,12 @@ select option {
 
   color: var(--text);
 
-  background: var(--panel2);
-
-  border: 1px solid var(--line);
-
-}
-
-
-.danger-button {
-
   background:
-    linear-gradient(
-      180deg,
-      #ff6e80,
-      #cf3047
-    );
+    var(--panel2);
+
+  border:
+    1px solid
+    var(--line);
 
 }
 
@@ -568,7 +584,9 @@ select option {
 
   overflow: auto;
 
-  border: 1px solid var(--line);
+  border:
+    1px solid
+    var(--line);
 
   border-radius: .8rem;
 
@@ -581,7 +599,7 @@ table {
 
   border-collapse: collapse;
 
-  min-width: 700px;
+  min-width: 560px;
 
 }
 
@@ -591,7 +609,9 @@ td {
 
   padding: .82rem .85rem;
 
-  border-bottom: 1px solid var(--line);
+  border-bottom:
+    1px solid
+    var(--line);
 
   text-align: left;
 
@@ -631,7 +651,46 @@ tbody tr:last-child td {
 
 
 tbody tr:hover {
-  background: rgba(255,255,255,.025);
+
+  background:
+    rgba(255,255,255,.025);
+
+}
+
+
+.athletes-table {
+  min-width: 460px;
+}
+
+
+.athlete-name-link {
+
+  border: 0;
+
+  padding: .25rem 0;
+
+  color: #fff;
+
+  background:
+    transparent;
+
+  font-weight: 850;
+
+  text-align: left;
+
+  text-decoration:
+    underline;
+
+  text-decoration-color:
+    rgba(35,167,255,.45);
+
+  text-underline-offset: 4px;
+
+}
+
+
+.athlete-name-link:hover {
+  color: var(--blue);
 }
 
 
@@ -647,20 +706,12 @@ tbody tr:hover {
 
   color: var(--blue);
 
-  background: rgba(35,167,255,.10);
+  background:
+    rgba(35,167,255,.10);
 
   font-size: .75rem;
 
   font-weight: 900;
-
-}
-
-
-.test-player-button {
-
-  min-height: 36px;
-
-  padding: .48rem .8rem;
 
 }
 
@@ -677,7 +728,7 @@ tbody tr:hover {
 
 
 
-/* TESTING HEADER */
+/* TEST HEADER */
 
 .testing-topbar {
 
@@ -704,7 +755,8 @@ tbody tr:hover {
 
   border-radius: 1rem;
 
-  backdrop-filter: blur(10px);
+  backdrop-filter:
+    blur(10px);
 
 }
 
@@ -750,6 +802,19 @@ tbody tr:hover {
 
   padding: 1rem;
 
+}
+
+
+/*
+Broad Jump spans both columns.
+
+This lets Broad Jump appear first,
+then puts the two timed tests next
+to each other underneath it.
+*/
+
+.wide-test-card {
+  grid-column: 1 / -1;
 }
 
 
@@ -815,7 +880,7 @@ tbody tr:hover {
 
 
 
-/* MAX + AVG */
+/* MAX / AVG */
 
 .dual-stat {
 
@@ -835,11 +900,14 @@ tbody tr:hover {
 
   padding: .7rem;
 
-  border: 1px solid var(--line);
+  border:
+    1px solid
+    var(--line);
 
   border-radius: .75rem;
 
-  background: rgba(0,0,0,.12);
+  background:
+    rgba(0,0,0,.12);
 
 }
 
@@ -906,7 +974,7 @@ tbody tr:hover {
 
 
 
-/* PASS FAIL */
+/* PASS / FAIL */
 
 .pass-fail-grid {
 
@@ -965,20 +1033,20 @@ tbody tr:hover {
 
 
 
-/* TIMERS */
+/* TIMER */
 
 .timer-display {
 
-  margin: .3rem 0 .8rem;
+  margin: .3rem 0 1rem;
 
   font-variant-numeric:
     tabular-nums;
 
   font-size:
     clamp(
-      3rem,
-      8vw,
-      5.2rem
+      3.4rem,
+      9vw,
+      5.6rem
     );
 
   line-height: 1;
@@ -992,14 +1060,89 @@ tbody tr:hover {
 }
 
 
-.timer-buttons {
+/*
+One large timer button.
 
-  display: grid;
+START = blue
+STOP = red
+*/
 
-  grid-template-columns:
-    1fr 1fr 1fr;
+.timer-toggle-button {
 
-  gap: .55rem;
+  width: 100%;
+
+  min-height: 94px;
+
+  border: 0;
+
+  border-radius: 1rem;
+
+  color: #fff;
+
+  background:
+    linear-gradient(
+      180deg,
+      #2fbcff,
+      #087aca
+    );
+
+  box-shadow:
+    0 10px 28px
+    rgba(8,122,202,.25);
+
+  font-size: 1.55rem;
+
+  font-weight: 950;
+
+  letter-spacing: .08em;
+
+}
+
+
+.timer-toggle-button.running {
+
+  background:
+    linear-gradient(
+      180deg,
+      #ff7285,
+      #cf3047
+    );
+
+  box-shadow:
+    0 10px 28px
+    rgba(207,48,71,.28);
+
+}
+
+
+.timer-toggle-button:active {
+
+  transform:
+    translateY(1px);
+
+}
+
+
+.timer-reset-button {
+
+  width: 100%;
+
+  min-height: 42px;
+
+  margin-top: .55rem;
+
+  border:
+    1px solid
+    var(--line);
+
+  border-radius: .7rem;
+
+  color: var(--muted);
+
+  background:
+    rgba(0,0,0,.12);
+
+  font-weight: 850;
 
 }
 
@@ -1150,7 +1293,7 @@ tbody tr:hover {
 
 
 .results-matrix {
-  min-width: 1900px;
+  min-width: 1750px;
 }
 
 
@@ -1206,7 +1349,8 @@ tbody tr:hover {
 
   text-align: left;
 
-  text-decoration: underline;
+  text-decoration:
+    underline;
 
   text-decoration-color:
     rgba(35,167,255,.35);
@@ -1232,7 +1376,7 @@ tbody tr:hover {
 
 
 
-/* PLAYER INDEX DRAWER */
+/* INDEX DRAWER */
 
 .drawer-backdrop {
 
@@ -1277,7 +1421,8 @@ tbody tr:hover {
   background: #091625;
 
   box-shadow:
-    24px 0 60px rgba(0,0,0,.4);
+    24px 0 60px
+    rgba(0,0,0,.4);
 
 }
 
@@ -1345,7 +1490,8 @@ tbody tr:hover {
 
   color: var(--text);
 
-  background: transparent;
+  background:
+    transparent;
 
   text-align: left;
 
@@ -1455,7 +1601,8 @@ tbody tr:hover {
 
   color: #fff;
 
-  background: var(--panel2);
+  background:
+    var(--panel2);
 
   font-size: 1.35rem;
 
@@ -1515,7 +1662,7 @@ tbody tr:hover {
 
 
 
-/* IMPORT SUMMARY */
+/* IMPORT */
 
 .summary-grid {
 
@@ -1714,7 +1861,8 @@ tbody tr:hover {
 
   color: #fff;
 
-  background: var(--panel2);
+  background:
+    var(--panel2);
 
   font-size: 1.35rem;
 
@@ -1803,7 +1951,8 @@ tbody tr:hover {
 
   background: #fff;
 
-  box-shadow: var(--shadow);
+  box-shadow:
+    var(--shadow);
 
   text-align: center;
 
@@ -1905,6 +2054,11 @@ tbody tr:hover {
   }
 
 
+  .wide-test-card {
+    grid-column: auto;
+  }
+
+
   .testing-topbar {
 
     top: 58px;
@@ -1937,16 +2091,16 @@ tbody tr:hover {
   }
 
 
-  .timer-buttons {
+  /*
+  Extra-large timer button on phone.
+  */
 
-    grid-template-columns:
-      1fr 1fr;
+  .timer-toggle-button {
 
-  }
+    min-height: 110px;
 
+    font-size: 1.7rem;
 
-  .timer-buttons .timer-reset {
-    grid-column: 1 / -1;
   }
 
 
