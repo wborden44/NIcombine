@@ -1,14 +1,12 @@
 import {
   initializeApp
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-
 import {
   getAuth,
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
-
 import {
   getFirestore,
   collection,
@@ -24,45 +22,34 @@ import {
   writeBatch
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
-
 /* =========================================================
    FIREBASE
 ========================================================= */
 
 const firebaseConfig = {
-
   apiKey:
     "AIzaSyAJxv5u5UfWETCKQjEl3JLT1W2CMR17oeY",
-
   authDomain:
     "ni-kennesaw-combine.firebaseapp.com",
-
   projectId:
     "ni-kennesaw-combine",
-
   storageBucket:
     "ni-kennesaw-combine.firebasestorage.app",
-
   messagingSenderId:
     "963104261958",
-
   appId:
     "1:963104261958:web:1a3aa62125299084f30747"
-
 };
-
 
 const app =
   initializeApp(
     firebaseConfig
   );
 
-
 const auth =
   getAuth(
     app
   );
-
 
 const db =
   getFirestore(
@@ -77,10 +64,8 @@ const db =
 const ADMIN_EMAIL =
   "wes@ninthinningbaseball.com";
 
-
 const PLAYERS_COLLECTION =
   "players";
-
 
 const RESULTS_COLLECTION =
   "results";
@@ -95,203 +80,146 @@ const EVENTS = [
   {
     key:
       "pulldown",
-
     label:
       "Pulldown",
-
     unit:
       "mph",
-
     type:
       "number",
-
     direction:
       "high",
-
     maxAvg:
       true
   },
-
 
   {
     key:
       "exitVelo",
-
     label:
       "Exit Velo — Tee",
-
     shortLabel:
       "Exit Velo",
-
     unit:
       "mph",
-
     type:
       "number",
-
     direction:
       "high",
-
     maxAvg:
       true
   },
 
-
   {
     key:
       "internalRotation",
-
     label:
       "Internal Rotation",
-
     unit:
       "°",
-
     type:
       "number",
-
     direction:
       "high"
   },
-
 
   {
     key:
       "externalRotation",
-
     label:
       "External Rotation",
-
     unit:
       "°",
-
     type:
       "number",
-
     direction:
       "high"
   },
-
 
   {
     key:
       "dynoInternal",
-
     label:
       "Dyno Internal",
-
     unit:
       "lb",
-
     type:
       "number",
-
     direction:
       "high"
   },
-
 
   {
     key:
       "dynoExternal",
-
     label:
       "Dyno External",
-
     unit:
       "lb",
-
     type:
       "number",
-
     direction:
       "high"
   },
-
 
   {
     key:
       "gripLeft",
-
     label:
       "Grip Strength — Left",
-
     shortLabel:
       "Grip L",
-
     unit:
       "lb",
-
     type:
       "number",
-
     direction:
       "high"
   },
-
 
   {
     key:
       "gripRight",
-
     label:
       "Grip Strength — Right",
-
     shortLabel:
       "Grip R",
-
     unit:
       "lb",
-
     type:
       "number",
-
     direction:
       "high"
   },
-
 
   {
     key:
       "medBallLeft",
-
     label:
       "Med Ball Rotation — Left",
-
     shortLabel:
       "Med Ball L",
-
     unit:
       "in",
-
     type:
       "number",
-
     direction:
       "high"
   },
-
 
   {
     key:
       "medBallRight",
-
     label:
       "Med Ball Rotation — Right",
-
     shortLabel:
       "Med Ball R",
-
     unit:
       "in",
-
     type:
       "number",
-
     direction:
       "high"
   },
-
 
   /*
     THESE FOUR ARE PURPOSELY ORDERED:
@@ -303,79 +231,57 @@ const EVENTS = [
   {
     key:
       "broadJump",
-
     label:
       "Broad Jump",
-
     unit:
       "in",
-
     type:
       "number",
-
     direction:
       "high"
   },
 
-
   {
     key:
       "squatAssessment",
-
     label:
       "Squat Assessment",
-
     shortLabel:
       "Squat",
-
     unit:
       "",
-
     type:
       "passfail",
-
     direction:
       "passfail"
   },
 
-
   {
     key:
       "fiveTenFive",
-
     label:
       "5/10/5 Run",
-
     shortLabel:
       "5/10/5",
-
     unit:
       "sec",
-
     type:
       "timer",
-
     direction:
       "low"
   },
 
-
   {
     key:
       "tenYardShuttle",
-
     label:
       "10-Yard Shuttle",
-
     shortLabel:
       "10-Yd Shuttle",
-
     unit:
       "sec",
-
     type:
       "timer",
-
     direction:
       "low"
   }
@@ -390,52 +296,40 @@ const EVENTS = [
 let currentUser =
   null;
 
-
 let athletes =
   [];
-
 
 let results =
   [];
 
-
 let selectedAthlete =
   null;
 
+const selectedAthleteIds =
+  new Set();
 
 let importRows =
   [];
 
-
 let athleteSort = {
-
   key:
     "lastName",
-
   asc:
     true
-
 };
-
 
 let matrixSort = {
-
   key:
     "athlete",
-
   asc:
     true
-
 };
-
 
 let numberPadEventKey =
   null;
 
-
 let numberPadBuffer =
   "";
-
 
 const timerStates =
   {};
@@ -519,7 +413,6 @@ function applyTeamLabels() {
 
     athleteTeamHeader.dataset.athleteSort =
       "teamName";
-
 
     athleteTeamHeader.textContent =
       "Team";
@@ -862,6 +755,9 @@ onAuthStateChanged(
         null;
 
 
+      selectedAthleteIds.clear();
+
+
       return;
 
     }
@@ -927,6 +823,28 @@ onAuthStateChanged(
         "hidden",
         !isAdmin()
       );
+
+
+    [
+      "selectVisiblePlayersButton",
+      "clearPlayerSelectionButton",
+      "deleteSelectedPlayersButton",
+      "athleteSelectHeader"
+    ].forEach(
+      id =>
+        document
+          .getElementById(
+            id
+          )
+          ?.classList
+          .toggle(
+            "hidden",
+            !isAdmin()
+          )
+    );
+
+
+    updateBulkSelectionControls();
 
 
     await refreshData();
@@ -1162,13 +1080,6 @@ function normalizePlayer(
       ),
 
 
-    /*
-      NEW records use teamName.
-
-      Old ageGroup records remain readable so
-      previously imported players do not disappear.
-    */
-
     teamName:
       normalizeTeamName(
         data.teamName ??
@@ -1274,7 +1185,6 @@ function normalizeEventKey(
     pulldown:
       "pulldown",
 
-
     exitVelo:
       "exitVelo",
 
@@ -1284,13 +1194,11 @@ function normalizeEventKey(
     exitVelocity:
       "exitVelo",
 
-
     internalRotation:
       "internalRotation",
 
     internal_rotation:
       "internalRotation",
-
 
     externalRotation:
       "externalRotation",
@@ -1298,13 +1206,11 @@ function normalizeEventKey(
     external_rotation:
       "externalRotation",
 
-
     dynoInternal:
       "dynoInternal",
 
     dyno_internal:
       "dynoInternal",
-
 
     dynoExternal:
       "dynoExternal",
@@ -1312,13 +1218,11 @@ function normalizeEventKey(
     dyno_external:
       "dynoExternal",
 
-
     gripLeft:
       "gripLeft",
 
     grip_left:
       "gripLeft",
-
 
     gripRight:
       "gripRight",
@@ -1326,13 +1230,11 @@ function normalizeEventKey(
     grip_right:
       "gripRight",
 
-
     medBallLeft:
       "medBallLeft",
 
     med_ball_left:
       "medBallLeft",
-
 
     medBallRight:
       "medBallRight",
@@ -1340,13 +1242,11 @@ function normalizeEventKey(
     med_ball_right:
       "medBallRight",
 
-
     broadJump:
       "broadJump",
 
     broad_jump:
       "broadJump",
-
 
     squatAssessment:
       "squatAssessment",
@@ -1354,13 +1254,11 @@ function normalizeEventKey(
     squat_assessment:
       "squatAssessment",
 
-
     fiveTenFive:
       "fiveTenFive",
 
     five_ten_five:
       "fiveTenFive",
-
 
     tenYardShuttle:
       "tenYardShuttle",
@@ -1629,6 +1527,36 @@ function bindAthletePage() {
 
   document
     .getElementById(
+      "selectVisiblePlayersButton"
+    )
+    ?.addEventListener(
+      "click",
+      selectAllVisiblePlayers
+    );
+
+
+  document
+    .getElementById(
+      "clearPlayerSelectionButton"
+    )
+    ?.addEventListener(
+      "click",
+      clearPlayerSelection
+    );
+
+
+  document
+    .getElementById(
+      "deleteSelectedPlayersButton"
+    )
+    ?.addEventListener(
+      "click",
+      deleteSelectedPlayers
+    );
+
+
+  document
+    .getElementById(
       "openAddPlayerButton"
     )
     .addEventListener(
@@ -1718,13 +1646,7 @@ function bindAthletePage() {
 }
 
 
-function renderAthleteTable() {
-
-  const body =
-    document.getElementById(
-      "athleteTableBody"
-    );
-
+function getVisibleAthletes() {
 
   const search =
     normalizeText(
@@ -1740,7 +1662,7 @@ function renderAthleteTable() {
     getSelectedAthleteAgeGroups();
 
 
-  let filtered =
+  const filtered =
     athletes.filter(
       athlete => {
 
@@ -1826,6 +1748,55 @@ function renderAthleteTable() {
   );
 
 
+  return filtered;
+
+}
+
+
+function renderAthleteTable() {
+
+  const body =
+    document.getElementById(
+      "athleteTableBody"
+    );
+
+
+  const filtered =
+    getVisibleAthletes();
+
+
+  const validIds =
+    new Set(
+      athletes.map(
+        athlete =>
+          athlete.id
+      )
+    );
+
+
+  for (
+    const id
+    of
+    Array.from(
+      selectedAthleteIds
+    )
+  ) {
+
+    if (
+      !validIds.has(
+        id
+      )
+    ) {
+
+      selectedAthleteIds.delete(
+        id
+      );
+
+    }
+
+  }
+
+
   body.innerHTML =
     "";
 
@@ -1843,7 +1814,15 @@ function renderAthleteTable() {
 
 
     row.className =
-      "athlete-row";
+      `athlete-row${
+        selectedAthleteIds.has(
+          athlete.id
+        )
+        ?
+        " athlete-row-selected"
+        :
+        ""
+      }`;
 
 
     row.tabIndex =
@@ -1852,6 +1831,47 @@ function renderAthleteTable() {
 
     row.innerHTML =
       `
+
+        ${
+          isAdmin()
+          ?
+          `
+
+            <td class="athlete-select-cell">
+
+              <label
+                class="athlete-select-label"
+                title="Select ${escapeHtml(
+                  `${athlete.firstName} ${athlete.lastName}`
+                )}"
+              >
+
+                <input
+                  class="athlete-select-checkbox"
+                  type="checkbox"
+                  data-player-id="${escapeHtml(
+                    athlete.id
+                  )}"
+                  ${
+                    selectedAthleteIds.has(
+                      athlete.id
+                    )
+                    ?
+                    "checked"
+                    :
+                    ""
+                  }
+                />
+
+              </label>
+
+            </td>
+
+          `
+          :
+          ""
+        }
+
 
         <td>
 
@@ -1877,7 +1897,7 @@ function renderAthleteTable() {
 
         <td>
 
-          <span class="age-pill">
+          <span class="age-pill team-pill">
             ${escapeHtml(
               athlete.teamName
             )}
@@ -1890,16 +1910,41 @@ function renderAthleteTable() {
 
     row.addEventListener(
       "click",
-      () =>
+      event => {
+
+        if (
+          event.target.closest(
+            ".athlete-select-cell"
+          )
+        ) {
+
+          return;
+
+        }
+
+
         startTesting(
           athlete.id
-        )
+        );
+
+      }
     );
 
 
     row.addEventListener(
       "keydown",
       event => {
+
+        if (
+          event.target.closest?.(
+            ".athlete-select-cell"
+          )
+        ) {
+
+          return;
+
+        }
+
 
         if (
           event.key ===
@@ -1922,6 +1967,54 @@ function renderAthleteTable() {
     );
 
 
+    const checkbox =
+      row.querySelector(
+        ".athlete-select-checkbox"
+      );
+
+
+    checkbox?.addEventListener(
+      "click",
+      event =>
+        event.stopPropagation()
+    );
+
+
+    checkbox?.addEventListener(
+      "change",
+      () => {
+
+        if (
+          checkbox.checked
+        ) {
+
+          selectedAthleteIds.add(
+            athlete.id
+          );
+
+        }
+
+        else {
+
+          selectedAthleteIds.delete(
+            athlete.id
+          );
+
+        }
+
+
+        row.classList.toggle(
+          "athlete-row-selected",
+          checkbox.checked
+        );
+
+
+        updateBulkSelectionControls();
+
+      }
+    );
+
+
     body.appendChild(
       row
     );
@@ -1939,6 +2032,362 @@ function renderAthleteTable() {
       filtered.length >
       0
     );
+
+
+  updateBulkSelectionControls();
+
+}
+
+
+function selectAllVisiblePlayers() {
+
+  if (
+    !isAdmin()
+  ) {
+
+    return;
+
+  }
+
+
+  const visible =
+    getVisibleAthletes();
+
+
+  for (
+    const athlete
+    of
+    visible
+  ) {
+
+    selectedAthleteIds.add(
+      athlete.id
+    );
+
+  }
+
+
+  renderAthleteTable();
+
+}
+
+
+function clearPlayerSelection() {
+
+  selectedAthleteIds.clear();
+
+
+  renderAthleteTable();
+
+}
+
+
+function updateBulkSelectionControls() {
+
+  const count =
+    selectedAthleteIds.size;
+
+
+  const deleteButton =
+    document.getElementById(
+      "deleteSelectedPlayersButton"
+    );
+
+
+  const clearButton =
+    document.getElementById(
+      "clearPlayerSelectionButton"
+    );
+
+
+  const selectButton =
+    document.getElementById(
+      "selectVisiblePlayersButton"
+    );
+
+
+  if (
+    deleteButton
+  ) {
+
+    deleteButton.textContent =
+      `Delete Selected (${count})`;
+
+
+    deleteButton.disabled =
+      count ===
+      0;
+
+  }
+
+
+  if (
+    clearButton
+  ) {
+
+    clearButton.disabled =
+      count ===
+      0;
+
+  }
+
+
+  if (
+    selectButton
+  ) {
+
+    const visibleCount =
+      getVisibleAthletes().length;
+
+
+    selectButton.textContent =
+      visibleCount
+      ?
+      `Select All Visible (${visibleCount})`
+      :
+      "Select All Visible";
+
+
+    selectButton.disabled =
+      visibleCount ===
+      0;
+
+  }
+
+}
+
+
+async function deleteSelectedPlayers() {
+
+  if (
+    !isAdmin()
+  ) {
+
+    return;
+
+  }
+
+
+  const playerIds =
+    Array.from(
+      selectedAthleteIds
+    );
+
+
+  if (
+    !playerIds.length
+  ) {
+
+    return;
+
+  }
+
+
+  const selectedPlayers =
+    athletes.filter(
+      athlete =>
+        selectedAthleteIds.has(
+          athlete.id
+        )
+    );
+
+
+  const selectedResults =
+    results.filter(
+      result =>
+        selectedAthleteIds.has(
+          result.athleteId
+        )
+    );
+
+
+  const firstConfirmation =
+    window.confirm(
+      `WARNING\n\nPermanently delete ${selectedPlayers.length} selected player${selectedPlayers.length === 1 ? "" : "s"} and ${selectedResults.length} saved result${selectedResults.length === 1 ? "" : "s"}?\n\nThis cannot be undone.`
+    );
+
+
+  if (
+    !firstConfirmation
+  ) {
+
+    return;
+
+  }
+
+
+  const typedConfirmation =
+    window.prompt(
+      `Type DELETE ${selectedPlayers.length} to confirm this bulk deletion.`
+    );
+
+
+  if (
+    typedConfirmation?.trim() !==
+    `DELETE ${selectedPlayers.length}`
+  ) {
+
+    showToast(
+      "Bulk delete cancelled.",
+      true
+    );
+
+
+    return;
+
+  }
+
+
+  const deleteButton =
+    document.getElementById(
+      "deleteSelectedPlayersButton"
+    );
+
+
+  const originalButtonText =
+    deleteButton?.textContent
+    ||
+    "Delete Selected";
+
+
+  if (
+    deleteButton
+  ) {
+
+    deleteButton.disabled =
+      true;
+
+
+    deleteButton.textContent =
+      "Deleting…";
+
+  }
+
+
+  try {
+
+    const refsToDelete =
+      [
+
+        ...selectedResults.map(
+          result =>
+            doc(
+              db,
+              RESULTS_COLLECTION,
+              result.id
+            )
+        ),
+
+
+        ...selectedPlayers.map(
+          player =>
+            doc(
+              db,
+              PLAYERS_COLLECTION,
+              player.id
+            )
+        )
+
+      ];
+
+
+    for (
+      let i =
+        0;
+
+      i <
+      refsToDelete.length;
+
+      i +=
+        450
+    ) {
+
+      const batch =
+        writeBatch(
+          db
+        );
+
+
+      for (
+        const ref
+        of
+        refsToDelete.slice(
+          i,
+          i +
+          450
+        )
+      ) {
+
+        batch.delete(
+          ref
+        );
+
+      }
+
+
+      await batch.commit();
+
+    }
+
+
+    if (
+      selectedAthlete
+      &&
+      selectedAthleteIds.has(
+        selectedAthlete.id
+      )
+    ) {
+
+      selectedAthlete =
+        null;
+
+    }
+
+
+    selectedAthleteIds.clear();
+
+
+    await refreshData();
+
+
+    showToast(
+      `${selectedPlayers.length} player${selectedPlayers.length === 1 ? "" : "s"} deleted.`
+    );
+
+  }
+
+  catch (
+    error
+  ) {
+
+    console.error(
+      "BULK DELETE PLAYERS",
+      error
+    );
+
+
+    showToast(
+      `Could not delete selected players: ${error.message}`,
+      true
+    );
+
+  }
+
+  finally {
+
+    if (
+      deleteButton
+    ) {
+
+      deleteButton.textContent =
+        originalButtonText;
+
+    }
+
+
+    updateBulkSelectionControls();
+
+  }
 
 }
 
@@ -1979,19 +2428,6 @@ async function addPlayer(
         .value
     );
 
-
-  /*
-    Works with either:
-
-      id="newTeamName"
-
-    OR your existing HTML:
-
-      id="newAgeGroup"
-
-    So the JS remains compatible even if you
-    haven't changed the old HTML ID.
-  */
 
   const teamInput =
     document.getElementById(
@@ -2397,11 +2833,6 @@ async function deleteSelectedPlayer() {
     );
 
 
-    /*
-      Firestore allows 500 operations per batch.
-      We keep each batch below that.
-    */
-
     for (
       let i =
         0;
@@ -2534,10 +2965,6 @@ function renderTestCards() {
       );
 
 
-    /*
-      TIMER
-    */
-
     if (
       event.type ===
       "timer"
@@ -2658,10 +3085,6 @@ function renderTestCards() {
     }
 
 
-    /*
-      PASS / FAIL
-    */
-
     else if (
       event.type ===
       "passfail"
@@ -2764,10 +3187,6 @@ function renderTestCards() {
 
     }
 
-
-    /*
-      NUMBER ENTRY
-    */
 
     else {
 
@@ -4772,11 +5191,6 @@ function exportResultsToExcel() {
   }
 
 
-  /*
-    SHEET 1:
-    SUMMARY / BEST RESULTS
-  */
-
   const summaryRows =
     athletes
       .slice()
@@ -4878,11 +5292,6 @@ function exportResultsToExcel() {
         }
       );
 
-
-  /*
-    SHEET 2:
-    EVERY RECORDED ATTEMPT
-  */
 
   const attemptRows =
     results
@@ -5073,7 +5482,7 @@ function exportResultsToExcel() {
 
     {
       wch:
-        18
+        12
     },
 
     {
@@ -5910,15 +6319,6 @@ function buildImportRows(
           ""
         );
 
-
-      /*
-        New import format:
-
-        First Name | Last Name | Team Name
-
-        Old Age Group fields are accepted only as
-        a backwards-compatible fallback.
-      */
 
       const teamName =
         normalizeTeamName(
@@ -6955,15 +7355,6 @@ function normalizeText(
 function normalizeTeamName(
   value
 ) {
-
-  /*
-    Preserve capitalization exactly as entered/imported.
-
-    Example:
-      "15U Borden"
-    stays
-      "15U Borden"
-  */
 
   return cleanText(
     value
