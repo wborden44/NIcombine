@@ -18,7 +18,7 @@
 
   <link
     rel="stylesheet"
-    href="./style.css?v=20260827-31"
+    href="./style.css?v=20260828-32"
   />
 
   <script
@@ -208,6 +208,32 @@
           <div class="heading-actions">
 
             <button
+              id="selectVisiblePlayersButton"
+              class="button button-secondary hidden"
+              type="button"
+            >
+              Select All Visible
+            </button>
+
+            <button
+              id="clearPlayerSelectionButton"
+              class="button button-secondary hidden"
+              type="button"
+              disabled
+            >
+              Clear Selection
+            </button>
+
+            <button
+              id="deleteSelectedPlayersButton"
+              class="button delete-player-button hidden"
+              type="button"
+              disabled
+            >
+              Delete Selected (0)
+            </button>
+
+            <button
               id="openAddPlayerButton"
               class="button button-secondary"
               type="button"
@@ -250,15 +276,9 @@
                 aria-haspopup="true"
                 aria-expanded="false"
               >
-                <span id="athleteAgeFilterLabel">
-  All Teams
-</span>
-
-                <span class="age-filter-chevron">
-                  ▾
-                </span>
+                <span id="athleteAgeFilterLabel">All Teams</span>
+                <span class="age-filter-chevron">▾</span>
               </button>
-
 
               <div
                 id="athleteAgeFilterMenu"
@@ -266,11 +286,7 @@
               >
 
                 <div class="age-filter-menu-header">
-
-                  <span>
-                    Teams
-                  </span>
-
+                  <span>Teams</span>
                   <button
                     id="clearAthleteAgeFilters"
                     class="age-filter-clear"
@@ -278,9 +294,7 @@
                   >
                     Clear
                   </button>
-
                 </div>
-
 
                 <div
                   id="athleteAgeFilterOptions"
@@ -302,6 +316,13 @@
 
                 <tr>
 
+                  <th
+                    id="athleteSelectHeader"
+                    class="athlete-select-column hidden"
+                  >
+                    Select
+                  </th>
+
                   <th data-athlete-sort="firstName">
                     First Name
                   </th>
@@ -310,9 +331,9 @@
                     Last Name
                   </th>
 
-               <th data-athlete-sort="teamName">
-  Team
-</th>
+                  <th data-athlete-sort="teamName">
+                    Team
+                  </th>
 
                 </tr>
 
@@ -453,13 +474,13 @@
               placeholder="Search athlete…"
             />
 
-           <select id="resultsAgeFilter">
+            <select id="resultsAgeFilter">
 
-  <option value="">
-    All Teams
-  </option>
+              <option value="">
+                All Teams
+              </option>
 
-</select>
+            </select>
 
           </div>
 
@@ -627,17 +648,17 @@
 
           <div>
 
-  <label for="newTeamName">
-    Team Name
-  </label>
+            <label for="newTeamName">
+              Team Name
+            </label>
 
-  <input
-    id="newTeamName"
-    placeholder="15U Borden"
-    required
-  />
+            <input
+              id="newTeamName"
+              placeholder="15U Borden"
+              required
+            />
 
-</div>
+          </div>
 
         </div>
 
@@ -713,11 +734,10 @@
 
       <p class="muted">
         Accepted files: CSV, XLS and XLSX.
-      
-       Required columns:
-<strong>First Name</strong>,
-<strong>Last Name</strong>,
-<strong>Team Name</strong>.
+        Required columns:
+        <strong>First Name</strong>,
+        <strong>Last Name</strong>,
+        <strong>Team Name</strong>.
       </p>
 
 
@@ -842,7 +862,7 @@
                 </th>
 
                 <th>
-                 Team Name
+                  Team Name
                 </th>
 
                 <th>
@@ -991,7 +1011,7 @@
 
   <script
     type="module"
-    src="./script.js?v=20260827-31"
+    src="./script.js?v=20260828-32"
   ></script>
 
 </body>
