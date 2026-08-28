@@ -510,6 +510,8 @@ window.addEventListener(
 
     bindNumberPad();
 
+    bindIndexTeamFilter();
+
   }
 );
 
@@ -591,8 +593,7 @@ function bindLogin() {
 
         console.error(
           "LOGIN ERROR",
-          error.code,
-          error.message
+          error
         );
 
 
@@ -612,17 +613,6 @@ function bindLogin() {
 
           text =
             "Invalid email or password.";
-
-        }
-
-
-        if (
-          error.code ===
-          "auth/too-many-requests"
-        ) {
-
-          text =
-            "Too many failed attempts. Wait a few minutes and try again.";
 
         }
 
@@ -850,6 +840,8 @@ async function refreshData() {
 
 
   updateTeamFilters();
+
+  updateIndexTeamFilters();
 
   renderAthleteTable();
 
@@ -1786,10 +1778,6 @@ function renderAthleteTable() {
       }`;
 
 
-    row.tabIndex =
-      0;
-
-
     row.innerHTML =
       `
 
@@ -2001,6 +1989,15 @@ function clearPlayerSelection() {
 
 
 function updateBulkSelectionControls() {
+
+  if (
+    !isAdmin()
+  ) {
+
+    return;
+
+  }
+
 
   const count =
     selectedAthleteIds.size;
@@ -2652,6 +2649,11 @@ async function deleteSelectedPlayer() {
       "athletesView"
     );
 
+
+    showToast(
+      `${player.firstName} ${player.lastName} deleted.`
+    );
+
   }
 
   catch (
@@ -2848,6 +2850,8 @@ function renderTestCards() {
                 <span class="best-chip">
                   ${escapeHtml(
                     stats.latest.assessment
+                    ||
+                    "—"
                   )}
                 </span>
               `
@@ -2866,6 +2870,8 @@ function renderTestCards() {
           <textarea
             id="squatNotes"
             class="notes-input"
+            rows="3"
+            placeholder="Optional notes..."
           ></textarea>
 
 
@@ -3199,6 +3205,13 @@ function renderAttempts(
                 );
 
 
+              const canDelete =
+                isAdmin()
+                ||
+                attempt.enteredByUid ===
+                currentUser?.uid;
+
+
               return `
 
                 <div
@@ -3234,15 +3247,23 @@ function renderAttempts(
                   </div>
 
 
-                  <button
-                    class="delete-attempt"
-                    data-result-id="${escapeHtml(
-                      attempt.id
-                    )}"
-                    type="button"
-                  >
-                    ×
-                  </button>
+                  ${
+                    canDelete
+                    ?
+                    `
+                      <button
+                        class="delete-attempt"
+                        data-result-id="${escapeHtml(
+                          attempt.id
+                        )}"
+                        type="button"
+                      >
+                        ×
+                      </button>
+                    `
+                    :
+                    ""
+                  }
 
                 </div>
 
@@ -3827,7 +3848,7 @@ function resetNumberPadState() {
 
 
 /* =========================================================
-   SAVE RESULTS
+   SAVE RESULT
 ========================================================= */
 
 async function saveNumericResult(
@@ -3880,6 +3901,14 @@ async function saveNumericResult(
 
 
         value,
+
+
+        assessment:
+          null,
+
+
+        notes:
+          "",
 
 
         enteredByUid:
@@ -3941,6 +3970,17 @@ async function saveAssessment(
   assessment
 ) {
 
+  if (
+    !selectedAthlete
+    ||
+    !currentUser
+  ) {
+
+    return;
+
+  }
+
+
   const notes =
     cleanText(
       document
@@ -3953,67 +3993,91 @@ async function saveAssessment(
     );
 
 
-  await addDoc(
-    collection(
-      db,
-      RESULTS_COLLECTION
-    ),
-    {
+  try {
 
-      athleteId:
-        selectedAthlete.id,
+    await addDoc(
+      collection(
+        db,
+        RESULTS_COLLECTION
+      ),
+      {
 
-
-      playerId:
-        selectedAthlete.id,
+        athleteId:
+          selectedAthlete.id,
 
 
-      athleteFirstName:
-        selectedAthlete.firstName,
+        playerId:
+          selectedAthlete.id,
 
 
-      athleteLastName:
-        selectedAthlete.lastName,
+        athleteFirstName:
+          selectedAthlete.firstName,
 
 
-      teamName:
-        selectedAthlete.teamName,
+        athleteLastName:
+          selectedAthlete.lastName,
 
 
-      event:
-        "squatAssessment",
+        teamName:
+          selectedAthlete.teamName,
 
 
-      assessment,
+        event:
+          "squatAssessment",
 
 
-      notes,
+        value:
+          null,
 
 
-      enteredByUid:
-        currentUser.uid,
+        assessment,
 
 
-      enteredByEmail:
-        currentUser.email
-        ||
-        "",
+        notes,
 
 
-      createdAt:
-        serverTimestamp()
-
-    }
-  );
+        enteredByUid:
+          currentUser.uid,
 
 
-  await loadResults();
+        enteredByEmail:
+          currentUser.email
+          ||
+          "",
 
 
-  renderTestCards();
+        createdAt:
+          serverTimestamp()
+
+      }
+    );
 
 
-  renderResultsMatrix();
+    await loadResults();
+
+
+    renderTestCards();
+
+
+    renderResultsMatrix();
+
+
+    showToast(
+      `Squat Assessment: ${assessment}`
+    );
+
+  }
+
+  catch (
+    error
+  ) {
+
+    showToast(
+      error.message,
+      true
+    );
+
+  }
 
 }
 
@@ -4021,6 +4085,41 @@ async function saveAssessment(
 async function deleteAttempt(
   resultId
 ) {
+
+  const attempt =
+    results.find(
+      result =>
+        result.id ===
+        resultId
+    );
+
+
+  if (
+    !attempt
+  ) {
+
+    return;
+
+  }
+
+
+  if (
+    !isAdmin()
+    &&
+    attempt.enteredByUid !==
+    currentUser?.uid
+  ) {
+
+    showToast(
+      "You can only delete an entry you recorded.",
+      true
+    );
+
+
+    return;
+
+  }
+
 
   if (
     !window.confirm(
@@ -4033,22 +4132,42 @@ async function deleteAttempt(
   }
 
 
-  await deleteDoc(
-    doc(
-      db,
-      RESULTS_COLLECTION,
-      resultId
-    )
-  );
+  try {
+
+    await deleteDoc(
+      doc(
+        db,
+        RESULTS_COLLECTION,
+        resultId
+      )
+    );
 
 
-  await loadResults();
+    await loadResults();
 
 
-  renderTestCards();
+    renderTestCards();
 
 
-  renderResultsMatrix();
+    renderResultsMatrix();
+
+
+    showToast(
+      "Entry deleted."
+    );
+
+  }
+
+  catch (
+    error
+  ) {
+
+    showToast(
+      error.message,
+      true
+    );
+
+  }
 
 }
 
@@ -4098,6 +4217,17 @@ function startTimer(
     ];
 
 
+  if (
+    !state
+    ||
+    state.running
+  ) {
+
+    return;
+
+  }
+
+
   state.elapsedMs =
     0;
 
@@ -4108,6 +4238,11 @@ function startTimer(
 
   state.running =
     true;
+
+
+  clearInterval(
+    state.intervalId
+  );
 
 
   renderTestCards();
@@ -4155,6 +4290,17 @@ async function stopTimer(
     timerStates[
       eventKey
     ];
+
+
+  if (
+    !state
+    ||
+    !state.running
+  ) {
+
+    return;
+
+  }
 
 
   state.elapsedMs =
@@ -4212,6 +4358,15 @@ function resetTimer(
     ];
 
 
+  if (
+    !state
+  ) {
+
+    return;
+
+  }
+
+
   clearInterval(
     state.intervalId
   );
@@ -4221,8 +4376,16 @@ function resetTimer(
     false;
 
 
+  state.startedAt =
+    0;
+
+
   state.elapsedMs =
     0;
+
+
+  state.intervalId =
+    null;
 
 
   renderTestCards();
@@ -4246,6 +4409,10 @@ function resetAllTimers() {
 
         state.running =
           false;
+
+
+        state.startedAt =
+          0;
 
 
         state.elapsedMs =
@@ -4272,6 +4439,696 @@ function formatTimer(
   )
     .toFixed(
       2
+    );
+
+}
+
+
+/* =========================================================
+   PLAYER INDEX TEAM FILTER
+========================================================= */
+
+function bindIndexTeamFilter() {
+
+  const container =
+    document.getElementById(
+      "indexTeamFilter"
+    );
+
+
+  const button =
+    document.getElementById(
+      "indexTeamFilterButton"
+    );
+
+
+  const menu =
+    document.getElementById(
+      "indexTeamFilterMenu"
+    );
+
+
+  const clearButton =
+    document.getElementById(
+      "clearIndexTeamFilters"
+    );
+
+
+  button
+    .addEventListener(
+      "click",
+      event => {
+
+        event.stopPropagation();
+
+
+        const isOpen =
+          !menu
+            .classList
+            .contains(
+              "hidden"
+            );
+
+
+        menu
+          .classList
+          .toggle(
+            "hidden",
+            isOpen
+          );
+
+
+        button
+          .setAttribute(
+            "aria-expanded",
+            String(
+              !isOpen
+            )
+          );
+
+      }
+    );
+
+
+  menu
+    .addEventListener(
+      "click",
+      event =>
+        event.stopPropagation()
+    );
+
+
+  clearButton
+    .addEventListener(
+      "click",
+      () => {
+
+        document
+          .querySelectorAll(
+            '#indexTeamFilterOptions input[type="checkbox"]'
+          )
+          .forEach(
+            checkbox => {
+
+              checkbox.checked =
+                false;
+
+            }
+          );
+
+
+        updateIndexTeamFilterLabel();
+
+        renderIndexDrawer();
+
+      }
+    );
+
+
+  document.addEventListener(
+    "click",
+    event => {
+
+      if (
+        !container.contains(
+          event.target
+        )
+      ) {
+
+        menu
+          .classList
+          .add(
+            "hidden"
+          );
+
+
+        button
+          .setAttribute(
+            "aria-expanded",
+            "false"
+          );
+
+      }
+
+    }
+  );
+
+}
+
+
+function updateIndexTeamFilters() {
+
+  const options =
+    document.getElementById(
+      "indexTeamFilterOptions"
+    );
+
+
+  if (
+    !options
+  ) {
+
+    return;
+
+  }
+
+
+  const selectedTeams =
+    new Set(
+      getSelectedIndexTeams()
+    );
+
+
+  const teams =
+    [
+      ...new Set(
+        athletes
+          .map(
+            athlete =>
+              athlete.teamName
+          )
+          .filter(
+            Boolean
+          )
+      )
+    ]
+      .sort(
+        naturalSort
+      );
+
+
+  options.innerHTML =
+    teams
+      .map(
+        team =>
+          `
+
+            <label class="index-team-filter-option">
+
+              <input
+                type="checkbox"
+                value="${escapeHtml(
+                  team
+                )}"
+                ${
+                  selectedTeams.has(
+                    team
+                  )
+                  ?
+                  "checked"
+                  :
+                  ""
+                }
+              />
+
+              <span>
+                ${escapeHtml(
+                  team
+                )}
+              </span>
+
+            </label>
+
+          `
+      )
+      .join("");
+
+
+  options
+    .querySelectorAll(
+      'input[type="checkbox"]'
+    )
+    .forEach(
+      checkbox =>
+        checkbox.addEventListener(
+          "change",
+          () => {
+
+            updateIndexTeamFilterLabel();
+
+            renderIndexDrawer();
+
+          }
+        )
+    );
+
+
+  updateIndexTeamFilterLabel();
+
+}
+
+
+function getSelectedIndexTeams() {
+
+  return [
+
+    ...document
+      .querySelectorAll(
+        '#indexTeamFilterOptions input[type="checkbox"]:checked'
+      )
+
+  ]
+    .map(
+      checkbox =>
+        checkbox.value
+    )
+    .filter(
+      Boolean
+    );
+
+}
+
+
+function updateIndexTeamFilterLabel() {
+
+  const selected =
+    getSelectedIndexTeams();
+
+
+  const label =
+    document.getElementById(
+      "indexTeamFilterLabel"
+    );
+
+
+  if (
+    !selected.length
+  ) {
+
+    label.textContent =
+      "All Teams";
+
+
+    return;
+
+  }
+
+
+  if (
+    selected.length ===
+    1
+  ) {
+
+    label.textContent =
+      selected[
+        0
+      ];
+
+
+    return;
+
+  }
+
+
+  if (
+    selected.length ===
+    2
+  ) {
+
+    label.textContent =
+      `${selected[0]}, ${selected[1]}`;
+
+
+    return;
+
+  }
+
+
+  label.textContent =
+    `${selected.length} Teams`;
+
+}
+
+
+/* =========================================================
+   PLAYER INDEX
+========================================================= */
+
+function openIndexDrawer() {
+
+  document
+    .getElementById(
+      "indexSearch"
+    )
+    .value =
+    "";
+
+
+  updateIndexTeamFilters();
+
+
+  renderIndexDrawer();
+
+
+  document
+    .getElementById(
+      "playerIndexDrawer"
+    )
+    .classList
+    .remove(
+      "hidden"
+    );
+
+
+  document
+    .getElementById(
+      "indexBackdrop"
+    )
+    .classList
+    .remove(
+      "hidden"
+    );
+
+}
+
+
+function closeIndexDrawer() {
+
+  document
+    .getElementById(
+      "playerIndexDrawer"
+    )
+    .classList
+    .add(
+      "hidden"
+    );
+
+
+  document
+    .getElementById(
+      "indexBackdrop"
+    )
+    .classList
+    .add(
+      "hidden"
+    );
+
+
+  document
+    .getElementById(
+      "indexTeamFilterMenu"
+    )
+    .classList
+    .add(
+      "hidden"
+    );
+
+
+  document
+    .getElementById(
+      "indexTeamFilterButton"
+    )
+    .setAttribute(
+      "aria-expanded",
+      "false"
+    );
+
+}
+
+
+function renderIndexDrawer() {
+
+  const container =
+    document.getElementById(
+      "indexPlayerList"
+    );
+
+
+  const empty =
+    document.getElementById(
+      "indexPlayerEmpty"
+    );
+
+
+  const count =
+    document.getElementById(
+      "indexPlayerCount"
+    );
+
+
+  if (
+    !container
+  ) {
+
+    return;
+
+  }
+
+
+  const search =
+    normalizeText(
+      document
+        .getElementById(
+          "indexSearch"
+        )
+        ?.value
+      ||
+      ""
+    );
+
+
+  const selectedTeams =
+    getSelectedIndexTeams();
+
+
+  const filtered =
+    athletes
+      .filter(
+        athlete => {
+
+          const matchesSearch =
+            !search
+            ||
+            normalizeText(
+              `${athlete.firstName} ${athlete.lastName} ${athlete.teamName}`
+            )
+              .includes(
+                search
+              );
+
+
+          const matchesTeam =
+            selectedTeams.length ===
+            0
+            ||
+            selectedTeams.includes(
+              athlete.teamName
+            );
+
+
+          return (
+            matchesSearch
+            &&
+            matchesTeam
+          );
+
+        }
+      )
+      .sort(
+        comparePlayers
+      );
+
+
+  count.textContent =
+    `${filtered.length} player${
+      filtered.length ===
+      1
+      ?
+      ""
+      :
+      "s"
+    }`;
+
+
+  empty.classList.toggle(
+    "hidden",
+    filtered.length >
+    0
+  );
+
+
+  const groups =
+    {};
+
+
+  for (
+    const athlete
+    of
+    filtered
+  ) {
+
+    const team =
+      athlete.teamName
+      ||
+      "Other";
+
+
+    if (
+      !groups[
+        team
+      ]
+    ) {
+
+      groups[
+        team
+      ] =
+        [];
+
+    }
+
+
+    groups[
+      team
+    ].push(
+      athlete
+    );
+
+  }
+
+
+  container.innerHTML =
+    Object
+      .keys(
+        groups
+      )
+      .sort(
+        naturalSort
+      )
+      .map(
+        team => {
+
+          const teamPlayers =
+            groups[
+              team
+            ]
+              .sort(
+                comparePlayers
+              );
+
+
+          return `
+
+            <div class="index-team-group">
+
+              <div class="index-team-heading">
+
+                <span>
+                  ${escapeHtml(
+                    team
+                  )}
+                </span>
+
+                <span>
+                  ${teamPlayers.length}
+                </span>
+
+              </div>
+
+
+              ${
+                teamPlayers
+                  .map(
+                    athlete =>
+                      `
+
+                        <button
+                          class="index-player${
+                            selectedAthlete?.id ===
+                            athlete.id
+                            ?
+                            " active"
+                            :
+                            ""
+                          }"
+                          data-player-id="${escapeHtml(
+                            athlete.id
+                          )}"
+                          type="button"
+                        >
+
+                          <span class="index-player-name">
+                            ${escapeHtml(
+                              athlete.lastName
+                            )},
+                            ${escapeHtml(
+                              athlete.firstName
+                            )}
+                          </span>
+
+                          <span class="index-player-team">
+                            ${escapeHtml(
+                              athlete.teamName
+                            )}
+                          </span>
+
+                        </button>
+
+                      `
+                  )
+                  .join("")
+              }
+
+            </div>
+
+          `;
+
+        }
+      )
+      .join("");
+
+
+  container
+    .querySelectorAll(
+      ".index-player"
+    )
+    .forEach(
+      button =>
+        button.addEventListener(
+          "click",
+          () => {
+
+            const id =
+              button.dataset.playerId;
+
+
+            selectedAthlete =
+              athletes.find(
+                athlete =>
+                  athlete.id ===
+                  id
+              )
+              ||
+              null;
+
+
+            if (
+              !selectedAthlete
+            ) {
+
+              return;
+
+            }
+
+
+            resetAllTimers();
+
+
+            renderTestingPage();
+
+
+            closeIndexDrawer();
+
+
+            window.scrollTo({
+              top:
+                0,
+
+              behavior:
+                "smooth"
+            });
+
+          }
+        )
     );
 
 }
@@ -4454,7 +5311,9 @@ function renderResultsMatrix() {
 
                 <button
                   class="matrix-player-link"
-                  data-player-id="${athlete.id}"
+                  data-player-id="${escapeHtml(
+                    athlete.id
+                  )}"
                   type="button"
                 >
                   ${escapeHtml(
@@ -4549,6 +5408,18 @@ function renderResultsMatrix() {
         )
     );
 
+
+  document
+    .getElementById(
+      "resultsEmpty"
+    )
+    .classList
+    .toggle(
+      "hidden",
+      rows.length >
+      0
+    );
+
 }
 
 
@@ -4634,11 +5505,13 @@ function compareMatrixPlayers(
 
     return matrixSort.asc
       ?
-      a.teamName.localeCompare(
+      naturalSort(
+        a.teamName,
         b.teamName
       )
       :
-      b.teamName.localeCompare(
+      naturalSort(
+        b.teamName,
         a.teamName
       );
 
@@ -4663,6 +5536,20 @@ function compareMatrixPlayers(
       b.id,
       event
     );
+
+
+  if (
+    av == null
+    &&
+    bv == null
+  ) {
+
+    return comparePlayers(
+      a,
+      b
+    );
+
+  }
 
 
   if (
@@ -4699,6 +5586,15 @@ function getSortValue(
   event
 ) {
 
+  if (
+    !event
+  ) {
+
+    return null;
+
+  }
+
+
   const stats =
     getEventStats(
       playerId,
@@ -4711,7 +5607,16 @@ function getSortValue(
     "passfail"
   ) {
 
-    return stats.latest?.assessment ===
+    if (
+      !stats.latest
+    ) {
+
+      return null;
+
+    }
+
+
+    return stats.latest.assessment ===
       "Pass"
       ?
       1
@@ -4926,7 +5831,7 @@ function getBestAttempt(
 
 
 /* =========================================================
-   FORMAT EVENT VALUES
+   VALUE FORMATTING
 ========================================================= */
 
 function formatEventValue(
@@ -5007,7 +5912,7 @@ function formatEventValue(
 
 
 /* =========================================================
-   TEAM FILTER
+   ATHLETE TEAM FILTER
 ========================================================= */
 
 function updateTeamFilters() {
@@ -5143,10 +6048,12 @@ function updateTeamFilters() {
 function getSelectedTeams() {
 
   return [
+
     ...document
       .querySelectorAll(
         '#athleteAgeFilterOptions input[type="checkbox"]:checked'
       )
+
   ]
     .map(
       checkbox =>
@@ -5200,162 +6107,6 @@ function updateTeamFilterLabel() {
 
 
 /* =========================================================
-   PLAYER INDEX
-========================================================= */
-
-function openIndexDrawer() {
-
-  renderIndexDrawer();
-
-
-  document
-    .getElementById(
-      "playerIndexDrawer"
-    )
-    .classList
-    .remove(
-      "hidden"
-    );
-
-
-  document
-    .getElementById(
-      "indexBackdrop"
-    )
-    .classList
-    .remove(
-      "hidden"
-    );
-
-}
-
-
-function closeIndexDrawer() {
-
-  document
-    .getElementById(
-      "playerIndexDrawer"
-    )
-    .classList
-    .add(
-      "hidden"
-    );
-
-
-  document
-    .getElementById(
-      "indexBackdrop"
-    )
-    .classList
-    .add(
-      "hidden"
-    );
-
-}
-
-
-function renderIndexDrawer() {
-
-  const container =
-    document.getElementById(
-      "indexPlayerList"
-    );
-
-
-  if (
-    !container
-  ) {
-
-    return;
-
-  }
-
-
-  const search =
-    normalizeText(
-      document
-        .getElementById(
-          "indexSearch"
-        )
-        ?.value
-      ||
-      ""
-    );
-
-
-  const filtered =
-    athletes.filter(
-      athlete =>
-        !search
-        ||
-        normalizeText(
-          `${athlete.firstName} ${athlete.lastName} ${athlete.teamName}`
-        )
-          .includes(
-            search
-          )
-    );
-
-
-  container.innerHTML =
-    filtered
-      .map(
-        athlete =>
-          `
-
-            <button
-              class="index-player"
-              data-player-id="${athlete.id}"
-              type="button"
-            >
-
-              <span>
-                ${escapeHtml(
-                  athlete.lastName
-                )},
-                ${escapeHtml(
-                  athlete.firstName
-                )}
-              </span>
-
-              <span>
-                ${escapeHtml(
-                  athlete.teamName
-                )}
-              </span>
-
-            </button>
-
-          `
-      )
-      .join("");
-
-
-  container
-    .querySelectorAll(
-      ".index-player"
-    )
-    .forEach(
-      button =>
-        button.addEventListener(
-          "click",
-          () => {
-
-            startTesting(
-              button.dataset.playerId
-            );
-
-
-            closeIndexDrawer();
-
-          }
-        )
-    );
-
-}
-
-
-/* =========================================================
    IMPORT
 ========================================================= */
 
@@ -5369,7 +6120,17 @@ function bindUploader() {
       "click",
       () => {
 
+        if (
+          !isAdmin()
+        ) {
+
+          return;
+
+        }
+
+
         resetImporter();
+
 
         openModal(
           "uploadModal"
@@ -5430,46 +6191,76 @@ async function handleFileUpload(
   }
 
 
-  const buffer =
-    await file.arrayBuffer();
+  document
+    .getElementById(
+      "selectedFileName"
+    )
+    .textContent =
+    file.name;
 
 
-  const workbook =
-    window.XLSX.read(
-      buffer,
-      {
-        type:
-          "array"
-      }
-    );
+  try {
+
+    const buffer =
+      await file.arrayBuffer();
 
 
-  const sheet =
-    workbook.Sheets[
-      workbook.SheetNames[
-        0
-      ]
-    ];
-
-
-  const rows =
-    window.XLSX.utils
-      .sheet_to_json(
-        sheet,
+    const workbook =
+      window.XLSX.read(
+        buffer,
         {
-          defval:
-            ""
+          type:
+            "array"
         }
       );
 
 
-  importRows =
-    buildImportRows(
-      rows
+    const sheet =
+      workbook.Sheets[
+        workbook.SheetNames[
+          0
+        ]
+      ];
+
+
+    const rows =
+      window.XLSX.utils
+        .sheet_to_json(
+          sheet,
+          {
+            defval:
+              "",
+
+            raw:
+              false
+          }
+        );
+
+
+    importRows =
+      buildImportRows(
+        rows
+      );
+
+
+    renderImportPreview();
+
+  }
+
+  catch (
+    error
+  ) {
+
+    showMessage(
+      document
+        .getElementById(
+          "importMessage"
+        ),
+      error.message,
+      "error"
     );
 
-
-  renderImportPreview();
+  }
 
 }
 
@@ -5477,6 +6268,10 @@ async function handleFileUpload(
 function buildImportRows(
   rows
 ) {
+
+  const seen =
+    new Set();
+
 
   return rows.map(
     raw => {
@@ -5487,50 +6282,152 @@ function buildImportRows(
         );
 
 
-      return {
-
-        firstName:
-          cleanText(
-            row[
-              "first name"
-            ]
-            ??
-            row.firstname
-            ??
-            ""
-          ),
-
-
-        lastName:
-          cleanText(
-            row[
-              "last name"
-            ]
-            ??
-            row.lastname
-            ??
-            ""
-          ),
+      const firstName =
+        cleanText(
+          row[
+            "first name"
+          ]
+          ??
+          row.firstname
+          ??
+          row.first
+          ??
+          ""
+        );
 
 
-        teamName:
-          cleanText(
-            row[
-              "team name"
-            ]
-            ??
-            row.teamname
-            ??
-            row.team
-            ??
-            row[
-              "age group"
-            ]
-            ??
-            ""
-          )
+      const lastName =
+        cleanText(
+          row[
+            "last name"
+          ]
+          ??
+          row.lastname
+          ??
+          row.last
+          ??
+          ""
+        );
+
+
+      const teamName =
+        cleanText(
+          row[
+            "team name"
+          ]
+          ??
+          row.teamname
+          ??
+          row.team
+          ??
+          row[
+            "age group"
+          ]
+          ??
+          row.agegroup
+          ??
+          ""
+        );
+
+
+      const item = {
+
+        firstName,
+
+        lastName,
+
+        teamName,
+
+        status:
+          "new",
+
+        reason:
+          "Ready to import"
 
       };
+
+
+      if (
+        !firstName
+        ||
+        !lastName
+        ||
+        !teamName
+      ) {
+
+        return {
+
+          ...item,
+
+          status:
+            "invalid",
+
+          reason:
+            "Missing required information"
+
+        };
+
+      }
+
+
+      const key =
+        playerMatchKey(
+          firstName,
+          lastName,
+          teamName
+        );
+
+
+      if (
+        seen.has(
+          key
+        )
+      ) {
+
+        return {
+
+          ...item,
+
+          status:
+            "duplicate",
+
+          reason:
+            "Duplicate row in file"
+
+        };
+
+      }
+
+
+      seen.add(
+        key
+      );
+
+
+      if (
+        findExistingPlayer(
+          firstName,
+          lastName,
+          teamName
+        )
+      ) {
+
+        return {
+
+          ...item,
+
+          status:
+            "duplicate",
+
+          reason:
+            "Already exists"
+
+        };
+
+      }
+
+
+      return item;
 
     }
   );
@@ -5540,47 +6437,70 @@ function buildImportRows(
 
 function renderImportPreview() {
 
-  const body =
-    document.getElementById(
-      "previewBody"
+  const newRows =
+    importRows.filter(
+      row =>
+        row.status ===
+        "new"
     );
 
 
-  body.innerHTML =
-    importRows
-      .map(
-        row =>
-          `
+  const duplicates =
+    importRows.filter(
+      row =>
+        row.status ===
+        "duplicate"
+    );
 
-            <tr>
 
-              <td>
-                ${escapeHtml(
-                  row.firstName
-                )}
-              </td>
+  const invalid =
+    importRows.filter(
+      row =>
+        row.status ===
+        "invalid"
+    );
 
-              <td>
-                ${escapeHtml(
-                  row.lastName
-                )}
-              </td>
 
-              <td>
-                ${escapeHtml(
-                  row.teamName
-                )}
-              </td>
+  document
+    .getElementById(
+      "summaryTotal"
+    )
+    .textContent =
+    importRows.length;
 
-              <td>
-                Ready
-              </td>
 
-            </tr>
+  document
+    .getElementById(
+      "summaryNew"
+    )
+    .textContent =
+    newRows.length;
 
-          `
-      )
-      .join("");
+
+  document
+    .getElementById(
+      "summaryDuplicate"
+    )
+    .textContent =
+    duplicates.length;
+
+
+  document
+    .getElementById(
+      "summaryInvalid"
+    )
+    .textContent =
+    invalid.length;
+
+
+  document
+    .getElementById(
+      "importSummary"
+    )
+    .classList
+    .remove(
+      "hidden"
+    );
 
 
   document
@@ -5595,15 +6515,81 @@ function renderImportPreview() {
 
   document
     .getElementById(
+      "previewBody"
+    )
+    .innerHTML =
+    importRows
+      .map(
+        row =>
+          `
+
+            <tr>
+
+              <td>
+                ${escapeHtml(
+                  row.firstName
+                  ||
+                  "—"
+                )}
+              </td>
+
+              <td>
+                ${escapeHtml(
+                  row.lastName
+                  ||
+                  "—"
+                )}
+              </td>
+
+              <td>
+                ${escapeHtml(
+                  row.teamName
+                  ||
+                  "—"
+                )}
+              </td>
+
+              <td>
+                ${escapeHtml(
+                  row.reason
+                )}
+              </td>
+
+            </tr>
+
+          `
+      )
+      .join("");
+
+
+  document
+    .getElementById(
       "importPlayersConfirmButton"
     )
     .disabled =
-    false;
+    !newRows.length;
 
 }
 
 
 async function importPlayers() {
+
+  if (
+    !isAdmin()
+  ) {
+
+    return;
+
+  }
+
+
+  const newRows =
+    importRows.filter(
+      row =>
+        row.status ===
+        "new"
+    );
+
 
   let imported =
     0;
@@ -5612,34 +6598,8 @@ async function importPlayers() {
   for (
     const player
     of
-    importRows
+    newRows
   ) {
-
-    if (
-      !player.firstName
-      ||
-      !player.lastName
-      ||
-      !player.teamName
-    ) {
-
-      continue;
-
-    }
-
-
-    if (
-      findExistingPlayer(
-        player.firstName,
-        player.lastName,
-        player.teamName
-      )
-    ) {
-
-      continue;
-
-    }
-
 
     const ref =
       doc(
@@ -5653,30 +6613,88 @@ async function importPlayers() {
       );
 
 
-    await setDoc(
-      ref,
-      {
+    try {
 
-        firstName:
-          player.firstName,
-
-
-        lastName:
-          player.lastName,
+      const existing =
+        await getDoc(
+          ref
+        );
 
 
-        teamName:
-          player.teamName,
+      if (
+        existing.exists()
+      ) {
 
-
-        createdAt:
-          serverTimestamp()
+        continue;
 
       }
-    );
 
 
-    imported++;
+      await setDoc(
+        ref,
+        {
+
+          firstName:
+            player.firstName,
+
+
+          lastName:
+            player.lastName,
+
+
+          teamName:
+            player.teamName,
+
+
+          normalizedFirstName:
+            normalizeText(
+              player.firstName
+            ),
+
+
+          normalizedLastName:
+            normalizeText(
+              player.lastName
+            ),
+
+
+          normalizedTeamName:
+            normalizeText(
+              player.teamName
+            ),
+
+
+          createdByUid:
+            currentUser.uid,
+
+
+          createdByEmail:
+            currentUser.email
+            ||
+            "",
+
+
+          createdAt:
+            serverTimestamp()
+
+        }
+      );
+
+
+      imported++;
+
+    }
+
+    catch (
+      error
+    ) {
+
+      console.error(
+        "IMPORT PLAYER",
+        error
+      );
+
+    }
 
   }
 
@@ -5712,6 +6730,14 @@ function resetImporter() {
 
   document
     .getElementById(
+      "selectedFileName"
+    )
+    .textContent =
+    "No file selected.";
+
+
+  document
+    .getElementById(
       "previewBody"
     )
     .innerHTML =
@@ -5721,6 +6747,16 @@ function resetImporter() {
   document
     .getElementById(
       "previewSection"
+    )
+    .classList
+    .add(
+      "hidden"
+    );
+
+
+  document
+    .getElementById(
+      "importSummary"
     )
     .classList
     .add(
@@ -5751,7 +6787,7 @@ function downloadTemplate() {
       ],
       {
         type:
-          "text/csv"
+          "text/csv;charset=utf-8"
       }
     );
 
@@ -5776,7 +6812,15 @@ function downloadTemplate() {
     "combine-player-template.csv";
 
 
+  document.body.appendChild(
+    link
+  );
+
+
   link.click();
+
+
+  link.remove();
 
 
   URL.revokeObjectURL(
@@ -5791,6 +6835,21 @@ function downloadTemplate() {
 ========================================================= */
 
 function exportResultsToExcel() {
+
+  if (
+    !window.XLSX
+  ) {
+
+    showToast(
+      "Excel export library did not load.",
+      true
+    );
+
+
+    return;
+
+  }
+
 
   const rows =
     athletes.map(
@@ -5939,6 +6998,35 @@ function bindModals() {
         )
     );
 
+
+  document.addEventListener(
+    "keydown",
+    event => {
+
+      if (
+        event.key ===
+        "Escape"
+      ) {
+
+        closeIndexDrawer();
+
+
+        document
+          .querySelectorAll(
+            ".modal-backdrop:not(.hidden)"
+          )
+          .forEach(
+            modal =>
+              closeModal(
+                modal.id
+              )
+          );
+
+      }
+
+    }
+  );
+
 }
 
 
@@ -6041,10 +7129,28 @@ function getTimestampValue(
   }
 
 
-  return timestamp.seconds
+  if (
+    timestamp.seconds
+  ) {
+
+    return timestamp.seconds *
+    1000;
+
+  }
+
+
+  const value =
+    new Date(
+      timestamp
+    )
+      .getTime();
+
+
+  return Number.isFinite(
+    value
+  )
     ?
-    timestamp.seconds *
-    1000
+    value
     :
     0;
 
@@ -6073,7 +7179,24 @@ function shortDate(
   return new Date(
     value
   )
-    .toLocaleString();
+    .toLocaleString(
+      [],
+      {
+
+        month:
+          "short",
+
+        day:
+          "numeric",
+
+        hour:
+          "numeric",
+
+        minute:
+          "2-digit"
+
+      }
+    );
 
 }
 
@@ -6125,13 +7248,29 @@ function comparePlayers(
 ) {
 
   return (
-    a.lastName.localeCompare(
-      b.lastName
-    )
+
+    a.lastName
+      .localeCompare(
+        b.lastName,
+        undefined,
+        {
+          numeric:
+            true
+        }
+      )
+
     ||
-    a.firstName.localeCompare(
-      b.firstName
-    )
+
+    a.firstName
+      .localeCompare(
+        b.firstName,
+        undefined,
+        {
+          numeric:
+            true
+        }
+      )
+
   );
 
 }
@@ -6210,16 +7349,73 @@ function playerDocumentId(
   teamName
 ) {
 
+  const key =
+    playerMatchKey(
+      firstName,
+      lastName,
+      teamName
+    );
+
+
   const base =
-    `${firstName}-${lastName}-${teamName}`
-      .toLowerCase()
+    key
       .replace(
         /[^a-z0-9]+/g,
         "-"
+      )
+      .replace(
+        /^-+|-+$/g,
+        ""
       );
 
 
-  return `${base}-${Date.now()}`;
+  return `${base}-${hashString(
+    key
+  )}`;
+
+}
+
+
+function hashString(
+  value
+) {
+
+  let hash =
+    2166136261;
+
+
+  for (
+    let i =
+      0;
+
+    i <
+    value.length;
+
+    i++
+  ) {
+
+    hash ^=
+      value.charCodeAt(
+        i
+      );
+
+
+    hash =
+      Math.imul(
+        hash,
+        16777619
+      );
+
+  }
+
+
+  return (
+    hash >>>
+    0
+  )
+    .toString(
+      36
+    );
 
 }
 
@@ -6240,6 +7436,8 @@ function normalizeSpreadsheetRow(
     of
     Object.entries(
       raw
+      ||
+      {}
     )
   ) {
 
@@ -6249,6 +7447,14 @@ function normalizeSpreadsheetRow(
       )
         .trim()
         .toLowerCase()
+        .replace(
+          /[_-]+/g,
+          " "
+        )
+        .replace(
+          /\s+/g,
+          " "
+        )
     ] =
       value;
 
