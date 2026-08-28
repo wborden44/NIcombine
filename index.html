@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
 
   <meta charset="UTF-8" />
@@ -27,7 +26,6 @@
   ></script>
 
 </head>
-
 
 <body>
 
@@ -266,7 +264,6 @@
               placeholder="Search athletes…"
             />
 
-
             <div
               id="athleteAgeFilter"
               class="age-filter-dropdown"
@@ -279,7 +276,6 @@
                 aria-haspopup="true"
                 aria-expanded="false"
               >
-
                 <span id="athleteAgeFilterLabel">
                   All Teams
                 </span>
@@ -287,7 +283,6 @@
                 <span class="age-filter-chevron">
                   ▾
                 </span>
-
               </button>
 
 
@@ -950,6 +945,11 @@
             Enter Result
           </h2>
 
+          <div
+            id="numberPadStageLabel"
+            class="number-pad-stage-label"
+          ></div>
+
         </div>
 
         <button
@@ -961,12 +961,6 @@
         </button>
 
       </div>
-
-
-      <div
-        id="numberPadStageLabel"
-        class="number-pad-stage hidden"
-      ></div>
 
 
       <div class="number-display-wrap">
@@ -982,6 +976,38 @@
           id="numberPadUnit"
           class="number-unit"
         ></div>
+
+      </div>
+
+
+      <div
+        id="distanceProgress"
+        class="distance-progress hidden"
+      >
+
+        <div>
+
+          <span>
+            FEET
+          </span>
+
+          <strong id="distanceFeetPreview">
+            —
+          </strong>
+
+        </div>
+
+        <div>
+
+          <span>
+            INCHES
+          </span>
+
+          <strong id="distanceInchesPreview">
+            —
+          </strong>
+
+        </div>
 
       </div>
 
@@ -1038,5 +1064,4 @@
   ></script>
 
 </body>
-
 </html>
