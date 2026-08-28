@@ -18,7 +18,7 @@
 
   <link
     rel="stylesheet"
-    href="./style.css?v=20260818-30"
+    href="./style.css?v=20260827-31"
   />
 
   <script
@@ -238,13 +238,58 @@
               placeholder="Search athletes…"
             />
 
-            <select id="athleteAgeFilter">
+            <div
+              id="athleteAgeFilter"
+              class="age-filter-dropdown"
+            >
 
-              <option value="">
-                All Age Groups
-              </option>
+              <button
+                id="athleteAgeFilterButton"
+                class="age-filter-button"
+                type="button"
+                aria-haspopup="true"
+                aria-expanded="false"
+              >
+                <span id="athleteAgeFilterLabel">
+                  All Age Groups
+                </span>
 
-            </select>
+                <span class="age-filter-chevron">
+                  ▾
+                </span>
+              </button>
+
+
+              <div
+                id="athleteAgeFilterMenu"
+                class="age-filter-menu hidden"
+              >
+
+                <div class="age-filter-menu-header">
+
+                  <span>
+                    Age Groups
+                  </span>
+
+                  <button
+                    id="clearAthleteAgeFilters"
+                    class="age-filter-clear"
+                    type="button"
+                  >
+                    Clear
+                  </button>
+
+                </div>
+
+
+                <div
+                  id="athleteAgeFilterOptions"
+                  class="age-filter-options"
+                ></div>
+
+              </div>
+
+            </div>
 
           </div>
 
@@ -945,7 +990,7 @@
 
   <script
     type="module"
-    src="./script.js?v=20260818-30"
+    src="./script.js?v=20260827-31"
   ></script>
 
 </body>
