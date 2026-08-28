@@ -18,7 +18,7 @@
 
   <link
     rel="stylesheet"
-    href="./style.css?v=20260828-33"
+    href="./style.css?v=20260828-34"
   />
 
   <script
@@ -264,6 +264,7 @@
               placeholder="Search athletes…"
             />
 
+
             <div
               id="athleteAgeFilter"
               class="age-filter-dropdown"
@@ -276,6 +277,7 @@
                 aria-haspopup="true"
                 aria-expanded="false"
               >
+
                 <span id="athleteAgeFilterLabel">
                   All Teams
                 </span>
@@ -283,6 +285,7 @@
                 <span class="age-filter-chevron">
                   ▾
                 </span>
+
               </button>
 
 
@@ -464,7 +467,6 @@
 
           </div>
 
-
           <button
             id="exportResultsButton"
             class="button"
@@ -498,9 +500,8 @@
 
 
           <p class="small-note">
-            One row per athlete. Click any event heading to sort.
-            Highest-result events sort high-to-low by default.
-            Timed events sort low-to-high by default.
+            One row per athlete. Click an event heading to sort.
+            Highest-result events sort high-to-low. Timed events sort low-to-high.
           </p>
 
 
@@ -574,17 +575,90 @@
     </div>
 
 
-    <input
-      id="indexSearch"
-      type="search"
-      placeholder="Search player…"
-    />
+    <div class="index-controls">
+
+      <input
+        id="indexSearch"
+        type="search"
+        placeholder="Search player…"
+      />
+
+
+      <div
+        id="indexTeamFilter"
+        class="index-team-filter"
+      >
+
+        <button
+          id="indexTeamFilterButton"
+          class="index-team-filter-button"
+          type="button"
+          aria-expanded="false"
+        >
+
+          <span id="indexTeamFilterLabel">
+            All Teams
+          </span>
+
+          <span class="index-team-filter-chevron">
+            ▾
+          </span>
+
+        </button>
+
+
+        <div
+          id="indexTeamFilterMenu"
+          class="index-team-filter-menu hidden"
+        >
+
+          <div class="index-team-filter-header">
+
+            <span>
+              Filter by Team
+            </span>
+
+            <button
+              id="clearIndexTeamFilters"
+              class="index-team-filter-clear"
+              type="button"
+            >
+              Clear
+            </button>
+
+          </div>
+
+
+          <div
+            id="indexTeamFilterOptions"
+            class="index-team-filter-options"
+          ></div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div
+      id="indexPlayerCount"
+      class="index-player-count"
+    ></div>
 
 
     <div
       id="indexPlayerList"
       class="index-player-list"
     ></div>
+
+
+    <div
+      id="indexPlayerEmpty"
+      class="index-empty hidden"
+    >
+      No players found.
+    </div>
 
   </aside>
 
@@ -799,54 +873,23 @@
       >
 
         <div class="summary-card">
-
-          <strong id="summaryTotal">
-            0
-          </strong>
-
-          <span>
-            Rows
-          </span>
-
+          <strong id="summaryTotal">0</strong>
+          <span>Rows</span>
         </div>
 
-
         <div class="summary-card">
-
-          <strong id="summaryNew">
-            0
-          </strong>
-
-          <span>
-            New
-          </span>
-
+          <strong id="summaryNew">0</strong>
+          <span>New</span>
         </div>
 
-
         <div class="summary-card">
-
-          <strong id="summaryDuplicate">
-            0
-          </strong>
-
-          <span>
-            Duplicates
-          </span>
-
+          <strong id="summaryDuplicate">0</strong>
+          <span>Duplicates</span>
         </div>
 
-
         <div class="summary-card">
-
-          <strong id="summaryInvalid">
-            0
-          </strong>
-
-          <span>
-            Invalid
-          </span>
-
+          <strong id="summaryInvalid">0</strong>
+          <span>Invalid</span>
         </div>
 
       </div>
@@ -864,23 +907,10 @@
             <thead>
 
               <tr>
-
-                <th>
-                  First Name
-                </th>
-
-                <th>
-                  Last Name
-                </th>
-
-                <th>
-                  Team Name
-                </th>
-
-                <th>
-                  Status
-                </th>
-
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>Team Name</th>
+                <th>Status</th>
               </tr>
 
             </thead>
@@ -1060,7 +1090,7 @@
 
   <script
     type="module"
-    src="./script.js?v=20260828-33"
+    src="./script.js?v=20260828-34"
   ></script>
 
 </body>
