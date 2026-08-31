@@ -2,12 +2,14 @@ import {
   initializeApp
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
 
+
 import {
   getAuth,
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+
 
 import {
   getFirestore,
@@ -23,6 +25,7 @@ import {
   serverTimestamp,
   writeBatch
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+
 
 
 /* =========================================================
@@ -70,12 +73,32 @@ const db =
   );
 
 
+
 /* =========================================================
-   SETTINGS
+   USER PERMISSIONS
 ========================================================= */
 
 const ADMIN_EMAIL =
   "wes@ninthinningbaseball.com";
+
+
+/*
+  VIEW-ONLY USER
+
+  IMPORTANT:
+  The password DOES NOT belong in this JavaScript file.
+
+  Create this user inside Firebase Authentication:
+  kennesaw@ninthinningbaseball.com
+
+  Set the password there.
+*/
+
+const VIEW_ONLY_EMAILS = [
+
+  "kennesaw@ninthinningbaseball.com"
+
+];
 
 
 const PLAYERS_COLLECTION =
@@ -86,13 +109,15 @@ const RESULTS_COLLECTION =
   "results";
 
 
+
 /* =========================================================
-   EVENTS
+   EVENT CONFIGURATION
 ========================================================= */
 
 const EVENTS = [
 
   {
+
     key:
       "pulldown",
 
@@ -110,10 +135,12 @@ const EVENTS = [
 
     maxAvg:
       true
+
   },
 
 
   {
+
     key:
       "exitVelo",
 
@@ -134,10 +161,12 @@ const EVENTS = [
 
     maxAvg:
       true
+
   },
 
 
   {
+
     key:
       "internalRotation",
 
@@ -152,10 +181,12 @@ const EVENTS = [
 
     direction:
       "high"
+
   },
 
 
   {
+
     key:
       "externalRotation",
 
@@ -170,10 +201,12 @@ const EVENTS = [
 
     direction:
       "high"
+
   },
 
 
   {
+
     key:
       "dynoInternal",
 
@@ -188,10 +221,12 @@ const EVENTS = [
 
     direction:
       "high"
+
   },
 
 
   {
+
     key:
       "dynoExternal",
 
@@ -206,10 +241,12 @@ const EVENTS = [
 
     direction:
       "high"
+
   },
 
 
   {
+
     key:
       "gripLeft",
 
@@ -227,10 +264,12 @@ const EVENTS = [
 
     direction:
       "high"
+
   },
 
 
   {
+
     key:
       "gripRight",
 
@@ -248,10 +287,12 @@ const EVENTS = [
 
     direction:
       "high"
+
   },
 
 
   {
+
     key:
       "medBallLeft",
 
@@ -272,10 +313,12 @@ const EVENTS = [
 
     feetInches:
       true
+
   },
 
 
   {
+
     key:
       "medBallRight",
 
@@ -296,10 +339,12 @@ const EVENTS = [
 
     feetInches:
       true
+
   },
 
 
   {
+
     key:
       "broadJump",
 
@@ -317,10 +362,12 @@ const EVENTS = [
 
     feetInches:
       true
+
   },
 
 
   {
+
     key:
       "squatAssessment",
 
@@ -338,10 +385,12 @@ const EVENTS = [
 
     direction:
       "passfail"
+
   },
 
 
   {
+
     key:
       "fiveTenFive",
 
@@ -359,10 +408,12 @@ const EVENTS = [
 
     direction:
       "low"
+
   },
 
 
   {
+
     key:
       "tenYardShuttle",
 
@@ -380,13 +431,15 @@ const EVENTS = [
 
     direction:
       "low"
+
   }
 
 ];
 
 
+
 /* =========================================================
-   STATE
+   APP STATE
 ========================================================= */
 
 let currentUser =
@@ -405,12 +458,12 @@ let selectedAthlete =
   null;
 
 
-const selectedAthleteIds =
-  new Set();
-
-
 let importRows =
   [];
+
+
+const selectedAthleteIds =
+  new Set();
 
 
 let athleteSort = {
@@ -451,39 +504,45 @@ let numberPadFeet =
   null;
 
 
+
+/* =========================================================
+   TIMER STATE
+========================================================= */
+
 const timerStates =
   {};
 
 
-for (
-  const event
-  of
-  EVENTS.filter(
+EVENTS
+  .filter(
     event =>
       event.type ===
       "timer"
   )
-) {
+  .forEach(
+    event => {
 
-  timerStates[
-    event.key
-  ] = {
+      timerStates[
+        event.key
+      ] = {
 
-    running:
-      false,
+        running:
+          false,
 
-    startedAt:
-      0,
+        startedAt:
+          0,
 
-    elapsedMs:
-      0,
+        elapsedMs:
+          0,
 
-    intervalId:
-      null
+        intervalId:
+          null
 
-  };
+      };
 
-}
+    }
+  );
+
 
 
 /* =========================================================
@@ -516,128 +575,321 @@ window.addEventListener(
 );
 
 
+
+/* =========================================================
+   PERMISSIONS
+========================================================= */
+
+function isAdmin() {
+
+  return (
+    normalizeText(
+      currentUser?.email
+    )
+    ===
+    normalizeText(
+      ADMIN_EMAIL
+    )
+  );
+
+}
+
+
+function isViewOnly() {
+
+  const email =
+    normalizeText(
+      currentUser?.email
+    );
+
+
+  return VIEW_ONLY_EMAILS
+    .map(
+      normalizeText
+    )
+    .includes(
+      email
+    );
+
+}
+
+
+function canEdit() {
+
+  return (
+
+    !!currentUser
+
+    &&
+
+    !isViewOnly()
+
+  );
+
+}
+
+
+function applyPermissionUI() {
+
+  const badge =
+    document.getElementById(
+      "adminBadge"
+    );
+
+
+  if (
+    isAdmin()
+  ) {
+
+    badge.textContent =
+      "ADMIN";
+
+
+    badge.classList.remove(
+      "hidden"
+    );
+
+
+    badge.classList.remove(
+      "view-only-badge"
+    );
+
+  }
+
+  else if (
+    isViewOnly()
+  ) {
+
+    badge.textContent =
+      "VIEW ONLY";
+
+
+    badge.classList.remove(
+      "hidden"
+    );
+
+
+    badge.classList.add(
+      "view-only-badge"
+    );
+
+  }
+
+  else {
+
+    badge.classList.add(
+      "hidden"
+    );
+
+  }
+
+
+
+  /*
+    EDITOR USERS:
+    All authenticated users OTHER than the view-only
+    account are allowed to add players and score.
+  */
+
+  document
+    .getElementById(
+      "openAddPlayerButton"
+    )
+    ?.classList
+    .toggle(
+      "hidden",
+      !canEdit()
+    );
+
+
+
+  /*
+    Upload/import remains ADMIN ONLY.
+  */
+
+  document
+    .getElementById(
+      "uploadPlayersButton"
+    )
+    ?.classList
+    .toggle(
+      "hidden",
+      !isAdmin()
+    );
+
+
+
+  /*
+    Player deletion remains ADMIN ONLY.
+  */
+
+  document
+    .getElementById(
+      "deletePlayerButton"
+    )
+    ?.classList
+    .toggle(
+      "hidden",
+      !isAdmin()
+    );
+
+
+  [
+
+    "selectVisiblePlayersButton",
+
+    "clearPlayerSelectionButton",
+
+    "deleteSelectedPlayersButton",
+
+    "athleteSelectHeader"
+
+  ]
+    .forEach(
+      id => {
+
+        document
+          .getElementById(
+            id
+          )
+          ?.classList
+          .toggle(
+            "hidden",
+            !isAdmin()
+          );
+
+      }
+    );
+
+}
+
+
+
 /* =========================================================
    LOGIN
 ========================================================= */
 
 function bindLogin() {
 
-  const form =
-    document.getElementById(
+  document
+    .getElementById(
       "loginForm"
-    );
+    )
+    .addEventListener(
+      "submit",
+      async event => {
+
+        event.preventDefault();
 
 
-  form.addEventListener(
-    "submit",
-    async event => {
-
-      event.preventDefault();
-
-
-      const email =
-        document
-          .getElementById(
-            "loginEmail"
-          )
-          .value
-          .trim();
+        const email =
+          document
+            .getElementById(
+              "loginEmail"
+            )
+            .value
+            .trim();
 
 
-      const password =
-        document
-          .getElementById(
-            "loginPassword"
-          )
-          .value;
+        const password =
+          document
+            .getElementById(
+              "loginPassword"
+            )
+            .value;
 
 
-      const message =
-        document.getElementById(
-          "loginMessage"
+        const message =
+          document.getElementById(
+            "loginMessage"
+          );
+
+
+        const button =
+          document.getElementById(
+            "loginButton"
+          );
+
+
+        hideMessage(
+          message
         );
 
-
-      const button =
-        document.getElementById(
-          "loginButton"
-        );
-
-
-      hideMessage(
-        message
-      );
-
-
-      button.disabled =
-        true;
-
-
-      button.textContent =
-        "Signing In…";
-
-
-      try {
-
-        await signInWithEmailAndPassword(
-          auth,
-          email,
-          password
-        );
-
-      }
-
-      catch (
-        error
-      ) {
-
-        console.error(
-          "LOGIN ERROR",
-          error
-        );
-
-
-        let text =
-          `${error.code}: ${error.message}`;
-
-
-        if (
-          [
-            "auth/invalid-credential",
-            "auth/wrong-password",
-            "auth/user-not-found"
-          ].includes(
-            error.code
-          )
-        ) {
-
-          text =
-            "Invalid email or password.";
-
-        }
-
-
-        showMessage(
-          message,
-          text,
-          "error"
-        );
-
-      }
-
-      finally {
 
         button.disabled =
-          false;
+          true;
 
 
         button.textContent =
-          "Sign In";
+          "Signing In…";
+
+
+        try {
+
+          await signInWithEmailAndPassword(
+            auth,
+            email,
+            password
+          );
+
+        }
+
+        catch (
+          error
+        ) {
+
+          console.error(
+            "LOGIN ERROR",
+            error
+          );
+
+
+          let text =
+            `${error.code}: ${error.message}`;
+
+
+          if (
+            [
+
+              "auth/invalid-credential",
+
+              "auth/wrong-password",
+
+              "auth/user-not-found"
+
+            ]
+              .includes(
+                error.code
+              )
+          ) {
+
+            text =
+              "Invalid email or password.";
+
+          }
+
+
+          showMessage(
+            message,
+            text,
+            "error"
+          );
+
+        }
+
+        finally {
+
+          button.disabled =
+            false;
+
+
+          button.textContent =
+            "Sign In";
+
+        }
 
       }
-
-    }
-  );
+    );
 
 
   document
@@ -655,8 +907,9 @@ function bindLogin() {
 }
 
 
+
 /* =========================================================
-   AUTH
+   AUTH STATE
 ========================================================= */
 
 onAuthStateChanged(
@@ -706,6 +959,9 @@ onAuthStateChanged(
       selectedAthleteIds.clear();
 
 
+      resetAllTimers();
+
+
       return;
 
     }
@@ -741,60 +997,7 @@ onAuthStateChanged(
       "";
 
 
-    document
-      .getElementById(
-        "uploadPlayersButton"
-      )
-      .classList
-      .toggle(
-        "hidden",
-        !isAdmin()
-      );
-
-
-    document
-      .getElementById(
-        "adminBadge"
-      )
-      .classList
-      .toggle(
-        "hidden",
-        !isAdmin()
-      );
-
-
-    document
-      .getElementById(
-        "deletePlayerButton"
-      )
-      .classList
-      .toggle(
-        "hidden",
-        !isAdmin()
-      );
-
-
-    [
-      "selectVisiblePlayersButton",
-      "clearPlayerSelectionButton",
-      "deleteSelectedPlayersButton",
-      "athleteSelectHeader"
-    ]
-      .forEach(
-        id => {
-
-          document
-            .getElementById(
-              id
-            )
-            ?.classList
-            .toggle(
-              "hidden",
-              !isAdmin()
-            );
-
-        }
-      );
+    applyPermissionUI();
 
 
     await refreshData();
@@ -802,27 +1005,6 @@ onAuthStateChanged(
   }
 );
 
-
-function isAdmin() {
-
-  return (
-
-    (
-      currentUser?.email
-      ||
-      ""
-    )
-      .trim()
-      .toLowerCase()
-
-    ===
-
-    ADMIN_EMAIL
-      .toLowerCase()
-
-  );
-
-}
 
 
 /* =========================================================
@@ -833,8 +1015,11 @@ async function refreshData() {
 
   await Promise.all(
     [
+
       loadAthletes(),
+
       loadResults()
+
     ]
   );
 
@@ -974,9 +1159,13 @@ async function loadResults() {
         )
         .filter(
           result =>
+
             result.event
+
             &&
+
             result.athleteId
+
         );
 
   }
@@ -1015,33 +1204,53 @@ function normalizePlayer(
 
     firstName:
       cleanText(
+
         data.firstName ??
+
         data.first_name ??
+
         data.firstname ??
+
         data.first ??
+
         ""
+
       ),
 
 
     lastName:
       cleanText(
+
         data.lastName ??
+
         data.last_name ??
+
         data.lastname ??
+
         data.last ??
+
         ""
+
       ),
 
 
     teamName:
       normalizeTeamName(
+
         data.teamName ??
+
         data.team_name ??
+
         data.team ??
+
         data.ageGroup ??
+
         data.age_group ??
+
         data.age ??
+
         ""
+
       )
 
   };
@@ -1062,66 +1271,101 @@ function normalizeResult(
 
 
     athleteId:
+
       data.athleteId ??
+
       data.playerId ??
+
       data.athlete_id ??
+
       data.player_id ??
+
       "",
 
 
     event:
       normalizeEventKey(
+
         data.event ??
+
         data.eventKey ??
+
         data.test ??
+
         data.metric ??
+
         ""
+
       ),
 
 
     value:
+
       data.value ??
+
       data.score ??
+
       data.result ??
+
       null,
 
 
     assessment:
+
       data.assessment ??
+
       data.status ??
+
       null,
 
 
     notes:
+
       data.notes ??
+
       "",
 
 
     teamName:
       normalizeTeamName(
+
         data.teamName ??
+
         data.team_name ??
+
         data.ageGroup ??
+
         data.age_group ??
+
         ""
+
       ),
 
 
     enteredByUid:
+
       data.enteredByUid ??
+
       data.entered_by_uid ??
+
       "",
 
 
     enteredByEmail:
+
       data.enteredByEmail ??
+
       data.entered_by_email ??
+
       "",
 
 
     createdAt:
+
       data.createdAt ??
+
       data.created_at ??
+
       null
 
   };
@@ -1233,6 +1477,7 @@ function normalizeEventKey(
 }
 
 
+
 /* =========================================================
    NAVIGATION
 ========================================================= */
@@ -1301,12 +1546,15 @@ function showView(
       ".nav-tab"
     )
     .forEach(
-      button =>
+      button => {
+
         button.classList.toggle(
           "active",
           button.dataset.view ===
           viewId
-        )
+        );
+
+      }
     );
 
 
@@ -1331,18 +1579,21 @@ function showView(
 
 
   window.scrollTo({
+
     top:
       0,
 
     behavior:
       "smooth"
+
   });
 
 }
 
 
+
 /* =========================================================
-   ATHLETES
+   ATHLETE PAGE
 ========================================================= */
 
 function bindAthletePage() {
@@ -1516,6 +1767,21 @@ function bindAthletePage() {
       "click",
       () => {
 
+        if (
+          !canEdit()
+        ) {
+
+          showToast(
+            "This account is view only.",
+            true
+          );
+
+
+          return;
+
+        }
+
+
         document
           .getElementById(
             "addPlayerForm"
@@ -1599,6 +1865,11 @@ function bindAthletePage() {
 }
 
 
+
+/* =========================================================
+   VISIBLE ATHLETES
+========================================================= */
+
 function getVisibleAthletes() {
 
   const search =
@@ -1621,30 +1892,42 @@ function getVisibleAthletes() {
 
         const text =
           normalizeText(
+
             `${athlete.firstName} ${athlete.lastName} ${athlete.teamName}`
+
+          );
+
+
+        const matchesSearch =
+
+          !search
+
+          ||
+
+          text.includes(
+            search
+          );
+
+
+        const matchesTeams =
+
+          selectedTeams.length ===
+          0
+
+          ||
+
+          selectedTeams.includes(
+            athlete.teamName
           );
 
 
         return (
 
-          (
-            !search
-            ||
-            text.includes(
-              search
-            )
-          )
+          matchesSearch
 
           &&
 
-          (
-            selectedTeams.length ===
-            0
-            ||
-            selectedTeams.includes(
-              athlete.teamName
-            )
-          )
+          matchesTeams
 
         );
 
@@ -1706,6 +1989,11 @@ function getVisibleAthletes() {
 }
 
 
+
+/* =========================================================
+   RENDER ATHLETE TABLE
+========================================================= */
+
 function renderAthleteTable() {
 
   const body =
@@ -1727,209 +2015,208 @@ function renderAthleteTable() {
     );
 
 
-  for (
-    const id
-    of
-    Array.from(
-      selectedAthleteIds
-    )
-  ) {
+  [
 
-    if (
-      !validIds.has(
-        id
-      )
-    ) {
+    ...selectedAthleteIds
 
-      selectedAthleteIds.delete(
-        id
-      );
+  ]
+    .forEach(
+      id => {
 
-    }
+        if (
+          !validIds.has(
+            id
+          )
+        ) {
 
-  }
+          selectedAthleteIds.delete(
+            id
+          );
+
+        }
+
+      }
+    );
 
 
   body.innerHTML =
     "";
 
 
-  for (
-    const athlete
-    of
-    filtered
-  ) {
+  filtered.forEach(
+    athlete => {
 
-    const row =
-      document.createElement(
-        "tr"
-      );
-
-
-    row.className =
-      `athlete-row${
-        selectedAthleteIds.has(
-          athlete.id
-        )
-        ?
-        " athlete-row-selected"
-        :
-        ""
-      }`;
-
-
-    row.innerHTML =
-      `
-
-        ${
-          isAdmin()
-          ?
-          `
-
-            <td class="athlete-select-cell">
-
-              <label class="athlete-select-label">
-
-                <input
-                  class="athlete-select-checkbox"
-                  type="checkbox"
-                  data-player-id="${escapeHtml(
-                    athlete.id
-                  )}"
-                  ${
-                    selectedAthleteIds.has(
-                      athlete.id
-                    )
-                    ?
-                    "checked"
-                    :
-                    ""
-                  }
-                />
-
-              </label>
-
-            </td>
-
-          `
-          :
-          ""
-        }
-
-
-        <td>
-
-          <strong>
-            ${escapeHtml(
-              athlete.firstName
-            )}
-          </strong>
-
-        </td>
-
-
-        <td>
-
-          <strong>
-            ${escapeHtml(
-              athlete.lastName
-            )}
-          </strong>
-
-        </td>
-
-
-        <td>
-
-          <span class="age-pill team-pill">
-            ${escapeHtml(
-              athlete.teamName
-            )}
-          </span>
-
-        </td>
-
-      `;
-
-
-    row.addEventListener(
-      "click",
-      event => {
-
-        if (
-          event.target.closest(
-            ".athlete-select-cell"
-          )
-        ) {
-
-          return;
-
-        }
-
-
-        startTesting(
-          athlete.id
+      const row =
+        document.createElement(
+          "tr"
         );
 
-      }
-    );
+
+      row.className =
+        `athlete-row${
+          selectedAthleteIds.has(
+            athlete.id
+          )
+          ?
+          " athlete-row-selected"
+          :
+          ""
+        }`;
 
 
-    const checkbox =
-      row.querySelector(
-        ".athlete-select-checkbox"
-      );
+      row.innerHTML =
+        `
+
+          ${
+            isAdmin()
+            ?
+            `
+
+              <td class="athlete-select-cell">
+
+                <label class="athlete-select-label">
+
+                  <input
+                    class="athlete-select-checkbox"
+                    type="checkbox"
+                    data-player-id="${escapeHtml(
+                      athlete.id
+                    )}"
+                    ${
+                      selectedAthleteIds.has(
+                        athlete.id
+                      )
+                      ?
+                      "checked"
+                      :
+                      ""
+                    }
+                  />
+
+                </label>
+
+              </td>
+
+            `
+            :
+            ""
+          }
 
 
-    checkbox
-      ?.addEventListener(
+          <td>
+
+            <strong>
+              ${escapeHtml(
+                athlete.firstName
+              )}
+            </strong>
+
+          </td>
+
+
+          <td>
+
+            <strong>
+              ${escapeHtml(
+                athlete.lastName
+              )}
+            </strong>
+
+          </td>
+
+
+          <td>
+
+            <span class="age-pill team-pill">
+              ${escapeHtml(
+                athlete.teamName
+              )}
+            </span>
+
+          </td>
+
+        `;
+
+
+      row.addEventListener(
         "click",
-        event =>
-          event.stopPropagation()
-      );
-
-
-    checkbox
-      ?.addEventListener(
-        "change",
-        () => {
+        event => {
 
           if (
-            checkbox.checked
+            event.target.closest(
+              ".athlete-select-cell"
+            )
           ) {
 
-            selectedAthleteIds.add(
-              athlete.id
-            );
-
-          }
-
-          else {
-
-            selectedAthleteIds.delete(
-              athlete.id
-            );
+            return;
 
           }
 
 
-          row.classList.toggle(
-            "athlete-row-selected",
-            checkbox.checked
+          startTesting(
+            athlete.id
           );
-
-
-          updateBulkSelectionControls();
 
         }
       );
 
 
-    body.appendChild(
-      row
-    );
+      const checkbox =
+        row.querySelector(
+          ".athlete-select-checkbox"
+        );
 
-  }
+
+      checkbox
+        ?.addEventListener(
+          "click",
+          event =>
+            event.stopPropagation()
+        );
+
+
+      checkbox
+        ?.addEventListener(
+          "change",
+          () => {
+
+            if (
+              checkbox.checked
+            ) {
+
+              selectedAthleteIds.add(
+                athlete.id
+              );
+
+            }
+
+            else {
+
+              selectedAthleteIds.delete(
+                athlete.id
+              );
+
+            }
+
+
+            row.classList.toggle(
+              "athlete-row-selected",
+              checkbox.checked
+            );
+
+
+            updateBulkSelectionControls();
+
+          }
+        );
+
+
+      body.appendChild(
+        row
+      );
+
+    }
+  );
 
 
   document
@@ -1949,6 +2236,11 @@ function renderAthleteTable() {
 }
 
 
+
+/* =========================================================
+   BULK PLAYER SELECTION
+========================================================= */
+
 function selectAllVisiblePlayers() {
 
   if (
@@ -1960,17 +2252,16 @@ function selectAllVisiblePlayers() {
   }
 
 
-  for (
-    const athlete
-    of
-    getVisibleAthletes()
-  ) {
+  getVisibleAthletes()
+    .forEach(
+      athlete => {
 
-    selectedAthleteIds.add(
-      athlete.id
+        selectedAthleteIds.add(
+          athlete.id
+        );
+
+      }
     );
-
-  }
 
 
   renderAthleteTable();
@@ -2054,6 +2345,11 @@ function updateBulkSelectionControls() {
 }
 
 
+
+/* =========================================================
+   BULK DELETE
+========================================================= */
+
 async function deleteSelectedPlayers() {
 
   if (
@@ -2092,14 +2388,16 @@ async function deleteSelectedPlayers() {
     );
 
 
-  const confirmed =
+  const firstConfirmation =
     window.confirm(
+
       `WARNING\n\nDelete ${selectedPlayers.length} players and ${selectedResults.length} saved results?\n\nThis cannot be undone.`
+
     );
 
 
   if (
-    !confirmed
+    !firstConfirmation
   ) {
 
     return;
@@ -2109,7 +2407,9 @@ async function deleteSelectedPlayers() {
 
   const typed =
     window.prompt(
+
       `Type DELETE ${selectedPlayers.length} to confirm.`
+
     );
 
 
@@ -2173,24 +2473,38 @@ async function deleteSelectedPlayers() {
         );
 
 
-      for (
-        const ref
-        of
-        refs.slice(
+      refs
+        .slice(
           i,
           i +
           450
         )
-      ) {
+        .forEach(
+          ref => {
 
-        batch.delete(
-          ref
+            batch.delete(
+              ref
+            );
+
+          }
         );
-
-      }
 
 
       await batch.commit();
+
+    }
+
+
+    if (
+      selectedAthlete
+      &&
+      selectedAthleteIds.has(
+        selectedAthlete.id
+      )
+    ) {
+
+      selectedAthlete =
+        null;
 
     }
 
@@ -2202,7 +2516,9 @@ async function deleteSelectedPlayers() {
 
 
     showToast(
+
       `${selectedPlayers.length} players deleted.`
+
     );
 
   }
@@ -2212,18 +2528,23 @@ async function deleteSelectedPlayers() {
   ) {
 
     console.error(
+      "BULK DELETE",
       error
     );
 
 
     showToast(
+
       `Could not delete players: ${error.message}`,
+
       true
+
     );
 
   }
 
 }
+
 
 
 /* =========================================================
@@ -2235,6 +2556,21 @@ async function addPlayer(
 ) {
 
   event.preventDefault();
+
+
+  if (
+    !canEdit()
+  ) {
+
+    showToast(
+      "This account is view only.",
+      true
+    );
+
+
+    return;
+
+  }
 
 
   const message =
@@ -2282,9 +2618,13 @@ async function addPlayer(
   ) {
 
     showMessage(
+
       message,
+
       "First name, last name and team name are required.",
+
       "error"
+
     );
 
 
@@ -2302,9 +2642,13 @@ async function addPlayer(
   ) {
 
     showMessage(
+
       message,
+
       "That player already exists.",
+
       "warning"
+
     );
 
 
@@ -2326,6 +2670,32 @@ async function addPlayer(
 
 
   try {
+
+    const existing =
+      await getDoc(
+        ref
+      );
+
+
+    if (
+      existing.exists()
+    ) {
+
+      showMessage(
+
+        message,
+
+        "That player already exists.",
+
+        "warning"
+
+      );
+
+
+      return;
+
+    }
+
 
     await setDoc(
       ref,
@@ -2382,7 +2752,9 @@ async function addPlayer(
 
 
     showToast(
+
       `${firstName} ${lastName} added.`
+
     );
 
   }
@@ -2392,9 +2764,13 @@ async function addPlayer(
   ) {
 
     showMessage(
+
       message,
+
       error.message,
+
       "error"
+
     );
 
   }
@@ -2402,8 +2778,9 @@ async function addPlayer(
 }
 
 
+
 /* =========================================================
-   TESTING
+   TESTING PAGE
 ========================================================= */
 
 function bindTestingPage() {
@@ -2523,6 +2900,7 @@ function renderTestingPage() {
       "testingPlayerName"
     )
     .textContent =
+
     `${selectedAthlete.firstName} ${selectedAthlete.lastName}`;
 
 
@@ -2531,13 +2909,30 @@ function renderTestingPage() {
       "testingPlayerAge"
     )
     .textContent =
+
     selectedAthlete.teamName;
+
+
+  document
+    .getElementById(
+      "deletePlayerButton"
+    )
+    .classList
+    .toggle(
+      "hidden",
+      !isAdmin()
+    );
 
 
   renderTestCards();
 
 }
 
+
+
+/* =========================================================
+   SINGLE PLAYER DELETE
+========================================================= */
 
 async function deleteSelectedPlayer() {
 
@@ -2556,10 +2951,16 @@ async function deleteSelectedPlayer() {
     selectedAthlete;
 
 
+  const confirmed =
+    window.confirm(
+
+      `Delete ${player.firstName} ${player.lastName} and all saved results?\n\nThis cannot be undone.`
+
+    );
+
+
   if (
-    !window.confirm(
-      `Delete ${player.firstName} ${player.lastName} and all saved results?`
-    )
+    !confirmed
   ) {
 
     return;
@@ -2567,37 +2968,37 @@ async function deleteSelectedPlayer() {
   }
 
 
-  const playerResults =
-    results.filter(
-      result =>
-        result.athleteId ===
-        player.id
-    );
-
-
-  const refs =
-    [
-
-      ...playerResults.map(
-        result =>
-          doc(
-            db,
-            RESULTS_COLLECTION,
-            result.id
-          )
-      ),
-
-
-      doc(
-        db,
-        PLAYERS_COLLECTION,
-        player.id
-      )
-
-    ];
-
-
   try {
+
+    const playerResults =
+      results.filter(
+        result =>
+          result.athleteId ===
+          player.id
+      );
+
+
+    const refs =
+      [
+
+        ...playerResults.map(
+          result =>
+            doc(
+              db,
+              RESULTS_COLLECTION,
+              result.id
+            )
+        ),
+
+
+        doc(
+          db,
+          PLAYERS_COLLECTION,
+          player.id
+        )
+
+      ];
+
 
     for (
       let i =
@@ -2616,21 +3017,21 @@ async function deleteSelectedPlayer() {
         );
 
 
-      for (
-        const ref
-        of
-        refs.slice(
+      refs
+        .slice(
           i,
           i +
           450
         )
-      ) {
+        .forEach(
+          ref => {
 
-        batch.delete(
-          ref
+            batch.delete(
+              ref
+            );
+
+          }
         );
-
-      }
 
 
       await batch.commit();
@@ -2651,7 +3052,9 @@ async function deleteSelectedPlayer() {
 
 
     showToast(
+
       `${player.firstName} ${player.lastName} deleted.`
+
     );
 
   }
@@ -2661,13 +3064,17 @@ async function deleteSelectedPlayer() {
   ) {
 
     showToast(
+
       error.message,
+
       true
+
     );
 
   }
 
 }
+
 
 
 /* =========================================================
@@ -2695,432 +3102,563 @@ function renderTestCards() {
   }
 
 
-  for (
-    const event
-    of
-    EVENTS
-  ) {
+  EVENTS.forEach(
+    event => {
 
-    const stats =
-      getEventStats(
-        selectedAthlete.id,
-        event
-      );
+      const stats =
+        getEventStats(
+          selectedAthlete.id,
+          event
+        );
 
 
-    const card =
-      document.createElement(
-        "article"
-      );
+      const card =
+        document.createElement(
+          "article"
+        );
 
 
-    card.className =
-      "test-card";
+      card.className =
+        "test-card";
 
 
-    if (
-      event.type ===
-      "timer"
-    ) {
 
-      const state =
-        timerStates[
-          event.key
-        ];
+      /* =====================================================
+         TIMED EVENTS
+      ====================================================== */
 
+      if (
+        event.type ===
+        "timer"
+      ) {
 
-      card.innerHTML =
-        `
-
-          <div class="test-card-header">
-
-            <div>
-
-              <p class="kicker">
-                LOWEST IS BEST
-              </p>
-
-              <h3>
-                ${escapeHtml(
-                  event.label
-                )}
-              </h3>
-
-            </div>
+        const state =
+          timerStates[
+            event.key
+          ];
 
 
-            ${
-              stats.best
-              ?
-              `
-                <span class="best-chip">
-                  BEST ${formatEventValue(
-                    stats.best.value,
-                    event
-                  )}
-                </span>
-              `
-              :
-              ""
-            }
+        card.innerHTML =
+          `
 
-          </div>
+            <div class="test-card-header">
 
+              <div>
 
-          <div
-            id="timer-${event.key}"
-            class="timer-display"
-          >
-            ${formatTimer(
-              state.elapsedMs
-            )}
-          </div>
+                <p class="kicker">
+                  LOWEST IS BEST
+                </p>
 
-
-          <button
-            class="timer-toggle-button${
-              state.running
-              ?
-              " running"
-              :
-              ""
-            }"
-            data-event="${event.key}"
-            type="button"
-          >
-            ${
-              state.running
-              ?
-              "STOP"
-              :
-              "START"
-            }
-          </button>
-
-
-          <button
-            class="timer-reset-button"
-            data-event="${event.key}"
-            type="button"
-          >
-            RESET
-          </button>
-
-
-          ${renderAttempts(
-            stats.attempts,
-            event,
-            5
-          )}
-
-        `;
-
-    }
-
-
-    else if (
-      event.type ===
-      "passfail"
-    ) {
-
-      card.innerHTML =
-        `
-
-          <div class="test-card-header">
-
-            <div>
-
-              <p class="kicker">
-                PASS / FAIL
-              </p>
-
-              <h3>
-                ${escapeHtml(
-                  event.label
-                )}
-              </h3>
-
-            </div>
-
-
-            ${
-              stats.latest
-              ?
-              `
-                <span class="best-chip">
+                <h3>
                   ${escapeHtml(
-                    stats.latest.assessment
-                    ||
-                    "—"
+                    event.label
                   )}
-                </span>
-              `
-              :
-              ""
-            }
-
-          </div>
-
-
-          <label for="squatNotes">
-            Notes
-          </label>
-
-
-          <textarea
-            id="squatNotes"
-            class="notes-input"
-            rows="3"
-            placeholder="Optional notes..."
-          ></textarea>
-
-
-          <div class="pass-fail-grid">
-
-            <button
-              class="assessment-button pass"
-              data-assessment="Pass"
-              type="button"
-            >
-              PASS
-            </button>
-
-
-            <button
-              class="assessment-button fail"
-              data-assessment="Fail"
-              type="button"
-            >
-              FAIL
-            </button>
-
-          </div>
-
-
-          ${renderAttempts(
-            stats.attempts,
-            event,
-            3
-          )}
-
-        `;
-
-    }
-
-
-    else {
-
-      card.innerHTML =
-        `
-
-          <div class="test-card-header">
-
-            <div>
-
-              <p class="kicker">
-                HIGHEST IS BEST
-              </p>
-
-              <h3>
-                ${escapeHtml(
-                  event.label
-                )}
-              </h3>
-
-            </div>
-
-
-            ${
-              stats.best
-              ?
-              `
-                <span class="best-chip">
-                  BEST ${formatEventValue(
-                    stats.best.value,
-                    event
-                  )}
-                </span>
-              `
-              :
-              ""
-            }
-
-          </div>
-
-
-          ${
-            event.maxAvg
-            ?
-            `
-
-              <div class="dual-stat">
-
-                <div>
-
-                  <span>
-                    MAX
-                  </span>
-
-                  <strong>
-                    ${
-                      stats.best
-                      ?
-                      formatEventValue(
-                        stats.best.value,
-                        event
-                      )
-                      :
-                      "—"
-                    }
-                  </strong>
-
-                </div>
-
-
-                <div>
-
-                  <span>
-                    AVG LAST 3
-                  </span>
-
-                  <strong>
-                    ${
-                      stats.avgLast3 == null
-                      ?
-                      "—"
-                      :
-                      formatEventValue(
-                        stats.avgLast3,
-                        event
-                      )
-                    }
-                  </strong>
-
-                </div>
+                </h3>
 
               </div>
 
-            `
-            :
-            ""
-          }
+
+              ${
+                stats.best
+                ?
+                `
+
+                  <span class="best-chip">
+
+                    BEST
+                    ${formatEventValue(
+                      stats.best.value,
+                      event
+                    )}
+
+                  </span>
+
+                `
+                :
+                ""
+              }
+
+            </div>
 
 
-          <button
-            class="number-entry-button"
-            data-event="${event.key}"
-            type="button"
-          >
+            <div
+              id="timer-${event.key}"
+              class="timer-display"
+            >
+              ${formatTimer(
+                state.elapsedMs
+              )}
+            </div>
+
+
             ${
-              event.feetInches
+              canEdit()
               ?
-              "ENTER DISTANCE"
+              `
+
+                <button
+                  class="timer-toggle-button${
+                    state.running
+                    ?
+                    " running"
+                    :
+                    ""
+                  }"
+                  data-event="${event.key}"
+                  type="button"
+                >
+
+                  ${
+                    state.running
+                    ?
+                    "STOP"
+                    :
+                    "START"
+                  }
+
+                </button>
+
+
+                <button
+                  class="timer-manual-button"
+                  data-event="${event.key}"
+                  type="button"
+                  ${
+                    state.running
+                    ?
+                    "disabled"
+                    :
+                    ""
+                  }
+                >
+                  ENTER TIME
+                </button>
+
+              `
               :
-              `ENTER ${escapeHtml(
-                event.unit.toUpperCase()
-              )}`
+              `
+
+                <div class="view-only-note">
+                  View only — scoring controls are disabled.
+                </div>
+
+              `
             }
-          </button>
 
 
-          ${renderAttempts(
-            stats.attempts,
-            event,
-            3
-          )}
+            ${renderAttempts(
+              stats.attempts,
+              event,
+              5
+            )}
 
-        `;
+          `;
+
+      }
+
+
+
+      /* =====================================================
+         PASS / FAIL
+      ====================================================== */
+
+      else if (
+        event.type ===
+        "passfail"
+      ) {
+
+        card.innerHTML =
+          `
+
+            <div class="test-card-header">
+
+              <div>
+
+                <p class="kicker">
+                  PASS / FAIL
+                </p>
+
+                <h3>
+                  ${escapeHtml(
+                    event.label
+                  )}
+                </h3>
+
+              </div>
+
+
+              ${
+                stats.latest
+                ?
+                `
+
+                  <span class="best-chip">
+
+                    ${escapeHtml(
+                      stats.latest.assessment
+                      ||
+                      "—"
+                    )}
+
+                  </span>
+
+                `
+                :
+                ""
+              }
+
+            </div>
+
+
+            ${
+              canEdit()
+              ?
+              `
+
+                <label for="squatNotes">
+                  Notes
+                </label>
+
+
+                <textarea
+                  id="squatNotes"
+                  class="notes-input"
+                  rows="3"
+                  placeholder="Optional notes..."
+                ></textarea>
+
+
+                <div class="pass-fail-grid">
+
+                  <button
+                    class="assessment-button pass"
+                    data-assessment="Pass"
+                    type="button"
+                  >
+                    PASS
+                  </button>
+
+
+                  <button
+                    class="assessment-button fail"
+                    data-assessment="Fail"
+                    type="button"
+                  >
+                    FAIL
+                  </button>
+
+                </div>
+
+              `
+              :
+              `
+
+                <div class="view-only-note">
+                  View only — scoring controls are disabled.
+                </div>
+
+              `
+            }
+
+
+            ${renderAttempts(
+              stats.attempts,
+              event,
+              3
+            )}
+
+          `;
+
+      }
+
+
+
+      /* =====================================================
+         NORMAL NUMERIC EVENTS
+      ====================================================== */
+
+      else {
+
+        card.innerHTML =
+          `
+
+            <div class="test-card-header">
+
+              <div>
+
+                <p class="kicker">
+                  HIGHEST IS BEST
+                </p>
+
+                <h3>
+                  ${escapeHtml(
+                    event.label
+                  )}
+                </h3>
+
+              </div>
+
+
+              ${
+                stats.best
+                ?
+                `
+
+                  <span class="best-chip">
+
+                    BEST
+                    ${formatEventValue(
+                      stats.best.value,
+                      event
+                    )}
+
+                  </span>
+
+                `
+                :
+                ""
+              }
+
+            </div>
+
+
+            ${
+              event.maxAvg
+              ?
+              `
+
+                <div class="dual-stat">
+
+                  <div>
+
+                    <span>
+                      MAX
+                    </span>
+
+                    <strong>
+
+                      ${
+                        stats.best
+                        ?
+                        formatEventValue(
+                          stats.best.value,
+                          event
+                        )
+                        :
+                        "—"
+                      }
+
+                    </strong>
+
+                  </div>
+
+
+                  <div>
+
+                    <span>
+                      AVG LAST 3
+                    </span>
+
+                    <strong>
+
+                      ${
+                        stats.avgLast3 == null
+                        ?
+                        "—"
+                        :
+                        formatEventValue(
+                          stats.avgLast3,
+                          event
+                        )
+                      }
+
+                    </strong>
+
+                  </div>
+
+                </div>
+
+              `
+              :
+              ""
+            }
+
+
+            ${
+              canEdit()
+              ?
+              `
+
+                <button
+                  class="number-entry-button"
+                  data-event="${event.key}"
+                  type="button"
+                >
+
+                  ${
+                    event.feetInches
+                    ?
+                    "ENTER DISTANCE"
+                    :
+                    `ENTER ${escapeHtml(
+                      event.unit.toUpperCase()
+                    )}`
+                  }
+
+                </button>
+
+              `
+              :
+              `
+
+                <div class="view-only-note">
+                  View only — scoring controls are disabled.
+                </div>
+
+              `
+            }
+
+
+            ${renderAttempts(
+              stats.attempts,
+              event,
+              3
+            )}
+
+          `;
+
+      }
+
+
+      grid.appendChild(
+        card
+      );
 
     }
+  );
 
 
-    grid.appendChild(
-      card
-    );
 
-  }
-
+  /* ========================================================
+     NUMERIC BUTTONS
+  ========================================================= */
 
   grid
     .querySelectorAll(
       ".number-entry-button"
     )
     .forEach(
-      button =>
+      button => {
+
         button.addEventListener(
           "click",
           () =>
             openNumberPad(
               button.dataset.event
             )
-        )
+        );
+
+      }
     );
 
+
+
+  /* ========================================================
+     START / STOP BUTTONS
+  ========================================================= */
 
   grid
     .querySelectorAll(
       ".timer-toggle-button"
     )
     .forEach(
-      button =>
+      button => {
+
         button.addEventListener(
           "click",
           () =>
             toggleTimer(
               button.dataset.event
             )
-        )
+        );
+
+      }
     );
 
+
+
+  /* ========================================================
+     MANUAL TIME BUTTONS
+  ========================================================= */
 
   grid
     .querySelectorAll(
-      ".timer-reset-button"
+      ".timer-manual-button"
     )
     .forEach(
-      button =>
+      button => {
+
         button.addEventListener(
           "click",
           () =>
-            resetTimer(
+            openManualTimePad(
               button.dataset.event
             )
-        )
+        );
+
+      }
     );
 
+
+
+  /* ========================================================
+     PASS / FAIL
+  ========================================================= */
 
   grid
     .querySelectorAll(
       ".assessment-button"
     )
     .forEach(
-      button =>
+      button => {
+
         button.addEventListener(
           "click",
           () =>
             saveAssessment(
               button.dataset.assessment
             )
-        )
+        );
+
+      }
     );
 
+
+
+  /* ========================================================
+     DELETE ATTEMPTS
+  ========================================================= */
 
   grid
     .querySelectorAll(
       ".delete-attempt"
     )
     .forEach(
-      button =>
+      button => {
+
         button.addEventListener(
           "click",
           () =>
             deleteAttempt(
               button.dataset.resultId
             )
-        )
+        );
+
+      }
     );
 
 }
+
 
 
 /* =========================================================
@@ -3139,9 +3677,11 @@ function renderAttempts(
   ) {
 
     return `
+
       <div class="attempt-empty">
         No entries yet.
       </div>
+
     `;
 
   }
@@ -3170,7 +3710,15 @@ function renderAttempts(
     <div class="attempts">
 
       <div class="attempts-title">
-        RECORDED ENTRIES
+
+        ${
+          event.maxAvg
+          ?
+          "LAST 3 ENTRIES"
+          :
+          "RECORDED ENTRIES"
+        }
+
       </div>
 
 
@@ -3184,12 +3732,17 @@ function renderAttempts(
             attempt => {
 
               const display =
+
                 event.type ===
                 "passfail"
 
                 ?
 
-                `${attempt.assessment || "—"}${
+                `${
+                  attempt.assessment
+                  ||
+                  "—"
+                }${
                   attempt.notes
                   ?
                   ` — ${attempt.notes}`
@@ -3205,11 +3758,20 @@ function renderAttempts(
                 );
 
 
-              const canDelete =
-                isAdmin()
-                ||
-                attempt.enteredByUid ===
-                currentUser?.uid;
+              const mayDelete =
+
+                canEdit()
+
+                &&
+
+                (
+                  isAdmin()
+
+                  ||
+
+                  attempt.enteredByUid ===
+                  currentUser?.uid
+                );
 
 
               return `
@@ -3236,30 +3798,48 @@ function renderAttempts(
                       )}
                     </strong>
 
+
                     <small>
+
                       ${escapeHtml(
                         shortDate(
                           attempt.createdAt
                         )
                       )}
+
+                      ${
+                        attempt.enteredByEmail
+                        ?
+                        ` • ${escapeHtml(
+                          shortCoachName(
+                            attempt.enteredByEmail
+                          )
+                        )}`
+                        :
+                        ""
+                      }
+
                     </small>
 
                   </div>
 
 
                   ${
-                    canDelete
+                    mayDelete
                     ?
                     `
+
                       <button
                         class="delete-attempt"
                         data-result-id="${escapeHtml(
                           attempt.id
                         )}"
                         type="button"
+                        title="Delete entry"
                       >
                         ×
                       </button>
+
                     `
                     :
                     ""
@@ -3279,6 +3859,7 @@ function renderAttempts(
   `;
 
 }
+
 
 
 /* =========================================================
@@ -3380,7 +3961,27 @@ function bindNumberPad() {
 }
 
 
+
+/* =========================================================
+   SAVE NUMBER PAD VALUE
+========================================================= */
+
 async function saveNumberPadValue() {
+
+  if (
+    !canEdit()
+  ) {
+
+    showToast(
+      "This account is view only.",
+      true
+    );
+
+
+    return;
+
+  }
+
 
   const event =
     getEvent(
@@ -3396,6 +3997,11 @@ async function saveNumberPadValue() {
 
   }
 
+
+
+  /* ========================================================
+     FEET + INCHES
+  ========================================================= */
 
   if (
     event.feetInches
@@ -3522,6 +4128,7 @@ async function saveNumberPadValue() {
 
 
     const totalInches =
+
       (
         Number(
           numberPadFeet
@@ -3529,7 +4136,9 @@ async function saveNumberPadValue() {
         *
         12
       )
+
       +
+
       inches;
 
 
@@ -3556,6 +4165,11 @@ async function saveNumberPadValue() {
   }
 
 
+
+  /* ========================================================
+     NORMAL NUMBERS / MANUAL TIMER
+  ========================================================= */
+
   const value =
     Number(
       numberPadBuffer
@@ -3573,6 +4187,25 @@ async function saveNumberPadValue() {
 
     showToast(
       "Enter a valid number.",
+      true
+    );
+
+
+    return;
+
+  }
+
+
+  if (
+    event.type ===
+    "timer"
+    &&
+    value <=
+    0
+  ) {
+
+    showToast(
+      "Enter a time greater than 0 seconds.",
       true
     );
 
@@ -3602,9 +4235,29 @@ async function saveNumberPadValue() {
 }
 
 
+
+/* =========================================================
+   OPEN NORMAL NUMBER PAD
+========================================================= */
+
 function openNumberPad(
   eventKey
 ) {
+
+  if (
+    !canEdit()
+  ) {
+
+    showToast(
+      "This account is view only.",
+      true
+    );
+
+
+    return;
+
+  }
+
 
   const event =
     getEvent(
@@ -3640,6 +4293,7 @@ function openNumberPad(
       "numberPadPlayer"
     )
     .textContent =
+
     `${selectedAthlete.firstName} ${selectedAthlete.lastName}`;
 
 
@@ -3648,8 +4302,14 @@ function openNumberPad(
       "numberPadTitle"
     )
     .textContent =
+
     event.label;
 
+
+
+  /* ========================================================
+     FEET + INCHES MODE
+  ========================================================= */
 
   if (
     event.feetInches
@@ -3710,6 +4370,11 @@ function openNumberPad(
 
   }
 
+
+  /* ========================================================
+     NORMAL NUMBER MODE
+  ========================================================= */
+
   else {
 
     numberPadStage =
@@ -3762,6 +4427,107 @@ function openNumberPad(
 }
 
 
+
+/* =========================================================
+   MANUAL TIMER ENTRY
+========================================================= */
+
+function openManualTimePad(
+  eventKey
+) {
+
+  if (
+    !canEdit()
+  ) {
+
+    showToast(
+      "This account is view only.",
+      true
+    );
+
+
+    return;
+
+  }
+
+
+  const event =
+    getEvent(
+      eventKey
+    );
+
+
+  if (
+    !event
+    ||
+    event.type !==
+    "timer"
+    ||
+    !selectedAthlete
+  ) {
+
+    return;
+
+  }
+
+
+  const timerState =
+    timerStates[
+      eventKey
+    ];
+
+
+  if (
+    timerState?.running
+  ) {
+
+    showToast(
+      "Stop the timer before entering a manual time.",
+      true
+    );
+
+
+    return;
+
+  }
+
+
+  openNumberPad(
+    eventKey
+  );
+
+
+  document
+    .getElementById(
+      "numberPadStageLabel"
+    )
+    .textContent =
+    "Enter time in seconds";
+
+
+  document
+    .getElementById(
+      "numberPadUnit"
+    )
+    .textContent =
+    "sec";
+
+
+  document
+    .getElementById(
+      "saveNumberPadButton"
+    )
+    .textContent =
+    "Save Time";
+
+}
+
+
+
+/* =========================================================
+   NUMBER PAD DISPLAY
+========================================================= */
+
 function updateNumberPadDisplay() {
 
   document
@@ -3769,6 +4535,7 @@ function updateNumberPadDisplay() {
       "numberPadDisplay"
     )
     .textContent =
+
     numberPadBuffer
     ||
     "—";
@@ -3792,6 +4559,7 @@ function updateNumberPadDisplay() {
         "distanceInchesPreview"
       )
       .textContent =
+
       numberPadBuffer
       ||
       "—";
@@ -3847,8 +4615,9 @@ function resetNumberPadState() {
 }
 
 
+
 /* =========================================================
-   SAVE RESULT
+   SAVE NUMERIC RESULT
 ========================================================= */
 
 async function saveNumericResult(
@@ -3860,7 +4629,21 @@ async function saveNumericResult(
     !selectedAthlete
     ||
     !currentUser
+    ||
+    !canEdit()
   ) {
+
+    if (
+      isViewOnly()
+    ) {
+
+      showToast(
+        "This account is view only.",
+        true
+      );
+
+    }
+
 
     return;
 
@@ -3944,10 +4727,12 @@ async function saveNumericResult(
 
 
     showToast(
+
       `${event.label}: ${formatEventValue(
         value,
         event
       )} saved.`
+
     );
 
   }
@@ -3957,14 +4742,22 @@ async function saveNumericResult(
   ) {
 
     showToast(
+
       error.message,
+
       true
+
     );
 
   }
 
 }
 
+
+
+/* =========================================================
+   SAVE SQUAT ASSESSMENT
+========================================================= */
 
 async function saveAssessment(
   assessment
@@ -3974,7 +4767,21 @@ async function saveAssessment(
     !selectedAthlete
     ||
     !currentUser
+    ||
+    !canEdit()
   ) {
+
+    if (
+      isViewOnly()
+    ) {
+
+      showToast(
+        "This account is view only.",
+        true
+      );
+
+    }
+
 
     return;
 
@@ -4063,7 +4870,9 @@ async function saveAssessment(
 
 
     showToast(
+
       `Squat Assessment: ${assessment}`
+
     );
 
   }
@@ -4073,8 +4882,11 @@ async function saveAssessment(
   ) {
 
     showToast(
+
       error.message,
+
       true
+
     );
 
   }
@@ -4082,9 +4894,29 @@ async function saveAssessment(
 }
 
 
+
+/* =========================================================
+   DELETE ATTEMPT
+========================================================= */
+
 async function deleteAttempt(
   resultId
 ) {
+
+  if (
+    !canEdit()
+  ) {
+
+    showToast(
+      "This account is view only.",
+      true
+    );
+
+
+    return;
+
+  }
+
 
   const attempt =
     results.find(
@@ -4111,8 +4943,11 @@ async function deleteAttempt(
   ) {
 
     showToast(
+
       "You can only delete an entry you recorded.",
+
       true
+
     );
 
 
@@ -4121,10 +4956,14 @@ async function deleteAttempt(
   }
 
 
-  if (
-    !window.confirm(
+  const confirmed =
+    window.confirm(
       "Delete this recorded attempt?"
-    )
+    );
+
+
+  if (
+    !confirmed
   ) {
 
     return;
@@ -4163,13 +5002,17 @@ async function deleteAttempt(
   ) {
 
     showToast(
+
       error.message,
+
       true
+
     );
 
   }
 
 }
+
 
 
 /* =========================================================
@@ -4180,10 +5023,34 @@ function toggleTimer(
   eventKey
 ) {
 
+  if (
+    !canEdit()
+  ) {
+
+    showToast(
+      "This account is view only.",
+      true
+    );
+
+
+    return;
+
+  }
+
+
   const state =
     timerStates[
       eventKey
     ];
+
+
+  if (
+    !state
+  ) {
+
+    return;
+
+  }
 
 
   if (
@@ -4207,9 +5074,23 @@ function toggleTimer(
 }
 
 
+
+/* =========================================================
+   START TIMER
+========================================================= */
+
 function startTimer(
   eventKey
 ) {
+
+  if (
+    !canEdit()
+  ) {
+
+    return;
+
+  }
+
 
   const state =
     timerStates[
@@ -4253,14 +5134,19 @@ function startTimer(
       () => {
 
         state.elapsedMs =
+
           performance.now()
+
           -
+
           state.startedAt;
 
 
         const display =
           document.getElementById(
+
             `timer-${eventKey}`
+
           );
 
 
@@ -4282,9 +5168,23 @@ function startTimer(
 }
 
 
+
+/* =========================================================
+   STOP TIMER
+========================================================= */
+
 async function stopTimer(
   eventKey
 ) {
+
+  if (
+    !canEdit()
+  ) {
+
+    return;
+
+  }
+
 
   const state =
     timerStates[
@@ -4304,8 +5204,11 @@ async function stopTimer(
 
 
   state.elapsedMs =
+
     performance.now()
+
     -
+
     state.startedAt;
 
 
@@ -4323,16 +5226,23 @@ async function stopTimer(
 
 
   const seconds =
+
     Math.round(
+
       (
         state.elapsedMs
         /
         1000
       )
+
       *
+
       100
+
     )
+
     /
+
     100;
 
 
@@ -4348,50 +5258,12 @@ async function stopTimer(
 }
 
 
-function resetTimer(
-  eventKey
-) {
 
-  const state =
-    timerStates[
-      eventKey
-    ];
+/* =========================================================
+   RESET ALL TIMERS
 
-
-  if (
-    !state
-  ) {
-
-    return;
-
-  }
-
-
-  clearInterval(
-    state.intervalId
-  );
-
-
-  state.running =
-    false;
-
-
-  state.startedAt =
-    0;
-
-
-  state.elapsedMs =
-    0;
-
-
-  state.intervalId =
-    null;
-
-
-  renderTestCards();
-
-}
-
+   There is intentionally NO visible reset button.
+========================================================= */
 
 function resetAllTimers() {
 
@@ -4433,15 +5305,20 @@ function formatTimer(
 ) {
 
   return (
+
     milliseconds
+
     /
+
     1000
+
   )
     .toFixed(
       2
     );
 
 }
+
 
 
 /* =========================================================
@@ -4468,12 +5345,6 @@ function bindIndexTeamFilter() {
     );
 
 
-  const clearButton =
-    document.getElementById(
-      "clearIndexTeamFilters"
-    );
-
-
   button
     .addEventListener(
       "click",
@@ -4483,6 +5354,7 @@ function bindIndexTeamFilter() {
 
 
         const isOpen =
+
           !menu
             .classList
             .contains(
@@ -4518,14 +5390,19 @@ function bindIndexTeamFilter() {
     );
 
 
-  clearButton
+  document
+    .getElementById(
+      "clearIndexTeamFilters"
+    )
     .addEventListener(
       "click",
       () => {
 
         document
           .querySelectorAll(
+
             '#indexTeamFilterOptions input[type="checkbox"]'
+
           )
           .forEach(
             checkbox => {
@@ -4538,6 +5415,7 @@ function bindIndexTeamFilter() {
 
 
         updateIndexTeamFilterLabel();
+
 
         renderIndexDrawer();
 
@@ -4576,6 +5454,11 @@ function bindIndexTeamFilter() {
 }
 
 
+
+/* =========================================================
+   UPDATE INDEX TEAM OPTIONS
+========================================================= */
+
 function updateIndexTeamFilters() {
 
   const options =
@@ -4593,7 +5476,7 @@ function updateIndexTeamFilters() {
   }
 
 
-  const selectedTeams =
+  const selected =
     new Set(
       getSelectedIndexTeams()
     );
@@ -4601,7 +5484,9 @@ function updateIndexTeamFilters() {
 
   const teams =
     [
+
       ...new Set(
+
         athletes
           .map(
             athlete =>
@@ -4610,7 +5495,9 @@ function updateIndexTeamFilters() {
           .filter(
             Boolean
           )
+
       )
+
     ]
       .sort(
         naturalSort
@@ -4631,7 +5518,7 @@ function updateIndexTeamFilters() {
                   team
                 )}"
                 ${
-                  selectedTeams.has(
+                  selected.has(
                     team
                   )
                   ?
@@ -4640,6 +5527,7 @@ function updateIndexTeamFilters() {
                   ""
                 }
               />
+
 
               <span>
                 ${escapeHtml(
@@ -4659,17 +5547,21 @@ function updateIndexTeamFilters() {
       'input[type="checkbox"]'
     )
     .forEach(
-      checkbox =>
+      checkbox => {
+
         checkbox.addEventListener(
           "change",
           () => {
 
             updateIndexTeamFilterLabel();
 
+
             renderIndexDrawer();
 
           }
-        )
+        );
+
+      }
     );
 
 
@@ -4684,7 +5576,9 @@ function getSelectedIndexTeams() {
 
     ...document
       .querySelectorAll(
+
         '#indexTeamFilterOptions input[type="checkbox"]:checked'
+
       )
 
   ]
@@ -4718,50 +5612,33 @@ function updateIndexTeamFilterLabel() {
     label.textContent =
       "All Teams";
 
-
-    return;
-
   }
 
-
-  if (
-    selected.length ===
-    1
-  ) {
-
-    label.textContent =
-      selected[
-        0
-      ];
-
-
-    return;
-
-  }
-
-
-  if (
-    selected.length ===
+  else if (
+    selected.length <=
     2
   ) {
 
     label.textContent =
-      `${selected[0]}, ${selected[1]}`;
-
-
-    return;
+      selected.join(
+        ", "
+      );
 
   }
 
+  else {
 
-  label.textContent =
-    `${selected.length} Teams`;
+    label.textContent =
+      `${selected.length} Teams`;
+
+  }
 
 }
 
 
+
 /* =========================================================
-   PLAYER INDEX
+   PLAYER INDEX DRAWER
 ========================================================= */
 
 function openIndexDrawer() {
@@ -4846,23 +5723,16 @@ function closeIndexDrawer() {
 }
 
 
+
+/* =========================================================
+   RENDER PLAYER INDEX
+========================================================= */
+
 function renderIndexDrawer() {
 
   const container =
     document.getElementById(
       "indexPlayerList"
-    );
-
-
-  const empty =
-    document.getElementById(
-      "indexPlayerEmpty"
-    );
-
-
-  const count =
-    document.getElementById(
-      "indexPlayerCount"
     );
 
 
@@ -4897,10 +5767,15 @@ function renderIndexDrawer() {
         athlete => {
 
           const matchesSearch =
+
             !search
+
             ||
+
             normalizeText(
+
               `${athlete.firstName} ${athlete.lastName} ${athlete.teamName}`
+
             )
               .includes(
                 search
@@ -4908,18 +5783,25 @@ function renderIndexDrawer() {
 
 
           const matchesTeam =
+
             selectedTeams.length ===
             0
+
             ||
+
             selectedTeams.includes(
               athlete.teamName
             );
 
 
           return (
+
             matchesSearch
+
             &&
+
             matchesTeam
+
           );
 
         }
@@ -4929,7 +5811,12 @@ function renderIndexDrawer() {
       );
 
 
-  count.textContent =
+  document
+    .getElementById(
+      "indexPlayerCount"
+    )
+    .textContent =
+
     `${filtered.length} player${
       filtered.length ===
       1
@@ -4940,53 +5827,57 @@ function renderIndexDrawer() {
     }`;
 
 
-  empty.classList.toggle(
-    "hidden",
-    filtered.length >
-    0
-  );
+  document
+    .getElementById(
+      "indexPlayerEmpty"
+    )
+    .classList
+    .toggle(
+      "hidden",
+      filtered.length >
+      0
+    );
 
 
   const groups =
     {};
 
 
-  for (
-    const athlete
-    of
-    filtered
-  ) {
+  filtered.forEach(
+    athlete => {
 
-    const team =
-      athlete.teamName
-      ||
-      "Other";
+      const team =
+        athlete.teamName
+        ||
+        "Other";
 
 
-    if (
-      !groups[
-        team
-      ]
-    ) {
+      if (
+        !groups[
+          team
+        ]
+      ) {
+
+        groups[
+          team
+        ] =
+          [];
+
+      }
+
 
       groups[
         team
-      ] =
-        [];
+      ].push(
+        athlete
+      );
 
     }
-
-
-    groups[
-      team
-    ].push(
-      athlete
-    );
-
-  }
+  );
 
 
   container.innerHTML =
+
     Object
       .keys(
         groups
@@ -5018,6 +5909,7 @@ function renderIndexDrawer() {
                   )}
                 </span>
 
+
                 <span>
                   ${teamPlayers.length}
                 </span>
@@ -5047,18 +5939,23 @@ function renderIndexDrawer() {
                         >
 
                           <span class="index-player-name">
+
                             ${escapeHtml(
                               athlete.lastName
                             )},
                             ${escapeHtml(
                               athlete.firstName
                             )}
+
                           </span>
 
+
                           <span class="index-player-team">
+
                             ${escapeHtml(
                               athlete.teamName
                             )}
+
                           </span>
 
                         </button>
@@ -5082,20 +5979,17 @@ function renderIndexDrawer() {
       ".index-player"
     )
     .forEach(
-      button =>
+      button => {
+
         button.addEventListener(
           "click",
           () => {
-
-            const id =
-              button.dataset.playerId;
-
 
             selectedAthlete =
               athletes.find(
                 athlete =>
                   athlete.id ===
-                  id
+                  button.dataset.playerId
               )
               ||
               null;
@@ -5120,22 +6014,27 @@ function renderIndexDrawer() {
 
 
             window.scrollTo({
+
               top:
                 0,
 
               behavior:
                 "smooth"
+
             });
 
           }
-        )
+        );
+
+      }
     );
 
 }
 
 
+
 /* =========================================================
-   RESULTS
+   RESULTS PAGE
 ========================================================= */
 
 function bindResultsPage() {
@@ -5172,6 +6071,11 @@ function bindResultsPage() {
 }
 
 
+
+/* =========================================================
+   RESULTS MATRIX
+========================================================= */
+
 function renderResultsMatrix() {
 
   const head =
@@ -5195,15 +6099,29 @@ function renderResultsMatrix() {
           class="sticky-athlete sortable"
           data-sort-key="athlete"
         >
+
           Athlete
+
+          ${sortArrow(
+            "athlete"
+          )}
+
         </th>
+
 
         <th
           class="sortable"
           data-sort-key="teamName"
         >
+
           Team
+
+          ${sortArrow(
+            "teamName"
+          )}
+
         </th>
+
 
         ${
           EVENTS
@@ -5212,14 +6130,20 @@ function renderResultsMatrix() {
                 `
 
                   <th
-                    class="sortable"
+                    class="sortable event-heading"
                     data-sort-key="${event.key}"
                   >
+
                     ${escapeHtml(
                       event.shortLabel
                       ||
                       event.label
                     )}
+
+                    ${sortArrow(
+                      event.key
+                    )}
+
                   </th>
 
                 `
@@ -5237,14 +6161,17 @@ function renderResultsMatrix() {
       "[data-sort-key]"
     )
     .forEach(
-      th =>
-        th.addEventListener(
+      header => {
+
+        header.addEventListener(
           "click",
           () =>
             setMatrixSort(
-              th.dataset.sortKey
+              header.dataset.sortKey
             )
-        )
+        );
+
+      }
     );
 
 
@@ -5268,28 +6195,45 @@ function renderResultsMatrix() {
 
   let rows =
     athletes.filter(
-      athlete =>
+      athlete => {
 
-        (
+        const matchesSearch =
+
           !search
+
           ||
+
           normalizeText(
-            `${athlete.firstName} ${athlete.lastName}`
+
+            `${athlete.firstName} ${athlete.lastName} ${athlete.teamName}`
+
           )
             .includes(
               search
-            )
-        )
+            );
 
-        &&
 
-        (
+        const matchesTeam =
+
           !team
-          ||
-          athlete.teamName ===
-          team
-        )
 
+          ||
+
+          athlete.teamName ===
+          team;
+
+
+        return (
+
+          matchesSearch
+
+          &&
+
+          matchesTeam
+
+        );
+
+      }
     );
 
 
@@ -5301,9 +6245,8 @@ function renderResultsMatrix() {
   body.innerHTML =
     rows
       .map(
-        athlete => {
-
-          return `
+        athlete =>
+          `
 
             <tr>
 
@@ -5316,21 +6259,29 @@ function renderResultsMatrix() {
                   )}"
                   type="button"
                 >
+
                   ${escapeHtml(
                     athlete.lastName
                   )},
                   ${escapeHtml(
                     athlete.firstName
                   )}
+
                 </button>
 
               </td>
 
 
               <td>
-                ${escapeHtml(
-                  athlete.teamName
-                )}
+
+                <span class="age-pill">
+
+                  ${escapeHtml(
+                    athlete.teamName
+                  )}
+
+                </span>
+
               </td>
 
 
@@ -5352,31 +6303,104 @@ function renderResultsMatrix() {
                       ) {
 
                         return `
+
                           <td>
+
                             ${
-                              stats.latest?.assessment
-                              ||
+                              stats.latest
+                              ?
+                              escapeHtml(
+
+                                stats.latest.assessment
+
+                                ||
+
+                                "—"
+
+                              )
+                              :
                               "—"
                             }
+
                           </td>
+
+                        `;
+
+                      }
+
+
+                      if (
+                        !stats.best
+                      ) {
+
+                        return `
+
+                          <td>
+                            —
+                          </td>
+
+                        `;
+
+                      }
+
+
+                      if (
+                        event.maxAvg
+                      ) {
+
+                        return `
+
+                          <td>
+
+                            <strong>
+
+                              ${formatEventValue(
+                                stats.best.value,
+                                event
+                              )}
+
+                            </strong>
+
+
+                            <small class="matrix-sub">
+
+                              avg
+
+                              ${
+                                stats.avgLast3 == null
+                                ?
+                                "—"
+                                :
+                                formatEventValue(
+                                  stats.avgLast3,
+                                  event
+                                )
+                              }
+
+                            </small>
+
+                          </td>
+
                         `;
 
                       }
 
 
                       return `
+
                         <td>
-                          ${
-                            stats.best
-                            ?
-                            formatEventValue(
+
+                          <strong>
+
+                            ${formatEventValue(
                               stats.best.value,
                               event
-                            )
-                            :
-                            "—"
-                          }
+                            )}
+
+                          </strong>
+
                         </td>
+
                       `;
 
                     }
@@ -5386,9 +6410,7 @@ function renderResultsMatrix() {
 
             </tr>
 
-          `;
-
-        }
+          `
       )
       .join("");
 
@@ -5398,14 +6420,17 @@ function renderResultsMatrix() {
       ".matrix-player-link"
     )
     .forEach(
-      button =>
+      button => {
+
         button.addEventListener(
           "click",
           () =>
             startTesting(
               button.dataset.playerId
             )
-        )
+        );
+
+      }
     );
 
 
@@ -5422,6 +6447,11 @@ function renderResultsMatrix() {
 
 }
 
+
+
+/* =========================================================
+   RESULT SORTING
+========================================================= */
 
 function setMatrixSort(
   key
@@ -5450,11 +6480,16 @@ function setMatrixSort(
       key,
 
       asc:
+
         event?.direction ===
         "high"
+
         ?
+
         false
+
         :
+
         true
 
     };
@@ -5472,8 +6507,15 @@ function compareMatrixPlayers(
   b
 ) {
 
+  const key =
+    matrixSort.key;
+
+
+
+  /* ATHLETE */
+
   if (
-    matrixSort.key ===
+    key ===
     "athlete"
   ) {
 
@@ -5485,42 +6527,60 @@ function compareMatrixPlayers(
       `${b.lastName}, ${b.firstName}`;
 
 
-    return matrixSort.asc
-      ?
+    const comparison =
       av.localeCompare(
-        bv
-      )
-      :
-      bv.localeCompare(
-        av
+        bv,
+        undefined,
+        {
+          numeric:
+            true
+        }
       );
+
+
+    return (
+      matrixSort.asc
+      ?
+      comparison
+      :
+      -comparison
+    );
 
   }
 
 
+
+  /* TEAM */
+
   if (
-    matrixSort.key ===
+    key ===
     "teamName"
   ) {
 
-    return matrixSort.asc
-      ?
+    const comparison =
       naturalSort(
         a.teamName,
         b.teamName
-      )
-      :
-      naturalSort(
-        b.teamName,
-        a.teamName
       );
+
+
+    return (
+      matrixSort.asc
+      ?
+      comparison
+      :
+      -comparison
+    );
 
   }
 
 
+
+  /* EVENTS */
+
   const event =
     getEvent(
-      matrixSort.key
+      key
     );
 
 
@@ -5570,13 +6630,50 @@ function compareMatrixPlayers(
   }
 
 
-  return matrixSort.asc
+  if (
+    typeof av ===
+    "number"
+    &&
+    typeof bv ===
+    "number"
+  ) {
+
+    return (
+      matrixSort.asc
+      ?
+      av -
+      bv
+      :
+      bv -
+      av
+    );
+
+  }
+
+
+  const comparison =
+    String(
+      av
+    )
+      .localeCompare(
+        String(
+          bv
+        ),
+        undefined,
+        {
+          numeric:
+            true
+        }
+      );
+
+
+  return (
+    matrixSort.asc
     ?
-    av -
-    bv
+    comparison
     :
-    bv -
-    av;
+    -comparison
+  );
 
 }
 
@@ -5616,29 +6713,77 @@ function getSortValue(
     }
 
 
-    return stats.latest.assessment ===
+    return (
+
+      stats.latest.assessment ===
       "Pass"
+
       ?
+
       1
+
       :
-      2;
+
+      2
+
+    );
 
   }
 
 
-  return stats.best
+  return (
+
+    stats.best
+
     ?
+
     Number(
       stats.best.value
     )
+
     :
-    null;
+
+    null
+
+  );
 
 }
 
 
+function sortArrow(
+  key
+) {
+
+  if (
+    matrixSort.key !==
+    key
+  ) {
+
+    return "";
+
+  }
+
+
+  return (
+
+    matrixSort.asc
+
+    ?
+
+    "▲"
+
+    :
+
+    "▼"
+
+  );
+
+}
+
+
+
 /* =========================================================
-   STATS
+   EVENT STATS
 ========================================================= */
 
 function getEventStats(
@@ -5650,21 +6795,28 @@ function getEventStats(
     results
       .filter(
         result =>
+
           result.athleteId ===
           playerId
+
           &&
+
           result.event ===
           event.key
+
       )
       .sort(
         (
           a,
           b
         ) =>
+
           getTimestampValue(
             b.createdAt
           )
+
           -
+
           getTimestampValue(
             a.createdAt
           )
@@ -5716,7 +6868,7 @@ function getEventStats(
     );
 
 
-  const values =
+  const last3 =
     numeric
       .slice(
         0,
@@ -5728,6 +6880,31 @@ function getEventStats(
             result.value
           )
       );
+
+
+  const avgLast3 =
+
+    last3.length
+
+    ?
+
+    last3.reduce(
+      (
+        sum,
+        value
+      ) =>
+        sum +
+        value,
+      0
+    )
+
+    /
+
+    last3.length
+
+    :
+
+    null;
 
 
   return {
@@ -5747,27 +6924,17 @@ function getEventStats(
     best,
 
 
-    avgLast3:
-      values.length
-      ?
-      values.reduce(
-        (
-          total,
-          value
-        ) =>
-          total +
-          value,
-        0
-      )
-      /
-      values.length
-      :
-      null
+    avgLast3
 
   };
 
 }
 
+
+
+/* =========================================================
+   BEST ATTEMPT
+========================================================= */
 
 function getBestAttempt(
   attempts,
@@ -5789,40 +6956,65 @@ function getBestAttempt(
       current
     ) => {
 
-      return direction ===
+      const bestValue =
+        Number(
+          best.value
+        );
+
+
+      const currentValue =
+        Number(
+          current.value
+        );
+
+
+      /*
+        TIMERS:
+        Lowest wins.
+      */
+
+      if (
+        direction ===
         "low"
+      ) {
+
+        return (
+
+          currentValue <
+          bestValue
+
+          ?
+
+          current
+
+          :
+
+          best
+
+        );
+
+      }
+
+
+      /*
+        OTHER NUMERIC EVENTS:
+        Highest wins.
+      */
+
+      return (
+
+        currentValue >
+        bestValue
 
         ?
 
-        (
-          Number(
-            current.value
-          )
-          <
-          Number(
-            best.value
-          )
-          ?
-          current
-          :
-          best
-        )
+        current
 
         :
 
-        (
-          Number(
-            current.value
-          )
-          >
-          Number(
-            best.value
-          )
-          ?
-          current
-          :
-          best
-        );
+        best
+
+      );
 
     }
   );
@@ -5830,8 +7022,9 @@ function getBestAttempt(
 }
 
 
+
 /* =========================================================
-   VALUE FORMATTING
+   FORMAT EVENT VALUE
 ========================================================= */
 
 function formatEventValue(
@@ -5856,6 +7049,11 @@ function formatEventValue(
   }
 
 
+
+  /*
+    ROTATIONAL THROWS + BROAD JUMP
+  */
+
   if (
     event?.feetInches
   ) {
@@ -5869,16 +7067,22 @@ function formatEventValue(
 
     let inches =
       Math.round(
+
         (
           number
           -
           feet *
           12
         )
+
         *
+
         100
+
       )
+
       /
+
       100;
 
 
@@ -5897,18 +7101,33 @@ function formatEventValue(
     }
 
 
-    return `${feet}' ${formatNumber(
-      inches
-    )}"`;
+    return (
+
+      `${feet}' ${formatNumber(
+        inches
+      )}"`
+
+    );
 
   }
 
 
-  return `${formatNumber(
-    number
-  )}${event?.unit ? ` ${event.unit}` : ""}`;
+  return (
+
+    `${formatNumber(
+      number
+    )}${
+      event?.unit
+      ?
+      ` ${event.unit}`
+      :
+      ""
+    }`
+
+  );
 
 }
+
 
 
 /* =========================================================
@@ -5919,7 +7138,9 @@ function updateTeamFilters() {
 
   const teams =
     [
+
       ...new Set(
+
         athletes
           .map(
             athlete =>
@@ -5928,7 +7149,9 @@ function updateTeamFilters() {
           .filter(
             Boolean
           )
+
       )
+
     ]
       .sort(
         naturalSort
@@ -5971,6 +7194,7 @@ function updateTeamFilters() {
                 }
               />
 
+
               <span>
                 ${escapeHtml(
                   team
@@ -5986,22 +7210,31 @@ function updateTeamFilters() {
 
   options
     .querySelectorAll(
-      "input"
+      'input[type="checkbox"]'
     )
     .forEach(
-      checkbox =>
+      checkbox => {
+
         checkbox.addEventListener(
           "change",
           () => {
 
             updateTeamFilterLabel();
 
+
             renderAthleteTable();
 
           }
-        )
+        );
+
+      }
     );
 
+
+
+  /*
+    RESULTS TEAM FILTER
+  */
 
   const resultsFilter =
     document.getElementById(
@@ -6014,16 +7247,27 @@ function updateTeamFilters() {
 
 
   resultsFilter.innerHTML =
+
     `<option value="">All Teams</option>`
+
     +
+
     teams
       .map(
         team =>
-          `<option value="${escapeHtml(
-            team
-          )}">${escapeHtml(
-            team
-          )}</option>`
+          `
+
+            <option value="${escapeHtml(
+              team
+            )}">
+
+              ${escapeHtml(
+                team
+              )}
+
+            </option>
+
+          `
       )
       .join("");
 
@@ -6051,7 +7295,9 @@ function getSelectedTeams() {
 
     ...document
       .querySelectorAll(
+
         '#athleteAgeFilterOptions input[type="checkbox"]:checked'
+
       )
 
   ]
@@ -6106,8 +7352,9 @@ function updateTeamFilterLabel() {
 }
 
 
+
 /* =========================================================
-   IMPORT
+   UPLOAD / IMPORT
 ========================================================= */
 
 function bindUploader() {
@@ -6172,9 +7419,23 @@ function bindUploader() {
 }
 
 
+
+/* =========================================================
+   READ IMPORT FILE
+========================================================= */
+
 async function handleFileUpload(
   event
 ) {
+
+  if (
+    !isAdmin()
+  ) {
+
+    return;
+
+  }
+
 
   const file =
     event.target.files?.[
@@ -6223,23 +7484,36 @@ async function handleFileUpload(
       ];
 
 
-    const rows =
+    if (
+      !sheet
+    ) {
+
+      throw new Error(
+        "No worksheet found."
+      );
+
+    }
+
+
+    const rawRows =
       window.XLSX.utils
         .sheet_to_json(
           sheet,
           {
+
             defval:
               "",
 
             raw:
               false
+
           }
         );
 
 
     importRows =
       buildImportRows(
-        rows
+        rawRows
       );
 
 
@@ -6251,13 +7525,25 @@ async function handleFileUpload(
     error
   ) {
 
+    console.error(
+      "READ IMPORT",
+      error
+    );
+
+
     showMessage(
+
       document
         .getElementById(
           "importMessage"
         ),
-      error.message,
+
+      error.message
+      ||
+      "Could not read file.",
+
       "error"
+
     );
 
   }
@@ -6265,15 +7551,20 @@ async function handleFileUpload(
 }
 
 
+
+/* =========================================================
+   BUILD IMPORT ROWS
+========================================================= */
+
 function buildImportRows(
-  rows
+  rawRows
 ) {
 
   const seen =
     new Set();
 
 
-  return rows.map(
+  return rawRows.map(
     raw => {
 
       const row =
@@ -6284,49 +7575,81 @@ function buildImportRows(
 
       const firstName =
         cleanText(
+
           row[
             "first name"
           ]
+
           ??
+
           row.firstname
+
           ??
+
           row.first
+
           ??
+
           ""
+
         );
 
 
       const lastName =
         cleanText(
+
           row[
             "last name"
           ]
+
           ??
+
           row.lastname
+
           ??
+
           row.last
+
           ??
+
           ""
+
         );
 
 
       const teamName =
-        cleanText(
+        normalizeTeamName(
+
           row[
             "team name"
           ]
+
           ??
+
           row.teamname
+
           ??
+
           row.team
+
           ??
+
           row[
             "age group"
           ]
+
           ??
+
           row.agegroup
+
           ??
+
+          row.age
+
+          ??
+
           ""
+
         );
 
 
@@ -6420,7 +7743,7 @@ function buildImportRows(
             "duplicate",
 
           reason:
-            "Already exists"
+            "Already exists — skipped"
 
         };
 
@@ -6434,6 +7757,11 @@ function buildImportRows(
 
 }
 
+
+
+/* =========================================================
+   IMPORT PREVIEW
+========================================================= */
 
 function renderImportPreview() {
 
@@ -6518,6 +7846,7 @@ function renderImportPreview() {
       "previewBody"
     )
     .innerHTML =
+
     importRows
       .map(
         row =>
@@ -6526,33 +7855,48 @@ function renderImportPreview() {
             <tr>
 
               <td>
+
                 ${escapeHtml(
                   row.firstName
                   ||
                   "—"
                 )}
+
               </td>
 
+
               <td>
+
                 ${escapeHtml(
                   row.lastName
                   ||
                   "—"
                 )}
+
               </td>
 
+
               <td>
+
                 ${escapeHtml(
                   row.teamName
                   ||
                   "—"
                 )}
+
               </td>
 
+
               <td>
-                ${escapeHtml(
-                  row.reason
-                )}
+
+                <span class="status-pill status-${row.status}">
+
+                  ${escapeHtml(
+                    row.reason
+                  )}
+
+                </span>
+
               </td>
 
             </tr>
@@ -6569,8 +7913,38 @@ function renderImportPreview() {
     .disabled =
     !newRows.length;
 
+
+  showMessage(
+
+    document
+      .getElementById(
+        "importMessage"
+      ),
+
+    `${newRows.length} new player${
+      newRows.length ===
+      1
+      ?
+      ""
+      :
+      "s"
+    } ready. Existing players will not be changed.`,
+
+    newRows.length
+    ?
+    "success"
+    :
+    "warning"
+
+  );
+
 }
 
+
+
+/* =========================================================
+   IMPORT PLAYERS
+========================================================= */
 
 async function importPlayers() {
 
@@ -6583,7 +7957,36 @@ async function importPlayers() {
   }
 
 
-  const newRows =
+  const button =
+    document.getElementById(
+      "importPlayersConfirmButton"
+    );
+
+
+  button.disabled =
+    true;
+
+
+  button.textContent =
+    "Importing…";
+
+
+  await loadAthletes();
+
+
+  let imported =
+    0;
+
+
+  let skipped =
+    0;
+
+
+  let failed =
+    0;
+
+
+  const rowsToImport =
     importRows.filter(
       row =>
         row.status ===
@@ -6591,15 +7994,27 @@ async function importPlayers() {
     );
 
 
-  let imported =
-    0;
-
-
   for (
     const player
     of
-    newRows
+    rowsToImport
   ) {
+
+    if (
+      findExistingPlayer(
+        player.firstName,
+        player.lastName,
+        player.teamName
+      )
+    ) {
+
+      skipped++;
+
+
+      continue;
+
+    }
+
 
     const ref =
       doc(
@@ -6624,6 +8039,9 @@ async function importPlayers() {
       if (
         existing.exists()
       ) {
+
+        skipped++;
+
 
         continue;
 
@@ -6690,9 +8108,17 @@ async function importPlayers() {
     ) {
 
       console.error(
+
         "IMPORT PLAYER",
+
+        player,
+
         error
+
       );
+
+
+      failed++;
 
     }
 
@@ -6702,17 +8128,38 @@ async function importPlayers() {
   await refreshData();
 
 
-  closeModal(
-    "uploadModal"
-  );
+  button.textContent =
+    "Import Players";
 
 
-  showToast(
-    `${imported} players imported.`
+  button.disabled =
+    true;
+
+
+  showMessage(
+
+    document
+      .getElementById(
+        "importMessage"
+      ),
+
+    `${imported} imported. ${skipped} duplicates skipped. ${failed} failed. Existing player data was not changed.`,
+
+    failed
+    ?
+    "warning"
+    :
+    "success"
+
   );
 
 }
 
+
+
+/* =========================================================
+   RESET IMPORTER
+========================================================= */
 
 function resetImporter() {
 
@@ -6771,13 +8218,70 @@ function resetImporter() {
     .disabled =
     true;
 
+
+  document
+    .getElementById(
+      "importPlayersConfirmButton"
+    )
+    .textContent =
+    "Import Players";
+
+
+  hideMessage(
+    document
+      .getElementById(
+        "importMessage"
+      )
+  );
+
 }
 
+
+
+/* =========================================================
+   DOWNLOAD IMPORT TEMPLATE
+========================================================= */
 
 function downloadTemplate() {
 
   const csv =
-    `First Name,Last Name,Team Name\nJohn,Smith,15U Borden`;
+    [
+
+      [
+
+        "First Name",
+
+        "Last Name",
+
+        "Team Name"
+
+      ],
+
+
+      [
+
+        "John",
+
+        "Smith",
+
+        "15U Borden"
+
+      ]
+
+    ]
+      .map(
+        row =>
+          row
+            .map(
+              csvEscape
+            )
+            .join(
+              ","
+            )
+      )
+      .join(
+        "\n"
+      );
 
 
   const blob =
@@ -6830,8 +8334,9 @@ function downloadTemplate() {
 }
 
 
+
 /* =========================================================
-   EXPORT
+   EXCEL EXPORT
 ========================================================= */
 
 function exportResultsToExcel() {
@@ -6851,82 +8356,328 @@ function exportResultsToExcel() {
   }
 
 
-  const rows =
-    athletes.map(
-      athlete => {
+  if (
+    !athletes.length
+  ) {
 
-        const row = {
-
-          "First Name":
-            athlete.firstName,
-
-
-          "Last Name":
-            athlete.lastName,
-
-
-          "Team Name":
-            athlete.teamName
-
-        };
-
-
-        for (
-          const event
-          of
-          EVENTS
-        ) {
-
-          const stats =
-            getEventStats(
-              athlete.id,
-              event
-            );
-
-
-          if (
-            event.type ===
-            "passfail"
-          ) {
-
-            row[
-              event.label
-            ] =
-              stats.latest?.assessment
-              ||
-              "";
-
-          }
-
-          else {
-
-            row[
-              event.label
-            ] =
-              stats.best
-              ?
-              formatEventValue(
-                stats.best.value,
-                event
-              )
-              :
-              "";
-
-          }
-
-        }
-
-
-        return row;
-
-      }
+    showToast(
+      "There are no athletes to export.",
+      true
     );
 
 
-  const sheet =
+    return;
+
+  }
+
+
+
+  /* ========================================================
+     BEST RESULTS SHEET
+  ========================================================= */
+
+  const summaryRows =
+    athletes
+      .slice()
+      .sort(
+        comparePlayers
+      )
+      .map(
+        athlete => {
+
+          const row = {
+
+            "First Name":
+              athlete.firstName,
+
+
+            "Last Name":
+              athlete.lastName,
+
+
+            "Team Name":
+              athlete.teamName
+
+          };
+
+
+          EVENTS.forEach(
+            event => {
+
+              const stats =
+                getEventStats(
+                  athlete.id,
+                  event
+                );
+
+
+              if (
+                event.type ===
+                "passfail"
+              ) {
+
+                row[
+                  event.label
+                ] =
+
+                  stats.latest?.assessment
+
+                  ||
+
+                  "";
+
+
+                row[
+                  `${event.label} Notes`
+                ] =
+
+                  stats.latest?.notes
+
+                  ||
+
+                  "";
+
+              }
+
+              else {
+
+                row[
+                  event.label
+                ] =
+
+                  stats.best
+
+                  ?
+
+                  formatEventValue(
+                    stats.best.value,
+                    event
+                  )
+
+                  :
+
+                  "";
+
+
+                if (
+                  event.maxAvg
+                ) {
+
+                  row[
+                    `${event.label} Avg Last 3`
+                  ] =
+
+                    stats.avgLast3 == null
+
+                    ?
+
+                    ""
+
+                    :
+
+                    formatEventValue(
+                      stats.avgLast3,
+                      event
+                    );
+
+                }
+
+              }
+
+            }
+          );
+
+
+          return row;
+
+        }
+      );
+
+
+
+  /* ========================================================
+     ALL ATTEMPTS SHEET
+  ========================================================= */
+
+  const attemptRows =
+    results
+      .slice()
+      .sort(
+        (
+          a,
+          b
+        ) =>
+
+          getTimestampValue(
+            a.createdAt
+          )
+
+          -
+
+          getTimestampValue(
+            b.createdAt
+          )
+      )
+      .map(
+        result => {
+
+          const athlete =
+            athletes.find(
+              player =>
+                player.id ===
+                result.athleteId
+            );
+
+
+          const event =
+            getEvent(
+              result.event
+            );
+
+
+          return {
+
+            "First Name":
+
+              athlete?.firstName
+
+              ||
+
+              result.athleteFirstName
+
+              ||
+
+              "",
+
+
+            "Last Name":
+
+              athlete?.lastName
+
+              ||
+
+              result.athleteLastName
+
+              ||
+
+              "",
+
+
+            "Team Name":
+
+              athlete?.teamName
+
+              ||
+
+              result.teamName
+
+              ||
+
+              "",
+
+
+            "Event":
+
+              event?.label
+
+              ||
+
+              result.event
+
+              ||
+
+              "",
+
+
+            "Value":
+
+              event?.feetInches
+              &&
+              result.value != null
+
+              ?
+
+              formatEventValue(
+                result.value,
+                event
+              )
+
+              :
+
+              result.value
+
+              ??
+
+              "",
+
+
+            "Unit":
+
+              event?.feetInches
+
+              ?
+
+              "ft/in"
+
+              :
+
+              event?.unit
+
+              ||
+
+              "",
+
+
+            "Assessment":
+
+              result.assessment
+
+              ||
+
+              "",
+
+
+            "Notes":
+
+              result.notes
+
+              ||
+
+              "",
+
+
+            "Entered By":
+
+              result.enteredByEmail
+
+              ||
+
+              "",
+
+
+            "Date":
+
+              exportDate(
+                result.createdAt
+              )
+
+          };
+
+        }
+      );
+
+
+  const summarySheet =
     window.XLSX.utils
       .json_to_sheet(
-        rows
+        summaryRows
+      );
+
+
+  const attemptsSheet =
+    window.XLSX.utils
+      .json_to_sheet(
+        attemptRows
       );
 
 
@@ -6938,17 +8689,43 @@ function exportResultsToExcel() {
   window.XLSX.utils
     .book_append_sheet(
       workbook,
-      sheet,
-      "Results"
+      summarySheet,
+      "Best Results"
     );
 
 
+  window.XLSX.utils
+    .book_append_sheet(
+      workbook,
+      attemptsSheet,
+      "All Attempts"
+    );
+
+
+  const today =
+    new Date()
+      .toISOString()
+      .slice(
+        0,
+        10
+      );
+
+
   window.XLSX.writeFile(
+
     workbook,
-    "Ninth-Inning-Combine.xlsx"
+
+    `Ninth-Inning-Combine-${today}.xlsx`
+
+  );
+
+
+  showToast(
+    "Excel file exported."
   );
 
 }
+
 
 
 /* =========================================================
@@ -6962,14 +8739,17 @@ function bindModals() {
       "[data-close]"
     )
     .forEach(
-      button =>
+      button => {
+
         button.addEventListener(
           "click",
           () =>
             closeModal(
               button.dataset.close
             )
-        )
+        );
+
+      }
     );
 
 
@@ -6978,7 +8758,8 @@ function bindModals() {
       ".modal-backdrop"
     )
     .forEach(
-      backdrop =>
+      backdrop => {
+
         backdrop.addEventListener(
           "click",
           event => {
@@ -6995,7 +8776,9 @@ function bindModals() {
             }
 
           }
-        )
+        );
+
+      }
     );
 
 
@@ -7004,25 +8787,31 @@ function bindModals() {
     event => {
 
       if (
-        event.key ===
+        event.key !==
         "Escape"
       ) {
 
-        closeIndexDrawer();
-
-
-        document
-          .querySelectorAll(
-            ".modal-backdrop:not(.hidden)"
-          )
-          .forEach(
-            modal =>
-              closeModal(
-                modal.id
-              )
-          );
+        return;
 
       }
+
+
+      document
+        .querySelectorAll(
+          ".modal-backdrop:not(.hidden)"
+        )
+        .forEach(
+          modal => {
+
+            closeModal(
+              modal.id
+            );
+
+          }
+        );
+
+
+      closeIndexDrawer();
 
     }
   );
@@ -7043,6 +8832,11 @@ function openModal(
       "hidden"
     );
 
+
+  document.body.classList.add(
+    "modal-open"
+  );
+
 }
 
 
@@ -7059,11 +8853,17 @@ function closeModal(
       "hidden"
     );
 
+
+  document.body.classList.remove(
+    "modal-open"
+  );
+
 }
 
 
+
 /* =========================================================
-   HELPERS
+   GENERAL HELPERS
 ========================================================= */
 
 function getEvent(
@@ -7075,33 +8875,6 @@ function getEvent(
       event.key ===
       key
   );
-
-}
-
-
-function formatNumber(
-  value
-) {
-
-  const number =
-    Number(
-      value
-    );
-
-
-  return Number.isFinite(
-    number
-  )
-    ?
-    number.toLocaleString(
-      undefined,
-      {
-        maximumFractionDigits:
-          2
-      }
-    )
-    :
-    "—";
 
 }
 
@@ -7133,8 +8906,15 @@ function getTimestampValue(
     timestamp.seconds
   ) {
 
-    return timestamp.seconds *
-    1000;
+    return (
+
+      timestamp.seconds
+
+      *
+
+      1000
+
+    );
 
   }
 
@@ -7146,13 +8926,21 @@ function getTimestampValue(
       .getTime();
 
 
-  return Number.isFinite(
-    value
-  )
+  return (
+
+    Number.isFinite(
+      value
+    )
+
     ?
+
     value
+
     :
-    0;
+
+    0
+
+  );
 
 }
 
@@ -7161,14 +8949,14 @@ function shortDate(
   timestamp
 ) {
 
-  const value =
+  const milliseconds =
     getTimestampValue(
       timestamp
     );
 
 
   if (
-    !value
+    !milliseconds
   ) {
 
     return "Just now";
@@ -7177,7 +8965,7 @@ function shortDate(
 
 
   return new Date(
-    value
+    milliseconds
   )
     .toLocaleString(
       [],
@@ -7201,14 +8989,113 @@ function shortDate(
 }
 
 
+function exportDate(
+  timestamp
+) {
+
+  const milliseconds =
+    getTimestampValue(
+      timestamp
+    );
+
+
+  return (
+
+    milliseconds
+
+    ?
+
+    new Date(
+      milliseconds
+    )
+      .toLocaleString()
+
+    :
+
+    ""
+
+  );
+
+}
+
+
+function shortCoachName(
+  email
+) {
+
+  return (
+
+    email
+
+    ?
+
+    String(
+      email
+    )
+      .split(
+        "@"
+      )[
+        0
+      ]
+
+    :
+
+    ""
+
+  );
+
+}
+
+
+function formatNumber(
+  value
+) {
+
+  const number =
+    Number(
+      value
+    );
+
+
+  return (
+
+    Number.isFinite(
+      number
+    )
+
+    ?
+
+    number.toLocaleString(
+      undefined,
+      {
+
+        maximumFractionDigits:
+          2
+
+      }
+    )
+
+    :
+
+    "—"
+
+  );
+
+}
+
+
 function cleanText(
   value
 ) {
 
   return String(
+
     value
+
     ??
+
     ""
+
   )
     .trim()
     .replace(
@@ -7298,13 +9185,18 @@ function naturalSort(
 }
 
 
+
+/* =========================================================
+   PLAYER MATCHING
+========================================================= */
+
 function findExistingPlayer(
   firstName,
   lastName,
   teamName
 ) {
 
-  const key =
+  const target =
     playerMatchKey(
       firstName,
       lastName,
@@ -7314,13 +9206,21 @@ function findExistingPlayer(
 
   return athletes.find(
     athlete =>
+
       playerMatchKey(
+
         athlete.firstName,
+
         athlete.lastName,
+
         athlete.teamName
+
       )
+
       ===
-      key
+
+      target
+
   );
 
 }
@@ -7332,13 +9232,24 @@ function playerMatchKey(
   teamName
 ) {
 
-  return `${normalizeText(
-    firstName
-  )}|${normalizeText(
-    lastName
-  )}|${normalizeText(
-    teamName
-  )}`;
+  return [
+
+    normalizeText(
+      firstName
+    ),
+
+    normalizeText(
+      lastName
+    ),
+
+    normalizeText(
+      teamName
+    )
+
+  ]
+    .join(
+      "|"
+    );
 
 }
 
@@ -7357,21 +9268,39 @@ function playerDocumentId(
     );
 
 
-  const base =
-    key
+  const slug =
+
+    `${normalizeText(
+      firstName
+    )}-${normalizeText(
+      lastName
+    )}-${normalizeText(
+      teamName
+    )}`
+
       .replace(
         /[^a-z0-9]+/g,
         "-"
       )
+
       .replace(
         /^-+|-+$/g,
         ""
+      )
+
+      .slice(
+        0,
+        80
       );
 
 
-  return `${base}-${hashString(
-    key
-  )}`;
+  return (
+
+    `${slug}-${hashString(
+      key
+    )}`
+
+  );
 
 }
 
@@ -7410,8 +9339,10 @@ function hashString(
 
 
   return (
+
     hash >>>
     0
+
   )
     .toString(
       36
@@ -7419,6 +9350,11 @@ function hashString(
 
 }
 
+
+
+/* =========================================================
+   SPREADSHEET HELPERS
+========================================================= */
 
 function normalizeSpreadsheetRow(
   raw
@@ -7428,37 +9364,39 @@ function normalizeSpreadsheetRow(
     {};
 
 
-  for (
-    const [
-      key,
-      value
-    ]
-    of
-    Object.entries(
+  Object
+    .entries(
       raw
       ||
       {}
     )
-  ) {
+    .forEach(
+      (
+        [
+          key,
+          value
+        ]
+      ) => {
 
-    output[
-      String(
-        key
-      )
-        .trim()
-        .toLowerCase()
-        .replace(
-          /[_-]+/g,
-          " "
-        )
-        .replace(
-          /\s+/g,
-          " "
-        )
-    ] =
-      value;
+        output[
+          String(
+            key
+          )
+            .trim()
+            .toLowerCase()
+            .replace(
+              /[_-]+/g,
+              " "
+            )
+            .replace(
+              /\s+/g,
+              " "
+            )
+        ] =
+          value;
 
-  }
+      }
+    );
 
 
   return output;
@@ -7466,14 +9404,44 @@ function normalizeSpreadsheetRow(
 }
 
 
+function csvEscape(
+  value
+) {
+
+  return (
+
+    `"${String(
+      value
+      ??
+      ""
+    )
+      .replace(
+        /"/g,
+        '""'
+      )}"`
+
+  );
+
+}
+
+
+
+/* =========================================================
+   HTML ESCAPE
+========================================================= */
+
 function escapeHtml(
   value
 ) {
 
   return String(
+
     value
+
     ??
+
     ""
+
   )
     .replace(
       /&/g,
@@ -7498,6 +9466,11 @@ function escapeHtml(
 
 }
 
+
+
+/* =========================================================
+   MESSAGES
+========================================================= */
 
 function showMessage(
   element,
@@ -7529,6 +9502,11 @@ function hideMessage(
 }
 
 
+
+/* =========================================================
+   TOAST
+========================================================= */
+
 let toastTimer;
 
 
@@ -7549,6 +9527,7 @@ function showToast(
 
 
   toast.className =
+
     `toast${
       isError
       ?
@@ -7565,10 +9544,13 @@ function showToast(
 
   toastTimer =
     setTimeout(
-      () =>
+      () => {
+
         toast.classList.add(
           "hidden"
-        ),
+        );
+
+      },
       3500
     );
 
