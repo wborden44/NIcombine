@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
   <meta charset="UTF-8" />
 
   <meta
@@ -15,24 +13,19 @@
     content="#07111f"
   />
 
-  <title>
-    Ninth Inning Combine
-  </title>
+  <title>Ninth Inning Combine</title>
 
   <link
     rel="stylesheet"
-    href="./style.css?v=20260831-36"
+    href="./style.css?v=20260831-37"
   />
 
   <script
     src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"
   ></script>
-
 </head>
 
-
 <body>
-
 
   <!-- ======================================================
        LOGIN
@@ -57,7 +50,6 @@
         Sign in with your coach account.
       </p>
 
-
       <form id="loginForm">
 
         <label for="loginEmail">
@@ -71,7 +63,6 @@
           required
         />
 
-
         <label for="loginPassword">
           Password
         </label>
@@ -83,7 +74,6 @@
           required
         />
 
-
         <button
           id="loginButton"
           class="button full-button"
@@ -93,7 +83,6 @@
         </button>
 
       </form>
-
 
       <div
         id="loginMessage"
@@ -105,7 +94,6 @@
   </section>
 
 
-
   <!-- ======================================================
        APP
   ======================================================= -->
@@ -115,10 +103,7 @@
     class="hidden"
   >
 
-
-    <!-- ====================================================
-         HEADER
-    ===================================================== -->
+    <!-- HEADER -->
 
     <header class="topbar">
 
@@ -142,14 +127,11 @@
           <span id="loggedInEmail"></span>
 
           <span
-            id="adminBadge"
-            class="admin-badge hidden"
-          >
-            ADMIN
-          </span>
+            id="userRoleBadge"
+            class="role-badge hidden"
+          ></span>
 
         </div>
-
 
         <button
           id="logoutButton"
@@ -164,10 +146,7 @@
     </header>
 
 
-
-    <!-- ====================================================
-         NAVIGATION
-    ===================================================== -->
+    <!-- NAVIGATION -->
 
     <nav class="nav-tabs">
 
@@ -179,7 +158,6 @@
         Athletes
       </button>
 
-
       <button
         class="nav-tab"
         data-view="resultsView"
@@ -189,7 +167,6 @@
       </button>
 
     </nav>
-
 
 
     <main class="app-shell">
@@ -229,7 +206,6 @@
               Select All Visible
             </button>
 
-
             <button
               id="clearPlayerSelectionButton"
               class="button button-secondary hidden"
@@ -238,7 +214,6 @@
             >
               Clear Selection
             </button>
-
 
             <button
               id="deleteSelectedPlayersButton"
@@ -249,7 +224,6 @@
               Delete Selected (0)
             </button>
 
-
             <button
               id="openAddPlayerButton"
               class="button button-secondary"
@@ -257,7 +231,6 @@
             >
               Add Player
             </button>
-
 
             <button
               id="uploadPlayersButton"
@@ -272,7 +245,6 @@
         </div>
 
 
-
         <div class="panel">
 
           <div class="toolbar">
@@ -285,23 +257,22 @@
 
 
             <div
-              id="athleteAgeFilter"
-              class="age-filter-dropdown"
+              id="athleteTeamFilter"
+              class="multi-filter"
             >
 
               <button
-                id="athleteAgeFilterButton"
-                class="age-filter-button"
+                id="athleteTeamFilterButton"
+                class="filter-button"
                 type="button"
-                aria-haspopup="true"
                 aria-expanded="false"
               >
 
-                <span id="athleteAgeFilterLabel">
+                <span id="athleteTeamFilterLabel">
                   All Teams
                 </span>
 
-                <span class="age-filter-chevron">
+                <span class="filter-chevron">
                   ▾
                 </span>
 
@@ -309,20 +280,19 @@
 
 
               <div
-                id="athleteAgeFilterMenu"
-                class="age-filter-menu hidden"
+                id="athleteTeamFilterMenu"
+                class="filter-menu hidden"
               >
 
-                <div class="age-filter-menu-header">
+                <div class="filter-menu-header">
 
                   <span>
                     Teams
                   </span>
 
-
                   <button
-                    id="clearAthleteAgeFilters"
-                    class="age-filter-clear"
+                    id="clearAthleteTeamFilters"
+                    class="filter-clear"
                     type="button"
                   >
                     Clear
@@ -332,8 +302,8 @@
 
 
                 <div
-                  id="athleteAgeFilterOptions"
-                  class="age-filter-options"
+                  id="athleteTeamFilterOptions"
+                  class="filter-options"
                 ></div>
 
               </div>
@@ -341,7 +311,6 @@
             </div>
 
           </div>
-
 
 
           <div class="table-wrap">
@@ -359,16 +328,13 @@
                     Select
                   </th>
 
-
                   <th data-athlete-sort="firstName">
                     First Name
                   </th>
 
-
                   <th data-athlete-sort="lastName">
                     Last Name
                   </th>
-
 
                   <th data-athlete-sort="teamName">
                     Team
@@ -377,7 +343,6 @@
                 </tr>
 
               </thead>
-
 
               <tbody id="athleteTableBody"></tbody>
 
@@ -396,7 +361,6 @@
         </div>
 
       </section>
-
 
 
       <!-- ====================================================
@@ -425,14 +389,12 @@
               TESTING
             </p>
 
-
             <h2 id="testingPlayerName">
               —
             </h2>
 
-
             <span
-              id="testingPlayerAge"
+              id="testingPlayerTeam"
               class="age-pill"
             ></span>
 
@@ -448,7 +410,6 @@
             >
               Delete Player
             </button>
-
 
             <button
               id="backToAthletesButton"
@@ -471,7 +432,6 @@
       </section>
 
 
-
       <!-- ====================================================
            RESULTS
       ===================================================== -->
@@ -489,13 +449,11 @@
               RESULTS
             </p>
 
-
             <h2>
               Combine Results
             </h2>
 
           </div>
-
 
           <button
             id="exportResultsButton"
@@ -508,7 +466,6 @@
         </div>
 
 
-
         <div class="panel">
 
           <div class="toolbar">
@@ -519,8 +476,7 @@
               placeholder="Search athlete…"
             />
 
-
-            <select id="resultsAgeFilter">
+            <select id="resultsTeamFilter">
 
               <option value="">
                 All Teams
@@ -532,9 +488,16 @@
 
 
           <p class="small-note">
-            One row per athlete. Click an event heading to sort.
+            Click an event heading to sort.
             Highest-result events sort high-to-low.
             Timed events sort low-to-high.
+          </p>
+
+
+          <p class="small-note med-ball-note">
+            <strong>Med Ball:</strong>
+            16U and 17U threw a 15 lb med ball.
+            Everyone else threw an 8 lb med ball.
           </p>
 
 
@@ -567,9 +530,8 @@
   </div>
 
 
-
   <!-- ======================================================
-       PLAYER INDEX DRAWER
+       PLAYER INDEX
   ======================================================= -->
 
   <div
@@ -591,13 +553,11 @@
           PLAYER INDEX
         </p>
 
-
         <h2>
           Switch Player
         </h2>
 
       </div>
-
 
       <button
         id="closeIndexButton"
@@ -608,7 +568,6 @@
       </button>
 
     </div>
-
 
 
     <div class="index-controls">
@@ -622,12 +581,12 @@
 
       <div
         id="indexTeamFilter"
-        class="index-team-filter"
+        class="multi-filter"
       >
 
         <button
           id="indexTeamFilterButton"
-          class="index-team-filter-button"
+          class="filter-button"
           type="button"
           aria-expanded="false"
         >
@@ -636,8 +595,7 @@
             All Teams
           </span>
 
-
-          <span class="index-team-filter-chevron">
+          <span class="filter-chevron">
             ▾
           </span>
 
@@ -646,19 +604,18 @@
 
         <div
           id="indexTeamFilterMenu"
-          class="index-team-filter-menu hidden"
+          class="filter-menu hidden"
         >
 
-          <div class="index-team-filter-header">
+          <div class="filter-menu-header">
 
             <span>
-              Filter by Team
+              Teams
             </span>
-
 
             <button
               id="clearIndexTeamFilters"
-              class="index-team-filter-clear"
+              class="filter-clear"
               type="button"
             >
               Clear
@@ -669,7 +626,7 @@
 
           <div
             id="indexTeamFilterOptions"
-            class="index-team-filter-options"
+            class="filter-options"
           ></div>
 
         </div>
@@ -701,9 +658,8 @@
   </aside>
 
 
-
   <!-- ======================================================
-       ADD PLAYER MODAL
+       ADD PLAYER
   ======================================================= -->
 
   <div
@@ -721,13 +677,11 @@
             ROSTER
           </p>
 
-
           <h2>
             Add Player
           </h2>
 
         </div>
-
 
         <button
           class="icon-button"
@@ -750,7 +704,6 @@
               First Name
             </label>
 
-
             <input
               id="newFirstName"
               required
@@ -765,7 +718,6 @@
               Last Name
             </label>
 
-
             <input
               id="newLastName"
               required
@@ -779,7 +731,6 @@
             <label for="newTeamName">
               Team Name
             </label>
-
 
             <input
               id="newTeamName"
@@ -808,7 +759,6 @@
             Cancel
           </button>
 
-
           <button
             class="button"
             type="submit"
@@ -825,9 +775,8 @@
   </div>
 
 
-
   <!-- ======================================================
-       UPLOAD PLAYERS MODAL
+       UPLOAD PLAYERS
   ======================================================= -->
 
   <div
@@ -845,13 +794,11 @@
             ADMIN
           </p>
 
-
           <h2>
             Upload Players
           </h2>
 
         </div>
-
 
         <button
           class="icon-button"
@@ -1005,7 +952,6 @@
 
             </thead>
 
-
             <tbody id="previewBody"></tbody>
 
           </table>
@@ -1025,7 +971,6 @@
           Cancel
         </button>
 
-
         <button
           id="importPlayersConfirmButton"
           class="button"
@@ -1040,7 +985,6 @@
     </div>
 
   </div>
-
 
 
   <!-- ======================================================
@@ -1063,11 +1007,9 @@
             class="kicker"
           ></p>
 
-
           <h2 id="numberPadTitle">
             Enter Result
           </h2>
-
 
           <div
             id="numberPadStageLabel"
@@ -1075,7 +1017,6 @@
           ></div>
 
         </div>
-
 
         <button
           class="icon-button"
@@ -1096,7 +1037,6 @@
         >
           —
         </div>
-
 
         <div
           id="numberPadUnit"
@@ -1123,7 +1063,6 @@
 
         </div>
 
-
         <div>
 
           <span>
@@ -1144,90 +1083,51 @@
         class="number-pad-grid"
       >
 
-        <button
-          data-key="7"
-          type="button"
-        >
+        <button data-key="7" type="button">
           7
         </button>
 
-        <button
-          data-key="8"
-          type="button"
-        >
+        <button data-key="8" type="button">
           8
         </button>
 
-        <button
-          data-key="9"
-          type="button"
-        >
+        <button data-key="9" type="button">
           9
         </button>
 
-
-        <button
-          data-key="4"
-          type="button"
-        >
+        <button data-key="4" type="button">
           4
         </button>
 
-        <button
-          data-key="5"
-          type="button"
-        >
+        <button data-key="5" type="button">
           5
         </button>
 
-        <button
-          data-key="6"
-          type="button"
-        >
+        <button data-key="6" type="button">
           6
         </button>
 
-
-        <button
-          data-key="1"
-          type="button"
-        >
+        <button data-key="1" type="button">
           1
         </button>
 
-        <button
-          data-key="2"
-          type="button"
-        >
+        <button data-key="2" type="button">
           2
         </button>
 
-        <button
-          data-key="3"
-          type="button"
-        >
+        <button data-key="3" type="button">
           3
         </button>
 
-
-        <button
-          data-key="."
-          type="button"
-        >
+        <button data-key="." type="button">
           .
         </button>
 
-        <button
-          data-key="0"
-          type="button"
-        >
+        <button data-key="0" type="button">
           0
         </button>
 
-        <button
-          data-key="back"
-          type="button"
-        >
+        <button data-key="back" type="button">
           ⌫
         </button>
 
@@ -1247,10 +1147,66 @@
   </div>
 
 
-
   <!-- ======================================================
-       TOAST
+       INFO / NOTES MODAL
   ======================================================= -->
+
+  <div
+    id="infoModal"
+    class="modal-backdrop hidden"
+  >
+
+    <div class="modal-card modal-small info-modal-card">
+
+      <div class="modal-header">
+
+        <div>
+
+          <p class="kicker">
+            NOTES
+          </p>
+
+          <h2 id="infoModalTitle">
+            Details
+          </h2>
+
+        </div>
+
+        <button
+          class="icon-button"
+          data-close="infoModal"
+          type="button"
+        >
+          ×
+        </button>
+
+      </div>
+
+
+      <div
+        id="infoModalBody"
+        class="info-modal-body"
+      ></div>
+
+
+      <div class="modal-actions">
+
+        <button
+          class="button"
+          data-close="infoModal"
+          type="button"
+        >
+          Close
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- TOAST -->
 
   <div
     id="toast"
@@ -1258,12 +1214,10 @@
   ></div>
 
 
-
   <script
     type="module"
-    src="./script.js?v=20260831-36"
+    src="./script.js?v=20260831-37"
   ></script>
 
 </body>
-
 </html>
