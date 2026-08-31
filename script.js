@@ -27,7 +27,6 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
 
-
 /* =========================================================
    FIREBASE
 ========================================================= */
@@ -73,26 +72,13 @@ const db =
   );
 
 
-
 /* =========================================================
-   USER PERMISSIONS
+   PERMISSIONS
 ========================================================= */
 
 const ADMIN_EMAIL =
   "wes@ninthinningbaseball.com";
 
-
-/*
-  VIEW-ONLY USER
-
-  IMPORTANT:
-  The password DOES NOT belong in this JavaScript file.
-
-  Create this user inside Firebase Authentication:
-  kennesaw@ninthinningbaseball.com
-
-  Set the password there.
-*/
 
 const VIEW_ONLY_EMAILS = [
 
@@ -109,15 +95,17 @@ const RESULTS_COLLECTION =
   "results";
 
 
+const MED_BALL_NOTE =
+  "16U and 17U threw the 15 lb med ball. Everyone else threw the 8 lb med ball.";
+
 
 /* =========================================================
-   EVENT CONFIGURATION
+   EVENTS
 ========================================================= */
 
 const EVENTS = [
 
   {
-
     key:
       "pulldown",
 
@@ -135,12 +123,10 @@ const EVENTS = [
 
     maxAvg:
       true
-
   },
 
 
   {
-
     key:
       "exitVelo",
 
@@ -161,12 +147,10 @@ const EVENTS = [
 
     maxAvg:
       true
-
   },
 
 
   {
-
     key:
       "internalRotation",
 
@@ -181,12 +165,10 @@ const EVENTS = [
 
     direction:
       "high"
-
   },
 
 
   {
-
     key:
       "externalRotation",
 
@@ -201,12 +183,10 @@ const EVENTS = [
 
     direction:
       "high"
-
   },
 
 
   {
-
     key:
       "dynoInternal",
 
@@ -221,12 +201,10 @@ const EVENTS = [
 
     direction:
       "high"
-
   },
 
 
   {
-
     key:
       "dynoExternal",
 
@@ -241,12 +219,10 @@ const EVENTS = [
 
     direction:
       "high"
-
   },
 
 
   {
-
     key:
       "gripLeft",
 
@@ -264,12 +240,10 @@ const EVENTS = [
 
     direction:
       "high"
-
   },
 
 
   {
-
     key:
       "gripRight",
 
@@ -287,12 +261,10 @@ const EVENTS = [
 
     direction:
       "high"
-
   },
 
 
   {
-
     key:
       "medBallLeft",
 
@@ -312,13 +284,14 @@ const EVENTS = [
       "high",
 
     feetInches:
-      true
+      true,
 
+    info:
+      MED_BALL_NOTE
   },
 
 
   {
-
     key:
       "medBallRight",
 
@@ -338,13 +311,14 @@ const EVENTS = [
       "high",
 
     feetInches:
-      true
+      true,
 
+    info:
+      MED_BALL_NOTE
   },
 
 
   {
-
     key:
       "broadJump",
 
@@ -362,12 +336,10 @@ const EVENTS = [
 
     feetInches:
       true
-
   },
 
 
   {
-
     key:
       "squatAssessment",
 
@@ -385,12 +357,10 @@ const EVENTS = [
 
     direction:
       "passfail"
-
   },
 
 
   {
-
     key:
       "fiveTenFive",
 
@@ -408,12 +378,10 @@ const EVENTS = [
 
     direction:
       "low"
-
   },
 
 
   {
-
     key:
       "tenYardShuttle",
 
@@ -431,15 +399,13 @@ const EVENTS = [
 
     direction:
       "low"
-
   }
 
 ];
 
 
-
 /* =========================================================
-   APP STATE
+   STATE
 ========================================================= */
 
 let currentUser =
@@ -504,11 +470,6 @@ let numberPadFeet =
   null;
 
 
-
-/* =========================================================
-   TIMER STATE
-========================================================= */
-
 const timerStates =
   {};
 
@@ -544,7 +505,6 @@ EVENTS
   );
 
 
-
 /* =========================================================
    STARTUP
 ========================================================= */
@@ -575,21 +535,24 @@ window.addEventListener(
 );
 
 
-
 /* =========================================================
-   PERMISSIONS
+   ACCESS
 ========================================================= */
 
 function isAdmin() {
 
   return (
+
     normalizeText(
       currentUser?.email
     )
+
     ===
+
     normalizeText(
       ADMIN_EMAIL
     )
+
   );
 
 }
@@ -597,18 +560,14 @@ function isAdmin() {
 
 function isViewOnly() {
 
-  const email =
-    normalizeText(
-      currentUser?.email
-    );
-
-
   return VIEW_ONLY_EMAILS
     .map(
       normalizeText
     )
     .includes(
-      email
+      normalizeText(
+        currentUser?.email
+      )
     );
 
 }
@@ -633,7 +592,7 @@ function applyPermissionUI() {
 
   const badge =
     document.getElementById(
-      "adminBadge"
+      "userRoleBadge"
     );
 
 
@@ -645,14 +604,8 @@ function applyPermissionUI() {
       "ADMIN";
 
 
-    badge.classList.remove(
-      "hidden"
-    );
-
-
-    badge.classList.remove(
-      "view-only-badge"
-    );
+    badge.className =
+      "role-badge admin-role";
 
   }
 
@@ -664,32 +617,18 @@ function applyPermissionUI() {
       "VIEW ONLY";
 
 
-    badge.classList.remove(
-      "hidden"
-    );
-
-
-    badge.classList.add(
-      "view-only-badge"
-    );
+    badge.className =
+      "role-badge view-role";
 
   }
 
   else {
 
-    badge.classList.add(
-      "hidden"
-    );
+    badge.className =
+      "role-badge hidden";
 
   }
 
-
-
-  /*
-    EDITOR USERS:
-    All authenticated users OTHER than the view-only
-    account are allowed to add players and score.
-  */
 
   document
     .getElementById(
@@ -702,11 +641,6 @@ function applyPermissionUI() {
     );
 
 
-
-  /*
-    Upload/import remains ADMIN ONLY.
-  */
-
   document
     .getElementById(
       "uploadPlayersButton"
@@ -717,11 +651,6 @@ function applyPermissionUI() {
       !isAdmin()
     );
 
-
-
-  /*
-    Player deletion remains ADMIN ONLY.
-  */
 
   document
     .getElementById(
@@ -762,7 +691,6 @@ function applyPermissionUI() {
     );
 
 }
-
 
 
 /* =========================================================
@@ -844,11 +772,7 @@ function bindLogin() {
           );
 
 
-          let text =
-            `${error.code}: ${error.message}`;
-
-
-          if (
+          const invalid =
             [
 
               "auth/invalid-credential",
@@ -860,19 +784,21 @@ function bindLogin() {
             ]
               .includes(
                 error.code
-              )
-          ) {
-
-            text =
-              "Invalid email or password.";
-
-          }
+              );
 
 
           showMessage(
+
             message,
-            text,
+
+            invalid
+            ?
+            "Invalid email or password."
+            :
+            `${error.code}: ${error.message}`,
+
             "error"
+
           );
 
         }
@@ -907,9 +833,8 @@ function bindLogin() {
 }
 
 
-
 /* =========================================================
-   AUTH STATE
+   AUTH
 ========================================================= */
 
 onAuthStateChanged(
@@ -1006,9 +931,8 @@ onAuthStateChanged(
 );
 
 
-
 /* =========================================================
-   DATA
+   LOAD DATA
 ========================================================= */
 
 async function refreshData() {
@@ -1189,6 +1113,10 @@ async function loadResults() {
 
 }
 
+
+/* =========================================================
+   NORMALIZATION
+========================================================= */
 
 function normalizePlayer(
   id,
@@ -1477,7 +1405,6 @@ function normalizeEventKey(
 }
 
 
-
 /* =========================================================
    NAVIGATION
 ========================================================= */
@@ -1591,7 +1518,6 @@ function showView(
 }
 
 
-
 /* =========================================================
    ATHLETE PAGE
 ========================================================= */
@@ -1608,125 +1534,35 @@ function bindAthletePage() {
     );
 
 
-  const filter =
-    document.getElementById(
-      "athleteAgeFilter"
-    );
+  bindMultiFilter({
 
+    containerId:
+      "athleteTeamFilter",
 
-  const filterButton =
-    document.getElementById(
-      "athleteAgeFilterButton"
-    );
+    buttonId:
+      "athleteTeamFilterButton",
 
+    menuId:
+      "athleteTeamFilterMenu",
 
-  const filterMenu =
-    document.getElementById(
-      "athleteAgeFilterMenu"
-    );
+    clearId:
+      "clearAthleteTeamFilters",
 
+    optionsId:
+      "athleteTeamFilterOptions",
 
-  filterButton
-    .addEventListener(
-      "click",
-      event => {
-
-        event.stopPropagation();
-
-
-        const isOpen =
-          !filterMenu
-            .classList
-            .contains(
-              "hidden"
-            );
-
-
-        filterMenu
-          .classList
-          .toggle(
-            "hidden",
-            isOpen
-          );
-
-
-        filterButton
-          .setAttribute(
-            "aria-expanded",
-            String(
-              !isOpen
-            )
-          );
-
-      }
-    );
-
-
-  filterMenu
-    .addEventListener(
-      "click",
-      event =>
-        event.stopPropagation()
-    );
-
-
-  document
-    .getElementById(
-      "clearAthleteAgeFilters"
-    )
-    .addEventListener(
-      "click",
+    onChange:
       () => {
 
-        filter
-          .querySelectorAll(
-            'input[type="checkbox"]'
-          )
-          .forEach(
-            checkbox => {
-
-              checkbox.checked =
-                false;
-
-            }
-          );
-
-
-        updateTeamFilterLabel();
+        updateFilterLabel(
+          "athlete"
+        );
 
         renderAthleteTable();
 
       }
-    );
 
-
-  document.addEventListener(
-    "click",
-    event => {
-
-      if (
-        !filter.contains(
-          event.target
-        )
-      ) {
-
-        filterMenu
-          .classList
-          .add(
-            "hidden"
-          );
-
-
-        filterButton
-          .setAttribute(
-            "aria-expanded",
-            "false"
-          );
-
-      }
-
-    }
-  );
+  });
 
 
   document
@@ -1865,9 +1701,151 @@ function bindAthletePage() {
 }
 
 
+/* =========================================================
+   MULTI TEAM FILTER
+========================================================= */
+
+function bindMultiFilter({
+  containerId,
+  buttonId,
+  menuId,
+  clearId,
+  optionsId,
+  onChange
+}) {
+
+  const container =
+    document.getElementById(
+      containerId
+    );
+
+
+  const button =
+    document.getElementById(
+      buttonId
+    );
+
+
+  const menu =
+    document.getElementById(
+      menuId
+    );
+
+
+  button.addEventListener(
+    "click",
+    event => {
+
+      event.stopPropagation();
+
+
+      const open =
+        !menu.classList.contains(
+          "hidden"
+        );
+
+
+      menu.classList.toggle(
+        "hidden",
+        open
+      );
+
+
+      button.setAttribute(
+        "aria-expanded",
+        String(
+          !open
+        )
+      );
+
+    }
+  );
+
+
+  menu.addEventListener(
+    "click",
+    event =>
+      event.stopPropagation()
+  );
+
+
+  document
+    .getElementById(
+      clearId
+    )
+    .addEventListener(
+      "click",
+      () => {
+
+        document
+          .querySelectorAll(
+            `#${optionsId} input[type="checkbox"]`
+          )
+          .forEach(
+            checkbox => {
+
+              checkbox.checked =
+                false;
+
+            }
+          );
+
+
+        onChange();
+
+      }
+    );
+
+
+  document.addEventListener(
+    "click",
+    event => {
+
+      if (
+        !container.contains(
+          event.target
+        )
+      ) {
+
+        menu.classList.add(
+          "hidden"
+        );
+
+
+        button.setAttribute(
+          "aria-expanded",
+          "false"
+        );
+
+      }
+
+    }
+  );
+
+}
+
+
+function getSelectedTeams(
+  optionsId
+) {
+
+  return [
+
+    ...document.querySelectorAll(
+      `#${optionsId} input[type="checkbox"]:checked`
+    )
+
+  ]
+    .map(
+      checkbox =>
+        checkbox.value
+    );
+
+}
+
 
 /* =========================================================
-   VISIBLE ATHLETES
+   ATHLETE TABLE
 ========================================================= */
 
 function getVisibleAthletes() {
@@ -1883,7 +1861,9 @@ function getVisibleAthletes() {
 
 
   const selectedTeams =
-    getSelectedTeams();
+    getSelectedTeams(
+      "athleteTeamFilterOptions"
+    );
 
 
   const filtered =
@@ -1898,36 +1878,29 @@ function getVisibleAthletes() {
           );
 
 
-        const matchesSearch =
-
-          !search
-
-          ||
-
-          text.includes(
-            search
-          );
-
-
-        const matchesTeams =
-
-          selectedTeams.length ===
-          0
-
-          ||
-
-          selectedTeams.includes(
-            athlete.teamName
-          );
-
-
         return (
 
-          matchesSearch
+          (
+            !search
+
+            ||
+
+            text.includes(
+              search
+            )
+          )
 
           &&
 
-          matchesTeams
+          (
+            !selectedTeams.length
+
+            ||
+
+            selectedTeams.includes(
+              athlete.teamName
+            )
+          )
 
         );
 
@@ -1989,11 +1962,6 @@ function getVisibleAthletes() {
 }
 
 
-
-/* =========================================================
-   RENDER ATHLETE TABLE
-========================================================= */
-
 function renderAthleteTable() {
 
   const body =
@@ -2016,9 +1984,7 @@ function renderAthleteTable() {
 
 
   [
-
     ...selectedAthleteIds
-
   ]
     .forEach(
       id => {
@@ -2091,7 +2057,7 @@ function renderAthleteTable() {
                       :
                       ""
                     }
-                  />
+                  >
 
                 </label>
 
@@ -2128,9 +2094,11 @@ function renderAthleteTable() {
           <td>
 
             <span class="age-pill team-pill">
+
               ${escapeHtml(
                 athlete.teamName
               )}
+
             </span>
 
           </td>
@@ -2236,9 +2204,8 @@ function renderAthleteTable() {
 }
 
 
-
 /* =========================================================
-   BULK PLAYER SELECTION
+   BULK PLAYER CONTROLS
 ========================================================= */
 
 function selectAllVisiblePlayers() {
@@ -2345,11 +2312,6 @@ function updateBulkSelectionControls() {
 }
 
 
-
-/* =========================================================
-   BULK DELETE
-========================================================= */
-
 async function deleteSelectedPlayers() {
 
   if (
@@ -2388,7 +2350,7 @@ async function deleteSelectedPlayers() {
     );
 
 
-  const firstConfirmation =
+  const confirmed =
     window.confirm(
 
       `WARNING\n\nDelete ${selectedPlayers.length} players and ${selectedResults.length} saved results?\n\nThis cannot be undone.`
@@ -2397,7 +2359,7 @@ async function deleteSelectedPlayers() {
 
 
   if (
-    !firstConfirmation
+    !confirmed
   ) {
 
     return;
@@ -2443,7 +2405,6 @@ async function deleteSelectedPlayers() {
             )
         ),
 
-
         ...selectedPlayers.map(
           player =>
             doc(
@@ -2480,13 +2441,10 @@ async function deleteSelectedPlayers() {
           450
         )
         .forEach(
-          ref => {
-
+          ref =>
             batch.delete(
               ref
-            );
-
-          }
+            )
         );
 
 
@@ -2497,7 +2455,9 @@ async function deleteSelectedPlayers() {
 
     if (
       selectedAthlete
+
       &&
+
       selectedAthleteIds.has(
         selectedAthlete.id
       )
@@ -2544,7 +2504,6 @@ async function deleteSelectedPlayers() {
   }
 
 }
-
 
 
 /* =========================================================
@@ -2778,9 +2737,8 @@ async function addPlayer(
 }
 
 
-
 /* =========================================================
-   TESTING PAGE
+   TESTING
 ========================================================= */
 
 function bindTestingPage() {
@@ -2859,7 +2817,9 @@ function startTesting(
       athlete =>
         athlete.id ===
         playerId
-    );
+    )
+    ||
+    null;
 
 
   if (
@@ -2906,7 +2866,7 @@ function renderTestingPage() {
 
   document
     .getElementById(
-      "testingPlayerAge"
+      "testingPlayerTeam"
     )
     .textContent =
 
@@ -2929,16 +2889,17 @@ function renderTestingPage() {
 }
 
 
-
 /* =========================================================
-   SINGLE PLAYER DELETE
+   DELETE PLAYER
 ========================================================= */
 
 async function deleteSelectedPlayer() {
 
   if (
     !isAdmin()
+
     ||
+
     !selectedAthlete
   ) {
 
@@ -2990,7 +2951,6 @@ async function deleteSelectedPlayer() {
             )
         ),
 
-
         doc(
           db,
           PLAYERS_COLLECTION,
@@ -3024,13 +2984,10 @@ async function deleteSelectedPlayer() {
           450
         )
         .forEach(
-          ref => {
-
+          ref =>
             batch.delete(
               ref
-            );
-
-          }
+            )
         );
 
 
@@ -3074,7 +3031,6 @@ async function deleteSelectedPlayer() {
   }
 
 }
-
 
 
 /* =========================================================
@@ -3122,10 +3078,29 @@ function renderTestCards() {
         "test-card";
 
 
+      const infoButton =
+        event.info
+        ?
+        `
 
-      /* =====================================================
-         TIMED EVENTS
-      ====================================================== */
+          <button
+            class="inline-info-button test-info-button"
+            data-info-title="Med Ball Throw Note"
+            data-info-body="${escapeHtml(
+              event.info
+            )}"
+            type="button"
+            aria-label="Med ball note"
+          >
+            ?
+          </button>
+
+        `
+        :
+        "";
+
+
+      /* TIMER */
 
       if (
         event.type ===
@@ -3257,10 +3232,7 @@ function renderTestCards() {
       }
 
 
-
-      /* =====================================================
-         PASS / FAIL
-      ====================================================== */
+      /* SQUAT */
 
       else if (
         event.type ===
@@ -3372,10 +3344,7 @@ function renderTestCards() {
       }
 
 
-
-      /* =====================================================
-         NORMAL NUMERIC EVENTS
-      ====================================================== */
+      /* NORMAL EVENTS */
 
       else {
 
@@ -3390,11 +3359,18 @@ function renderTestCards() {
                   HIGHEST IS BEST
                 </p>
 
-                <h3>
-                  ${escapeHtml(
-                    event.label
-                  )}
-                </h3>
+
+                <div class="test-title-inline">
+
+                  <h3>
+                    ${escapeHtml(
+                      event.label
+                    )}
+                  </h3>
+
+                  ${infoButton}
+
+                </div>
 
               </div>
 
@@ -3538,11 +3514,6 @@ function renderTestCards() {
   );
 
 
-
-  /* ========================================================
-     NUMERIC BUTTONS
-  ========================================================= */
-
   grid
     .querySelectorAll(
       ".number-entry-button"
@@ -3561,11 +3532,6 @@ function renderTestCards() {
       }
     );
 
-
-
-  /* ========================================================
-     START / STOP BUTTONS
-  ========================================================= */
 
   grid
     .querySelectorAll(
@@ -3586,11 +3552,6 @@ function renderTestCards() {
     );
 
 
-
-  /* ========================================================
-     MANUAL TIME BUTTONS
-  ========================================================= */
-
   grid
     .querySelectorAll(
       ".timer-manual-button"
@@ -3609,11 +3570,6 @@ function renderTestCards() {
       }
     );
 
-
-
-  /* ========================================================
-     PASS / FAIL
-  ========================================================= */
 
   grid
     .querySelectorAll(
@@ -3634,11 +3590,6 @@ function renderTestCards() {
     );
 
 
-
-  /* ========================================================
-     DELETE ATTEMPTS
-  ========================================================= */
-
   grid
     .querySelectorAll(
       ".delete-attempt"
@@ -3657,8 +3608,27 @@ function renderTestCards() {
       }
     );
 
-}
 
+  grid
+    .querySelectorAll(
+      ".test-info-button"
+    )
+    .forEach(
+      button => {
+
+        button.addEventListener(
+          "click",
+          () =>
+            openInfoModal(
+              button.dataset.infoTitle,
+              button.dataset.infoBody
+            )
+        );
+
+      }
+    );
+
+}
 
 
 /* =========================================================
@@ -3690,15 +3660,11 @@ function renderAttempts(
   const best =
     event.type ===
     "passfail"
-
     ?
-
     attempts[
       0
     ]
-
     :
-
     getBestAttempt(
       attempts,
       event.direction
@@ -3732,7 +3698,6 @@ function renderAttempts(
             attempt => {
 
               const display =
-
                 event.type ===
                 "passfail"
 
@@ -3835,7 +3800,6 @@ function renderAttempts(
                           attempt.id
                         )}"
                         type="button"
-                        title="Delete entry"
                       >
                         ×
                       </button>
@@ -3859,7 +3823,6 @@ function renderAttempts(
   `;
 
 }
-
 
 
 /* =========================================================
@@ -3908,7 +3871,6 @@ function bindNumberPad() {
 
         }
 
-
         else if (
           key ===
           "."
@@ -3930,7 +3892,6 @@ function bindNumberPad() {
           }
 
         }
-
 
         else if (
           numberPadBuffer.length <
@@ -3960,11 +3921,6 @@ function bindNumberPad() {
 
 }
 
-
-
-/* =========================================================
-   SAVE NUMBER PAD VALUE
-========================================================= */
 
 async function saveNumberPadValue() {
 
@@ -3997,11 +3953,6 @@ async function saveNumberPadValue() {
 
   }
 
-
-
-  /* ========================================================
-     FEET + INCHES
-  ========================================================= */
 
   if (
     event.feetInches
@@ -4129,13 +4080,13 @@ async function saveNumberPadValue() {
 
     const totalInches =
 
-      (
-        Number(
-          numberPadFeet
-        )
-        *
-        12
+      Number(
+        numberPadFeet
       )
+
+      *
+
+      12
 
       +
 
@@ -4164,11 +4115,6 @@ async function saveNumberPadValue() {
 
   }
 
-
-
-  /* ========================================================
-     NORMAL NUMBERS / MANUAL TIMER
-  ========================================================= */
 
   const value =
     Number(
@@ -4199,7 +4145,9 @@ async function saveNumberPadValue() {
   if (
     event.type ===
     "timer"
+
     &&
+
     value <=
     0
   ) {
@@ -4235,11 +4183,6 @@ async function saveNumberPadValue() {
 }
 
 
-
-/* =========================================================
-   OPEN NORMAL NUMBER PAD
-========================================================= */
-
 function openNumberPad(
   eventKey
 ) {
@@ -4267,7 +4210,9 @@ function openNumberPad(
 
   if (
     !event
+
     ||
+
     !selectedAthlete
   ) {
 
@@ -4305,11 +4250,6 @@ function openNumberPad(
 
     event.label;
 
-
-
-  /* ========================================================
-     FEET + INCHES MODE
-  ========================================================= */
 
   if (
     event.feetInches
@@ -4370,11 +4310,6 @@ function openNumberPad(
 
   }
 
-
-  /* ========================================================
-     NORMAL NUMBER MODE
-  ========================================================= */
-
   else {
 
     numberPadStage =
@@ -4427,11 +4362,6 @@ function openNumberPad(
 }
 
 
-
-/* =========================================================
-   MANUAL TIMER ENTRY
-========================================================= */
-
 function openManualTimePad(
   eventKey
 ) {
@@ -4459,10 +4389,14 @@ function openManualTimePad(
 
   if (
     !event
+
     ||
+
     event.type !==
     "timer"
+
     ||
+
     !selectedAthlete
   ) {
 
@@ -4471,14 +4405,10 @@ function openManualTimePad(
   }
 
 
-  const timerState =
+  if (
     timerStates[
       eventKey
-    ];
-
-
-  if (
-    timerState?.running
+    ]?.running
   ) {
 
     showToast(
@@ -4523,11 +4453,6 @@ function openManualTimePad(
 }
 
 
-
-/* =========================================================
-   NUMBER PAD DISPLAY
-========================================================= */
-
 function updateNumberPadDisplay() {
 
   document
@@ -4537,7 +4462,9 @@ function updateNumberPadDisplay() {
     .textContent =
 
     numberPadBuffer
+
     ||
+
     "—";
 
 
@@ -4549,7 +4476,9 @@ function updateNumberPadDisplay() {
 
   if (
     event?.feetInches
+
     &&
+
     numberPadStage ===
     "inches"
   ) {
@@ -4561,7 +4490,9 @@ function updateNumberPadDisplay() {
       .textContent =
 
       numberPadBuffer
+
       ||
+
       "—";
 
   }
@@ -4615,9 +4546,8 @@ function resetNumberPadState() {
 }
 
 
-
 /* =========================================================
-   SAVE NUMERIC RESULT
+   SAVE RESULTS
 ========================================================= */
 
 async function saveNumericResult(
@@ -4627,23 +4557,15 @@ async function saveNumericResult(
 
   if (
     !selectedAthlete
+
     ||
+
     !currentUser
+
     ||
+
     !canEdit()
   ) {
-
-    if (
-      isViewOnly()
-    ) {
-
-      showToast(
-        "This account is view only.",
-        true
-      );
-
-    }
-
 
     return;
 
@@ -4742,11 +4664,8 @@ async function saveNumericResult(
   ) {
 
     showToast(
-
       error.message,
-
       true
-
     );
 
   }
@@ -4754,34 +4673,21 @@ async function saveNumericResult(
 }
 
 
-
-/* =========================================================
-   SAVE SQUAT ASSESSMENT
-========================================================= */
-
 async function saveAssessment(
   assessment
 ) {
 
   if (
     !selectedAthlete
+
     ||
+
     !currentUser
+
     ||
+
     !canEdit()
   ) {
-
-    if (
-      isViewOnly()
-    ) {
-
-      showToast(
-        "This account is view only.",
-        true
-      );
-
-    }
-
 
     return;
 
@@ -4882,22 +4788,14 @@ async function saveAssessment(
   ) {
 
     showToast(
-
       error.message,
-
       true
-
     );
 
   }
 
 }
 
-
-
-/* =========================================================
-   DELETE ATTEMPT
-========================================================= */
 
 async function deleteAttempt(
   resultId
@@ -4937,17 +4835,16 @@ async function deleteAttempt(
 
   if (
     !isAdmin()
+
     &&
+
     attempt.enteredByUid !==
     currentUser?.uid
   ) {
 
     showToast(
-
       "You can only delete an entry you recorded.",
-
       true
-
     );
 
 
@@ -4956,14 +4853,10 @@ async function deleteAttempt(
   }
 
 
-  const confirmed =
-    window.confirm(
-      "Delete this recorded attempt?"
-    );
-
-
   if (
-    !confirmed
+    !window.confirm(
+      "Delete this recorded attempt?"
+    )
   ) {
 
     return;
@@ -5002,17 +4895,13 @@ async function deleteAttempt(
   ) {
 
     showToast(
-
       error.message,
-
       true
-
     );
 
   }
 
 }
-
 
 
 /* =========================================================
@@ -5026,12 +4915,6 @@ function toggleTimer(
   if (
     !canEdit()
   ) {
-
-    showToast(
-      "This account is view only.",
-      true
-    );
-
 
     return;
 
@@ -5074,11 +4957,6 @@ function toggleTimer(
 }
 
 
-
-/* =========================================================
-   START TIMER
-========================================================= */
-
 function startTimer(
   eventKey
 ) {
@@ -5100,7 +4978,9 @@ function startTimer(
 
   if (
     !state
+
     ||
+
     state.running
   ) {
 
@@ -5168,11 +5048,6 @@ function startTimer(
 }
 
 
-
-/* =========================================================
-   STOP TIMER
-========================================================= */
-
 async function stopTimer(
   eventKey
 ) {
@@ -5194,7 +5069,9 @@ async function stopTimer(
 
   if (
     !state
+
     ||
+
     !state.running
   ) {
 
@@ -5258,13 +5135,6 @@ async function stopTimer(
 }
 
 
-
-/* =========================================================
-   RESET ALL TIMERS
-
-   There is intentionally NO visible reset button.
-========================================================= */
-
 function resetAllTimers() {
 
   Object
@@ -5305,13 +5175,9 @@ function formatTimer(
 ) {
 
   return (
-
     milliseconds
-
     /
-
     1000
-
   )
     .toFixed(
       2
@@ -5320,326 +5186,74 @@ function formatTimer(
 }
 
 
-
 /* =========================================================
-   PLAYER INDEX TEAM FILTER
+   PLAYER INDEX FILTER
 ========================================================= */
 
 function bindIndexTeamFilter() {
 
-  const container =
-    document.getElementById(
-      "indexTeamFilter"
-    );
+  bindMultiFilter({
 
+    containerId:
+      "indexTeamFilter",
 
-  const button =
-    document.getElementById(
-      "indexTeamFilterButton"
-    );
+    buttonId:
+      "indexTeamFilterButton",
 
+    menuId:
+      "indexTeamFilterMenu",
 
-  const menu =
-    document.getElementById(
-      "indexTeamFilterMenu"
-    );
+    clearId:
+      "clearIndexTeamFilters",
 
+    optionsId:
+      "indexTeamFilterOptions",
 
-  button
-    .addEventListener(
-      "click",
-      event => {
-
-        event.stopPropagation();
-
-
-        const isOpen =
-
-          !menu
-            .classList
-            .contains(
-              "hidden"
-            );
-
-
-        menu
-          .classList
-          .toggle(
-            "hidden",
-            isOpen
-          );
-
-
-        button
-          .setAttribute(
-            "aria-expanded",
-            String(
-              !isOpen
-            )
-          );
-
-      }
-    );
-
-
-  menu
-    .addEventListener(
-      "click",
-      event =>
-        event.stopPropagation()
-    );
-
-
-  document
-    .getElementById(
-      "clearIndexTeamFilters"
-    )
-    .addEventListener(
-      "click",
+    onChange:
       () => {
 
-        document
-          .querySelectorAll(
-
-            '#indexTeamFilterOptions input[type="checkbox"]'
-
-          )
-          .forEach(
-            checkbox => {
-
-              checkbox.checked =
-                false;
-
-            }
-          );
-
-
-        updateIndexTeamFilterLabel();
-
+        updateFilterLabel(
+          "index"
+        );
 
         renderIndexDrawer();
 
       }
-    );
+
+  });
+
+}
 
 
-  document.addEventListener(
-    "click",
-    event => {
+function updateIndexTeamFilters() {
 
-      if (
-        !container.contains(
-          event.target
-        )
-      ) {
+  buildTeamCheckboxes(
 
-        menu
-          .classList
-          .add(
-            "hidden"
-          );
+    "indexTeamFilterOptions",
 
+    getSelectedTeams(
+      "indexTeamFilterOptions"
+    ),
 
-        button
-          .setAttribute(
-            "aria-expanded",
-            "false"
-          );
+    () => {
 
-      }
+      updateFilterLabel(
+        "index"
+      );
+
+      renderIndexDrawer();
 
     }
+
+  );
+
+
+  updateFilterLabel(
+    "index"
   );
 
 }
 
-
-
-/* =========================================================
-   UPDATE INDEX TEAM OPTIONS
-========================================================= */
-
-function updateIndexTeamFilters() {
-
-  const options =
-    document.getElementById(
-      "indexTeamFilterOptions"
-    );
-
-
-  if (
-    !options
-  ) {
-
-    return;
-
-  }
-
-
-  const selected =
-    new Set(
-      getSelectedIndexTeams()
-    );
-
-
-  const teams =
-    [
-
-      ...new Set(
-
-        athletes
-          .map(
-            athlete =>
-              athlete.teamName
-          )
-          .filter(
-            Boolean
-          )
-
-      )
-
-    ]
-      .sort(
-        naturalSort
-      );
-
-
-  options.innerHTML =
-    teams
-      .map(
-        team =>
-          `
-
-            <label class="index-team-filter-option">
-
-              <input
-                type="checkbox"
-                value="${escapeHtml(
-                  team
-                )}"
-                ${
-                  selected.has(
-                    team
-                  )
-                  ?
-                  "checked"
-                  :
-                  ""
-                }
-              />
-
-
-              <span>
-                ${escapeHtml(
-                  team
-                )}
-              </span>
-
-            </label>
-
-          `
-      )
-      .join("");
-
-
-  options
-    .querySelectorAll(
-      'input[type="checkbox"]'
-    )
-    .forEach(
-      checkbox => {
-
-        checkbox.addEventListener(
-          "change",
-          () => {
-
-            updateIndexTeamFilterLabel();
-
-
-            renderIndexDrawer();
-
-          }
-        );
-
-      }
-    );
-
-
-  updateIndexTeamFilterLabel();
-
-}
-
-
-function getSelectedIndexTeams() {
-
-  return [
-
-    ...document
-      .querySelectorAll(
-
-        '#indexTeamFilterOptions input[type="checkbox"]:checked'
-
-      )
-
-  ]
-    .map(
-      checkbox =>
-        checkbox.value
-    )
-    .filter(
-      Boolean
-    );
-
-}
-
-
-function updateIndexTeamFilterLabel() {
-
-  const selected =
-    getSelectedIndexTeams();
-
-
-  const label =
-    document.getElementById(
-      "indexTeamFilterLabel"
-    );
-
-
-  if (
-    !selected.length
-  ) {
-
-    label.textContent =
-      "All Teams";
-
-  }
-
-  else if (
-    selected.length <=
-    2
-  ) {
-
-    label.textContent =
-      selected.join(
-        ", "
-      );
-
-  }
-
-  else {
-
-    label.textContent =
-      `${selected.length} Teams`;
-
-  }
-
-}
-
-
-
-/* =========================================================
-   PLAYER INDEX DRAWER
-========================================================= */
 
 function openIndexDrawer() {
 
@@ -5723,11 +5337,6 @@ function closeIndexDrawer() {
 }
 
 
-
-/* =========================================================
-   RENDER PLAYER INDEX
-========================================================= */
-
 function renderIndexDrawer() {
 
   const container =
@@ -5758,7 +5367,9 @@ function renderIndexDrawer() {
 
 
   const selectedTeams =
-    getSelectedIndexTeams();
+    getSelectedTeams(
+      "indexTeamFilterOptions"
+    );
 
 
   const filtered =
@@ -5784,8 +5395,7 @@ function renderIndexDrawer() {
 
           const matchesTeam =
 
-            selectedTeams.length ===
-            0
+            !selectedTeams.length
 
             ||
 
@@ -5848,22 +5458,15 @@ function renderIndexDrawer() {
 
       const team =
         athlete.teamName
+
         ||
+
         "Other";
 
 
-      if (
-        !groups[
-          team
-        ]
-      ) {
-
-        groups[
-          team
-        ] =
-          [];
-
-      }
+      groups[
+        team
+      ] ||= [];
 
 
       groups[
@@ -5886,18 +5489,8 @@ function renderIndexDrawer() {
         naturalSort
       )
       .map(
-        team => {
-
-          const teamPlayers =
-            groups[
-              team
-            ]
-              .sort(
-                comparePlayers
-              );
-
-
-          return `
+        team =>
+          `
 
             <div class="index-team-group">
 
@@ -5909,16 +5502,20 @@ function renderIndexDrawer() {
                   )}
                 </span>
 
-
                 <span>
-                  ${teamPlayers.length}
+                  ${groups[team].length}
                 </span>
 
               </div>
 
 
               ${
-                teamPlayers
+                groups[
+                  team
+                ]
+                  .sort(
+                    comparePlayers
+                  )
                   .map(
                     athlete =>
                       `
@@ -5967,9 +5564,7 @@ function renderIndexDrawer() {
 
             </div>
 
-          `;
-
-        }
+          `
       )
       .join("");
 
@@ -6032,9 +5627,8 @@ function renderIndexDrawer() {
 }
 
 
-
 /* =========================================================
-   RESULTS PAGE
+   RESULTS
 ========================================================= */
 
 function bindResultsPage() {
@@ -6051,7 +5645,7 @@ function bindResultsPage() {
 
   document
     .getElementById(
-      "resultsAgeFilter"
+      "resultsTeamFilter"
     )
     .addEventListener(
       "change",
@@ -6070,11 +5664,6 @@ function bindResultsPage() {
 
 }
 
-
-
-/* =========================================================
-   RESULTS MATRIX
-========================================================= */
 
 function renderResultsMatrix() {
 
@@ -6130,19 +5719,50 @@ function renderResultsMatrix() {
                 `
 
                   <th
-                    class="sortable event-heading"
+                    class="sortable"
                     data-sort-key="${event.key}"
                   >
 
-                    ${escapeHtml(
-                      event.shortLabel
-                      ||
-                      event.label
-                    )}
+                    <span class="results-heading-inline">
 
-                    ${sortArrow(
-                      event.key
-                    )}
+                      <span>
+
+                        ${escapeHtml(
+                          event.shortLabel
+                          ||
+                          event.label
+                        )}
+
+                        ${sortArrow(
+                          event.key
+                        )}
+
+                      </span>
+
+
+                      ${
+                        event.info
+                        ?
+                        `
+
+                          <button
+                            class="inline-info-button results-header-info"
+                            data-info-title="Med Ball Throw Note"
+                            data-info-body="${escapeHtml(
+                              event.info
+                            )}"
+                            type="button"
+                            aria-label="Med ball note"
+                          >
+                            ?
+                          </button>
+
+                        `
+                        :
+                        ""
+                      }
+
+                    </span>
 
                   </th>
 
@@ -6188,17 +5808,16 @@ function renderResultsMatrix() {
   const team =
     document
       .getElementById(
-        "resultsAgeFilter"
+        "resultsTeamFilter"
       )
       .value;
 
 
-  let rows =
+  const rows =
     athletes.filter(
-      athlete => {
+      athlete =>
 
-        const matchesSearch =
-
+        (
           !search
 
           ||
@@ -6210,30 +5829,20 @@ function renderResultsMatrix() {
           )
             .includes(
               search
-            );
+            )
+        )
 
+        &&
 
-        const matchesTeam =
-
+        (
           !team
 
           ||
 
           athlete.teamName ===
-          team;
+          team
+        )
 
-
-        return (
-
-          matchesSearch
-
-          &&
-
-          matchesTeam
-
-        );
-
-      }
     );
 
 
@@ -6297,30 +5906,74 @@ function renderResultsMatrix() {
                         );
 
 
+                      /* SQUAT RESULT */
+
                       if (
                         event.type ===
                         "passfail"
                       ) {
 
+                        if (
+                          !stats.latest
+                        ) {
+
+                          return `
+
+                            <td>
+                              —
+                            </td>
+
+                          `;
+
+                        }
+
+
+                        const notes =
+                          cleanText(
+
+                            stats.latest.notes
+
+                            ||
+
+                            ""
+
+                          );
+
+
                         return `
 
                           <td>
 
-                            ${
-                              stats.latest
-                              ?
-                              escapeHtml(
+                            <div class="matrix-cell-inline">
 
-                                stats.latest.assessment
+                              <span>
 
-                                ||
+                                ${escapeHtml(
+                                  stats.latest.assessment
+                                  ||
+                                  "—"
+                                )}
 
-                                "—"
+                              </span>
 
-                              )
-                              :
-                              "—"
-                            }
+
+                              <button
+                                class="inline-info-button squat-note-info"
+                                data-info-title="${escapeHtml(
+                                  `${athlete.firstName} ${athlete.lastName} — Squat Notes`
+                                )}"
+                                data-info-body="${escapeHtml(
+                                  notes
+                                  ||
+                                  "No coach notes were entered for this squat assessment."
+                                )}"
+                                type="button"
+                                aria-label="View squat notes"
+                              >
+                                ?
+                              </button>
+
+                            </div>
 
                           </td>
 
@@ -6344,48 +5997,6 @@ function renderResultsMatrix() {
                       }
 
 
-                      if (
-                        event.maxAvg
-                      ) {
-
-                        return `
-
-                          <td>
-
-                            <strong>
-
-                              ${formatEventValue(
-                                stats.best.value,
-                                event
-                              )}
-
-                            </strong>
-
-
-                            <small class="matrix-sub">
-
-                              avg
-
-                              ${
-                                stats.avgLast3 == null
-                                ?
-                                "—"
-                                :
-                                formatEventValue(
-                                  stats.avgLast3,
-                                  event
-                                )
-                              }
-
-                            </small>
-
-                          </td>
-
-                        `;
-
-                      }
-
-
                       return `
 
                         <td>
@@ -6398,6 +6009,33 @@ function renderResultsMatrix() {
                             )}
 
                           </strong>
+
+
+                          ${
+                            event.maxAvg
+                            ?
+                            `
+
+                              <small class="matrix-sub">
+
+                                avg
+                                ${
+                                  stats.avgLast3 == null
+                                  ?
+                                  "—"
+                                  :
+                                  formatEventValue(
+                                    stats.avgLast3,
+                                    event
+                                  )
+                                }
+
+                              </small>
+
+                            `
+                            :
+                            ""
+                          }
 
                         </td>
 
@@ -6434,6 +6072,53 @@ function renderResultsMatrix() {
     );
 
 
+  [
+    head,
+    body
+  ]
+    .forEach(
+      scope => {
+
+        scope
+          .querySelectorAll(
+            ".results-header-info, .squat-note-info"
+          )
+          .forEach(
+            button => {
+
+              button.addEventListener(
+                "click",
+                event => {
+
+                  event.stopPropagation();
+
+
+                  openInfoModal(
+
+                    button.dataset.infoTitle
+
+                    ||
+
+                    "Details",
+
+                    button.dataset.infoBody
+
+                    ||
+
+                    "No notes available."
+
+                  );
+
+                }
+              );
+
+            }
+          );
+
+      }
+    );
+
+
   document
     .getElementById(
       "resultsEmpty"
@@ -6448,9 +6133,8 @@ function renderResultsMatrix() {
 }
 
 
-
 /* =========================================================
-   RESULT SORTING
+   RESULTS SORTING
 ========================================================= */
 
 function setMatrixSort(
@@ -6480,16 +6164,11 @@ function setMatrixSort(
       key,
 
       asc:
-
         event?.direction ===
         "high"
-
         ?
-
         false
-
         :
-
         true
 
     };
@@ -6511,31 +6190,25 @@ function compareMatrixPlayers(
     matrixSort.key;
 
 
-
-  /* ATHLETE */
-
   if (
     key ===
     "athlete"
   ) {
 
-    const av =
-      `${a.lastName}, ${a.firstName}`;
-
-
-    const bv =
-      `${b.lastName}, ${b.firstName}`;
-
-
     const comparison =
-      av.localeCompare(
-        bv,
-        undefined,
-        {
-          numeric:
-            true
-        }
-      );
+      `${a.lastName}, ${a.firstName}`
+        .localeCompare(
+
+          `${b.lastName}, ${b.firstName}`,
+
+          undefined,
+
+          {
+            numeric:
+              true
+          }
+
+        );
 
 
     return (
@@ -6548,9 +6221,6 @@ function compareMatrixPlayers(
 
   }
 
-
-
-  /* TEAM */
 
   if (
     key ===
@@ -6575,9 +6245,6 @@ function compareMatrixPlayers(
   }
 
 
-
-  /* EVENTS */
-
   const event =
     getEvent(
       key
@@ -6600,7 +6267,9 @@ function compareMatrixPlayers(
 
   if (
     av == null
+
     &&
+
     bv == null
   ) {
 
@@ -6630,49 +6299,14 @@ function compareMatrixPlayers(
   }
 
 
-  if (
-    typeof av ===
-    "number"
-    &&
-    typeof bv ===
-    "number"
-  ) {
-
-    return (
-      matrixSort.asc
-      ?
-      av -
-      bv
-      :
-      bv -
-      av
-    );
-
-  }
-
-
-  const comparison =
-    String(
-      av
-    )
-      .localeCompare(
-        String(
-          bv
-        ),
-        undefined,
-        {
-          numeric:
-            true
-        }
-      );
-
-
   return (
     matrixSort.asc
     ?
-    comparison
+    av -
+    bv
     :
-    -comparison
+    bv -
+    av
   );
 
 }
@@ -6704,48 +6338,29 @@ function getSortValue(
     "passfail"
   ) {
 
-    if (
-      !stats.latest
-    ) {
-
-      return null;
-
-    }
-
-
-    return (
-
-      stats.latest.assessment ===
-      "Pass"
-
+    return stats.latest
       ?
-
-      1
-
+      (
+        stats.latest.assessment ===
+        "Pass"
+        ?
+        1
+        :
+        2
+      )
       :
-
-      2
-
-    );
+      null;
 
   }
 
 
-  return (
-
-    stats.best
-
+  return stats.best
     ?
-
     Number(
       stats.best.value
     )
-
     :
-
-    null
-
-  );
+    null;
 
 }
 
@@ -6754,36 +6369,24 @@ function sortArrow(
   key
 ) {
 
-  if (
-    matrixSort.key !==
+  return matrixSort.key ===
     key
-  ) {
-
-    return "";
-
-  }
-
-
-  return (
-
-    matrixSort.asc
-
     ?
-
-    "▲"
-
+    (
+      matrixSort.asc
+      ?
+      "▲"
+      :
+      "▼"
+    )
     :
-
-    "▼"
-
-  );
+    "";
 
 }
 
 
-
 /* =========================================================
-   EVENT STATS
+   STATS
 ========================================================= */
 
 function getEventStats(
@@ -6882,31 +6485,6 @@ function getEventStats(
       );
 
 
-  const avgLast3 =
-
-    last3.length
-
-    ?
-
-    last3.reduce(
-      (
-        sum,
-        value
-      ) =>
-        sum +
-        value,
-      0
-    )
-
-    /
-
-    last3.length
-
-    :
-
-    null;
-
-
   return {
 
     attempts:
@@ -6924,17 +6502,27 @@ function getEventStats(
     best,
 
 
-    avgLast3
+    avgLast3:
+      last3.length
+      ?
+      last3.reduce(
+        (
+          sum,
+          value
+        ) =>
+          sum +
+          value,
+        0
+      )
+      /
+      last3.length
+      :
+      null
 
   };
 
 }
 
-
-
-/* =========================================================
-   BEST ATTEMPT
-========================================================= */
 
 function getBestAttempt(
   attempts,
@@ -6956,23 +6544,6 @@ function getBestAttempt(
       current
     ) => {
 
-      const bestValue =
-        Number(
-          best.value
-        );
-
-
-      const currentValue =
-        Number(
-          current.value
-        );
-
-
-      /*
-        TIMERS:
-        Lowest wins.
-      */
-
       if (
         direction ===
         "low"
@@ -6980,8 +6551,15 @@ function getBestAttempt(
 
         return (
 
-          currentValue <
-          bestValue
+          Number(
+            current.value
+          )
+
+          <
+
+          Number(
+            best.value
+          )
 
           ?
 
@@ -6996,15 +6574,17 @@ function getBestAttempt(
       }
 
 
-      /*
-        OTHER NUMERIC EVENTS:
-        Highest wins.
-      */
-
       return (
 
-        currentValue >
-        bestValue
+        Number(
+          current.value
+        )
+
+        >
+
+        Number(
+          best.value
+        )
 
         ?
 
@@ -7022,9 +6602,8 @@ function getBestAttempt(
 }
 
 
-
 /* =========================================================
-   FORMAT EVENT VALUE
+   FORMATTING
 ========================================================= */
 
 function formatEventValue(
@@ -7049,18 +6628,14 @@ function formatEventValue(
   }
 
 
-
-  /*
-    ROTATIONAL THROWS + BROAD JUMP
-  */
-
   if (
     event?.feetInches
   ) {
 
     let feet =
       Math.floor(
-        number /
+        number
+        /
         12
       );
 
@@ -7129,116 +6704,40 @@ function formatEventValue(
 }
 
 
-
 /* =========================================================
-   ATHLETE TEAM FILTER
+   TEAM FILTERS
 ========================================================= */
 
 function updateTeamFilters() {
 
-  const teams =
-    [
+  buildTeamCheckboxes(
 
-      ...new Set(
+    "athleteTeamFilterOptions",
 
-        athletes
-          .map(
-            athlete =>
-              athlete.teamName
-          )
-          .filter(
-            Boolean
-          )
+    getSelectedTeams(
+      "athleteTeamFilterOptions"
+    ),
 
-      )
+    () => {
 
-    ]
-      .sort(
-        naturalSort
+      updateFilterLabel(
+        "athlete"
       );
 
+      renderAthleteTable();
 
-  const options =
-    document.getElementById(
-      "athleteAgeFilterOptions"
-    );
+    }
 
-
-  const selected =
-    new Set(
-      getSelectedTeams()
-    );
+  );
 
 
-  options.innerHTML =
-    teams
-      .map(
-        team =>
-          `
+  const teams =
+    getTeams();
 
-            <label class="age-filter-option">
-
-              <input
-                type="checkbox"
-                value="${escapeHtml(
-                  team
-                )}"
-                ${
-                  selected.has(
-                    team
-                  )
-                  ?
-                  "checked"
-                  :
-                  ""
-                }
-              />
-
-
-              <span>
-                ${escapeHtml(
-                  team
-                )}
-              </span>
-
-            </label>
-
-          `
-      )
-      .join("");
-
-
-  options
-    .querySelectorAll(
-      'input[type="checkbox"]'
-    )
-    .forEach(
-      checkbox => {
-
-        checkbox.addEventListener(
-          "change",
-          () => {
-
-            updateTeamFilterLabel();
-
-
-            renderAthleteTable();
-
-          }
-        );
-
-      }
-    );
-
-
-
-  /*
-    RESULTS TEAM FILTER
-  */
 
   const resultsFilter =
     document.getElementById(
-      "resultsAgeFilter"
+      "resultsTeamFilter"
     );
 
 
@@ -7284,40 +6783,152 @@ function updateTeamFilters() {
   }
 
 
-  updateTeamFilterLabel();
+  updateFilterLabel(
+    "athlete"
+  );
 
 }
 
 
-function getSelectedTeams() {
+function getTeams() {
 
   return [
 
-    ...document
-      .querySelectorAll(
+    ...new Set(
 
-        '#athleteAgeFilterOptions input[type="checkbox"]:checked'
+      athletes
+        .map(
+          athlete =>
+            athlete.teamName
+        )
+        .filter(
+          Boolean
+        )
 
-      )
+    )
 
   ]
-    .map(
-      checkbox =>
-        checkbox.value
+    .sort(
+      naturalSort
     );
 
 }
 
 
-function updateTeamFilterLabel() {
+function buildTeamCheckboxes(
+  optionsId,
+  selectedTeams,
+  onChange
+) {
 
   const selected =
-    getSelectedTeams();
+    new Set(
+      selectedTeams
+    );
+
+
+  const options =
+    document.getElementById(
+      optionsId
+    );
+
+
+  if (
+    !options
+  ) {
+
+    return;
+
+  }
+
+
+  options.innerHTML =
+    getTeams()
+      .map(
+        team =>
+          `
+
+            <label class="filter-option">
+
+              <input
+                type="checkbox"
+                value="${escapeHtml(
+                  team
+                )}"
+                ${
+                  selected.has(
+                    team
+                  )
+                  ?
+                  "checked"
+                  :
+                  ""
+                }
+              >
+
+
+              <span>
+                ${escapeHtml(
+                  team
+                )}
+              </span>
+
+            </label>
+
+          `
+      )
+      .join("");
+
+
+  options
+    .querySelectorAll(
+      'input[type="checkbox"]'
+    )
+    .forEach(
+      checkbox => {
+
+        checkbox.addEventListener(
+          "change",
+          onChange
+        );
+
+      }
+    );
+
+}
+
+
+function updateFilterLabel(
+  which
+) {
+
+  const optionsId =
+    which ===
+    "athlete"
+    ?
+    "athleteTeamFilterOptions"
+    :
+    "indexTeamFilterOptions";
+
+
+  const labelId =
+    which ===
+    "athlete"
+    ?
+    "athleteTeamFilterLabel"
+    :
+    "indexTeamFilterLabel";
+
+
+  const selected =
+    getSelectedTeams(
+      optionsId
+    );
 
 
   const label =
     document.getElementById(
-      "athleteAgeFilterLabel"
+      labelId
     );
 
 
@@ -7352,9 +6963,8 @@ function updateTeamFilterLabel() {
 }
 
 
-
 /* =========================================================
-   UPLOAD / IMPORT
+   UPLOAD PLAYERS
 ========================================================= */
 
 function bindUploader() {
@@ -7419,11 +7029,6 @@ function bindUploader() {
 }
 
 
-
-/* =========================================================
-   READ IMPORT FILE
-========================================================= */
-
 async function handleFileUpload(
   event
 ) {
@@ -7462,17 +7067,16 @@ async function handleFileUpload(
 
   try {
 
-    const buffer =
-      await file.arrayBuffer();
-
-
     const workbook =
       window.XLSX.read(
-        buffer,
+
+        await file.arrayBuffer(),
+
         {
           type:
             "array"
         }
+
       );
 
 
@@ -7495,9 +7099,10 @@ async function handleFileUpload(
     }
 
 
-    const rawRows =
-      window.XLSX.utils
-        .sheet_to_json(
+    importRows =
+      buildImportRows(
+
+        window.XLSX.utils.sheet_to_json(
           sheet,
           {
 
@@ -7508,12 +7113,8 @@ async function handleFileUpload(
               false
 
           }
-        );
+        )
 
-
-    importRows =
-      buildImportRows(
-        rawRows
       );
 
 
@@ -7524,12 +7125,6 @@ async function handleFileUpload(
   catch (
     error
   ) {
-
-    console.error(
-      "READ IMPORT",
-      error
-    );
-
 
     showMessage(
 
@@ -7550,11 +7145,6 @@ async function handleFileUpload(
 
 }
 
-
-
-/* =========================================================
-   BUILD IMPORT ROWS
-========================================================= */
 
 function buildImportRows(
   rawRows
@@ -7672,9 +7262,13 @@ function buildImportRows(
 
       if (
         !firstName
+
         ||
+
         !lastName
+
         ||
+
         !teamName
       ) {
 
@@ -7757,11 +7351,6 @@ function buildImportRows(
 
 }
 
-
-
-/* =========================================================
-   IMPORT PREVIEW
-========================================================= */
 
 function renderImportPreview() {
 
@@ -7855,37 +7444,28 @@ function renderImportPreview() {
             <tr>
 
               <td>
-
                 ${escapeHtml(
                   row.firstName
                   ||
                   "—"
                 )}
-
               </td>
 
-
               <td>
-
                 ${escapeHtml(
                   row.lastName
                   ||
                   "—"
                 )}
-
               </td>
 
-
               <td>
-
                 ${escapeHtml(
                   row.teamName
                   ||
                   "—"
                 )}
-
               </td>
-
 
               <td>
 
@@ -7941,11 +7521,6 @@ function renderImportPreview() {
 }
 
 
-
-/* =========================================================
-   IMPORT PLAYERS
-========================================================= */
-
 async function importPlayers() {
 
   if (
@@ -7986,18 +7561,14 @@ async function importPlayers() {
     0;
 
 
-  const rowsToImport =
+  for (
+    const player
+    of
     importRows.filter(
       row =>
         row.status ===
         "new"
-    );
-
-
-  for (
-    const player
-    of
-    rowsToImport
+    )
   ) {
 
     if (
@@ -8103,20 +7674,7 @@ async function importPlayers() {
 
     }
 
-    catch (
-      error
-    ) {
-
-      console.error(
-
-        "IMPORT PLAYER",
-
-        player,
-
-        error
-
-      );
-
+    catch {
 
       failed++;
 
@@ -8155,11 +7713,6 @@ async function importPlayers() {
 
 }
 
-
-
-/* =========================================================
-   RESET IMPORTER
-========================================================= */
 
 function resetImporter() {
 
@@ -8237,51 +7790,10 @@ function resetImporter() {
 }
 
 
-
-/* =========================================================
-   DOWNLOAD IMPORT TEMPLATE
-========================================================= */
-
 function downloadTemplate() {
 
   const csv =
-    [
-
-      [
-
-        "First Name",
-
-        "Last Name",
-
-        "Team Name"
-
-      ],
-
-
-      [
-
-        "John",
-
-        "Smith",
-
-        "15U Borden"
-
-      ]
-
-    ]
-      .map(
-        row =>
-          row
-            .map(
-              csvEscape
-            )
-            .join(
-              ","
-            )
-      )
-      .join(
-        "\n"
-      );
+    `First Name,Last Name,Team Name\nJohn,Smith,15U Borden`;
 
 
   const blob =
@@ -8334,7 +7846,6 @@ function downloadTemplate() {
 }
 
 
-
 /* =========================================================
    EXCEL EXPORT
 ========================================================= */
@@ -8371,11 +7882,6 @@ function exportResultsToExcel() {
   }
 
 
-
-  /* ========================================================
-     BEST RESULTS SHEET
-  ========================================================= */
-
   const summaryRows =
     athletes
       .slice()
@@ -8390,10 +7896,8 @@ function exportResultsToExcel() {
             "First Name":
               athlete.firstName,
 
-
             "Last Name":
               athlete.lastName,
-
 
             "Team Name":
               athlete.teamName
@@ -8419,22 +7923,16 @@ function exportResultsToExcel() {
                 row[
                   event.label
                 ] =
-
                   stats.latest?.assessment
-
                   ||
-
                   "";
 
 
                 row[
                   `${event.label} Notes`
                 ] =
-
                   stats.latest?.notes
-
                   ||
-
                   "";
 
               }
@@ -8444,18 +7942,13 @@ function exportResultsToExcel() {
                 row[
                   event.label
                 ] =
-
                   stats.best
-
                   ?
-
                   formatEventValue(
                     stats.best.value,
                     event
                   )
-
                   :
-
                   "";
 
 
@@ -8466,15 +7959,10 @@ function exportResultsToExcel() {
                   row[
                     `${event.label} Avg Last 3`
                   ] =
-
                     stats.avgLast3 == null
-
                     ?
-
                     ""
-
                     :
-
                     formatEventValue(
                       stats.avgLast3,
                       event
@@ -8494,11 +7982,6 @@ function exportResultsToExcel() {
       );
 
 
-
-  /* ========================================================
-     ALL ATTEMPTS SHEET
-  ========================================================= */
-
   const attemptRows =
     results
       .slice()
@@ -8507,13 +7990,10 @@ function exportResultsToExcel() {
           a,
           b
         ) =>
-
           getTimestampValue(
             a.createdAt
           )
-
           -
-
           getTimestampValue(
             b.createdAt
           )
@@ -8538,125 +8018,85 @@ function exportResultsToExcel() {
           return {
 
             "First Name":
-
               athlete?.firstName
-
               ||
-
               result.athleteFirstName
-
               ||
-
               "",
 
 
             "Last Name":
-
               athlete?.lastName
-
               ||
-
               result.athleteLastName
-
               ||
-
               "",
 
 
             "Team Name":
-
               athlete?.teamName
-
               ||
-
               result.teamName
-
               ||
-
               "",
 
 
             "Event":
-
               event?.label
-
               ||
-
               result.event
-
               ||
-
               "",
 
 
             "Value":
-
               event?.feetInches
               &&
               result.value != null
-
               ?
-
               formatEventValue(
                 result.value,
                 event
               )
-
               :
-
-              result.value
-
-              ??
-
-              "",
+              (
+                result.value
+                ??
+                ""
+              ),
 
 
             "Unit":
-
               event?.feetInches
-
               ?
-
               "ft/in"
-
               :
-
-              event?.unit
-
-              ||
-
-              "",
+              (
+                event?.unit
+                ||
+                ""
+              ),
 
 
             "Assessment":
-
               result.assessment
-
               ||
-
               "",
 
 
             "Notes":
-
               result.notes
-
               ||
-
               "",
 
 
             "Entered By":
-
               result.enteredByEmail
-
               ||
-
               "",
 
 
             "Date":
-
               exportDate(
                 result.createdAt
               )
@@ -8667,55 +8107,43 @@ function exportResultsToExcel() {
       );
 
 
-  const summarySheet =
-    window.XLSX.utils
-      .json_to_sheet(
-        summaryRows
-      );
-
-
-  const attemptsSheet =
-    window.XLSX.utils
-      .json_to_sheet(
-        attemptRows
-      );
-
-
   const workbook =
-    window.XLSX.utils
-      .book_new();
+    window.XLSX.utils.book_new();
 
 
   window.XLSX.utils
     .book_append_sheet(
+
       workbook,
-      summarySheet,
+
+      window.XLSX.utils.json_to_sheet(
+        summaryRows
+      ),
+
       "Best Results"
+
     );
 
 
   window.XLSX.utils
     .book_append_sheet(
+
       workbook,
-      attemptsSheet,
+
+      window.XLSX.utils.json_to_sheet(
+        attemptRows
+      ),
+
       "All Attempts"
+
     );
-
-
-  const today =
-    new Date()
-      .toISOString()
-      .slice(
-        0,
-        10
-      );
 
 
   window.XLSX.writeFile(
 
     workbook,
 
-    `Ninth-Inning-Combine-${today}.xlsx`
+    `Ninth-Inning-Combine-${new Date().toISOString().slice(0, 10)}.xlsx`
 
   );
 
@@ -8725,7 +8153,6 @@ function exportResultsToExcel() {
   );
 
 }
-
 
 
 /* =========================================================
@@ -8854,16 +8281,61 @@ function closeModal(
     );
 
 
-  document.body.classList.remove(
-    "modal-open"
+  if (
+    !document.querySelector(
+      ".modal-backdrop:not(.hidden)"
+    )
+  ) {
+
+    document.body.classList.remove(
+      "modal-open"
+    );
+
+  }
+
+}
+
+
+function openInfoModal(
+  title,
+  body
+) {
+
+  document
+    .getElementById(
+      "infoModalTitle"
+    )
+    .textContent =
+
+    title
+
+    ||
+
+    "Details";
+
+
+  document
+    .getElementById(
+      "infoModalBody"
+    )
+    .textContent =
+
+    body
+
+    ||
+
+    "No notes available.";
+
+
+  openModal(
+    "infoModal"
   );
 
 }
 
 
-
 /* =========================================================
-   GENERAL HELPERS
+   HELPERS
 ========================================================= */
 
 function getEvent(
@@ -8906,15 +8378,8 @@ function getTimestampValue(
     timestamp.seconds
   ) {
 
-    return (
-
-      timestamp.seconds
-
-      *
-
-      1000
-
-    );
+    return timestamp.seconds *
+    1000;
 
   }
 
@@ -8926,21 +8391,13 @@ function getTimestampValue(
       .getTime();
 
 
-  return (
-
-    Number.isFinite(
-      value
-    )
-
-    ?
-
+  return Number.isFinite(
     value
-
+  )
+    ?
+    value
     :
-
-    0
-
-  );
+    0;
 
 }
 
@@ -8955,36 +8412,31 @@ function shortDate(
     );
 
 
-  if (
-    !milliseconds
-  ) {
+  return milliseconds
+    ?
+    new Date(
+      milliseconds
+    )
+      .toLocaleString(
+        [],
+        {
 
-    return "Just now";
+          month:
+            "short",
 
-  }
+          day:
+            "numeric",
 
+          hour:
+            "numeric",
 
-  return new Date(
-    milliseconds
-  )
-    .toLocaleString(
-      [],
-      {
+          minute:
+            "2-digit"
 
-        month:
-          "short",
-
-        day:
-          "numeric",
-
-        hour:
-          "numeric",
-
-        minute:
-          "2-digit"
-
-      }
-    );
+        }
+      )
+    :
+    "Just now";
 
 }
 
@@ -8999,22 +8451,14 @@ function exportDate(
     );
 
 
-  return (
-
-    milliseconds
-
+  return milliseconds
     ?
-
     new Date(
       milliseconds
     )
       .toLocaleString()
-
     :
-
-    ""
-
-  );
+    "";
 
 }
 
@@ -9023,12 +8467,8 @@ function shortCoachName(
   email
 ) {
 
-  return (
-
-    email
-
+  return email
     ?
-
     String(
       email
     )
@@ -9037,12 +8477,8 @@ function shortCoachName(
       )[
         0
       ]
-
     :
-
-    ""
-
-  );
+    "";
 
 }
 
@@ -9057,29 +8493,19 @@ function formatNumber(
     );
 
 
-  return (
-
-    Number.isFinite(
-      number
-    )
-
+  return Number.isFinite(
+    number
+  )
     ?
-
     number.toLocaleString(
       undefined,
       {
-
         maximumFractionDigits:
           2
-
       }
     )
-
     :
-
-    "—"
-
-  );
+    "—";
 
 }
 
@@ -9089,13 +8515,9 @@ function cleanText(
 ) {
 
   return String(
-
     value
-
     ??
-
     ""
-
   )
     .trim()
     .replace(
@@ -9184,11 +8606,6 @@ function naturalSort(
 
 }
 
-
-
-/* =========================================================
-   PLAYER MATCHING
-========================================================= */
 
 function findExistingPlayer(
   firstName,
@@ -9339,10 +8756,8 @@ function hashString(
 
 
   return (
-
     hash >>>
     0
-
   )
     .toString(
       36
@@ -9350,11 +8765,6 @@ function hashString(
 
 }
 
-
-
-/* =========================================================
-   SPREADSHEET HELPERS
-========================================================= */
 
 function normalizeSpreadsheetRow(
   raw
@@ -9404,44 +8814,14 @@ function normalizeSpreadsheetRow(
 }
 
 
-function csvEscape(
-  value
-) {
-
-  return (
-
-    `"${String(
-      value
-      ??
-      ""
-    )
-      .replace(
-        /"/g,
-        '""'
-      )}"`
-
-  );
-
-}
-
-
-
-/* =========================================================
-   HTML ESCAPE
-========================================================= */
-
 function escapeHtml(
   value
 ) {
 
   return String(
-
     value
-
     ??
-
     ""
-
   )
     .replace(
       /&/g,
@@ -9466,11 +8846,6 @@ function escapeHtml(
 
 }
 
-
-
-/* =========================================================
-   MESSAGES
-========================================================= */
 
 function showMessage(
   element,
@@ -9502,11 +8877,6 @@ function hideMessage(
 }
 
 
-
-/* =========================================================
-   TOAST
-========================================================= */
-
 let toastTimer;
 
 
@@ -9527,7 +8897,6 @@ function showToast(
 
 
   toast.className =
-
     `toast${
       isError
       ?
